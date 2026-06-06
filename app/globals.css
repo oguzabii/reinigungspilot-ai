@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  /* Clean, professional system font stack (no external font fetch). */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  /* Brand navy scale — the dark, high-trust surfaces of the product. */
+  --color-navy-50: #f2f6fc;
+  --color-navy-100: #e3ecf8;
+  --color-navy-200: #c6d6ee;
+  --color-navy-300: #9bb6df;
+  --color-navy-400: #688fcb;
+  --color-navy-500: #446fb4;
+  --color-navy-600: #325599;
+  --color-navy-700: #29447b;
+  --color-navy-800: #1a2e57;
+  --color-navy-900: #0f1e3c;
+  --color-navy-950: #081025;
+}
+
+@layer base {
+  /*
+   * Tailwind v4 defaults border + ring color to currentColor. Restore a sane
+   * default so a bare `border` renders as a light hairline.
+   */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-slate-200, #e2e8f0);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #ffffff;
+    color: var(--color-slate-900, #0f172a);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Anchored landing sections clear the sticky header. */
+  section[id] {
+    scroll-margin-top: 5.5rem;
+  }
+}
+
+@layer components {
+  /* Dark navy hero / CTA surface with subtle blue + green glow. */
+  .surface-hero {
+    background-image: radial-gradient(
+        55rem 55rem at 82% -10%,
+        rgba(59, 130, 246, 0.22),
+        transparent 60%
+      ),
+      radial-gradient(
+        45rem 45rem at 0% 5%,
+        rgba(16, 185, 129, 0.14),
+        transparent 55%
+      ),
+      linear-gradient(180deg, #0f1e3c 0%, #0a142c 60%, #081025 100%);
+  }
+
+  /* Faint dotted grid used behind light sections. */
+  .surface-grid {
+    background-image: radial-gradient(
+      rgba(15, 30, 60, 0.06) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+  }
+}

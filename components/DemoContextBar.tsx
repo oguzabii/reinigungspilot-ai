@@ -65,6 +65,9 @@ export function DemoContextBar({ pkg }: { pkg: PackageId }) {
           <p className="text-sm text-slate-500">
             {formatChf(def.monthlyChf)} / Monat
           </p>
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+            {def.audience}
+          </p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {included.map((label) => (
               <span

@@ -48,6 +48,10 @@ export interface PackageDef {
   tagline: string;
   /** Short paragraph describing the focus of the package. */
   description: string;
+  /** Short audience chip, e.g. "Beste Wahl". */
+  audienceTag: string;
+  /** "Für wen geeignet?" — one-sentence recommendation. */
+  audience: string;
   setupChf: number;
   monthlyChf: number;
   /** The package we primarily want to sell. */
@@ -67,6 +71,9 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
     tagline: "Das digitale Offert-Büro für eingehende Anfragen.",
     description:
       "Sammelt eingehende Leads zentral, berechnet Preise automatisch und erstellt professionelle PDF-Offerten inklusive Follow-up-Erinnerungen.",
+    audienceTag: "Für kleine Teams",
+    audience:
+      "Ideal für kleinere Betriebe, die bereits Anfragen erhalten und zuerst Ordnung, Tempo und professionelle Offerten wollen.",
     setupChf: 2490,
     monthlyChf: 299,
     highlight: false,
@@ -100,6 +107,9 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
     tagline: "Der Verkaufsmotor, der aktiv neue B2B-Kunden findet.",
     description:
       "Alles aus Starter – plus AI Lead Hunter, Lead-Scoring, Outreach, Auftrags- und Kalenderplanung sowie ein wöchentlicher Chef-Report.",
+    audienceTag: "Beste Wahl",
+    audience:
+      "Die beste Wahl für die meisten Reinigungsfirmen: für Betriebe, die aktiv neue B2B-Kunden gewinnen und ihren Verkauf systematisieren wollen.",
     setupChf: 4990,
     monthlyChf: 599,
     highlight: true,
@@ -135,6 +145,9 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
     tagline: "Das komplette Wachstumsbüro für ambitionierte Betriebe.",
     description:
       "Alles aus Pro – plus erweiterte B2B-Pipeline, inklusive Kampagnen-Landingpage, Content- und Strategie-Reports sowie deutlich höhere Limiten.",
+    audienceTag: "Für Wachstum & B2B",
+    audience:
+      "Für wachstumsorientierte Betriebe mit mehreren Teams und ehrgeiziger B2B-Expansion über mehrere Regionen.",
     setupChf: 7490,
     monthlyChf: 999,
     highlight: false,

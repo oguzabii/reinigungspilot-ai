@@ -36,13 +36,13 @@ export function CtaSection() {
         </ul>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <a
-            href="mailto:kontakt@reinigungspilot.ai?subject=Pilotfirma%20werden%20-%20ReinigungsPilot%20AI"
+          <Link
+            href="/pilot"
             className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
           >
-            Pilotfirma werden
+            Pilot anfragen
             <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
-          </a>
+          </Link>
           <Link
             href="/demo"
             className="inline-flex items-center gap-1.5 rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"

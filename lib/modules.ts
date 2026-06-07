@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { ModuleId } from "./package-gates";
 import type { PackageId } from "./packages";
+import { PACKAGE_ORDER } from "./packages";
 
 export type DemoViewId =
   | "dashboard"
@@ -225,3 +226,21 @@ export const PRODUCT_MODULES: ProductModule[] = [
     availableFrom: "premium",
   },
 ];
+
+export interface PackageModuleSplit {
+  included: ProductModule[];
+  excluded: ProductModule[];
+}
+
+function tierRank(id: PackageId): number {
+  return PACKAGE_ORDER.indexOf(id);
+}
+
+/** Splits the product modules into included / not-yet-included for a tier. */
+export function splitModulesByPackage(pkg: PackageId): PackageModuleSplit {
+  const rank = tierRank(pkg);
+  return {
+    included: PRODUCT_MODULES.filter((m) => tierRank(m.availableFrom) <= rank),
+    excluded: PRODUCT_MODULES.filter((m) => tierRank(m.availableFrom) > rank),
+  };
+}

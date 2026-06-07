@@ -74,16 +74,28 @@ const FIRST_TIPS = [
 
 const OBJECTIONS: { q: string; a: string }[] = [
   {
+    q: "„Wir haben schon ein CRM.“",
+    a: "Super – ReinigungsPilot AI ersetzt es nicht zwingend. Der Fokus liegt auf dem Verkauf: Anfragen, Offerten, Follow-up und aktive B2B-Akquise. Vieles davon leistet ein klassisches CRM nicht.",
+  },
+  {
+    q: "„Wir bekommen genug Anfragen.“",
+    a: "Sehr gut. Dann geht es nicht ums Finden, sondern ums Gewinnen: schnellere Offerten und konsequentes Nachfassen holen aus denselben Anfragen mehr Aufträge.",
+  },
+  {
+    q: "„AI ist mir zu unsicher.“",
+    a: "Verständlich. Die AI schlägt nur vor – Sie geben jeden Versand frei. Nichts geht unkontrolliert raus, und Ihre Daten gehören Ihnen.",
+  },
+  {
     q: "„Das ist zu teuer.“",
-    a: "Ein einziger zusätzlich gewonnener Auftrag pro Monat deckt das Abo meist mehrfach. Wir rechnen das gemeinsam an Ihren Zahlen durch.",
+    a: "Rechnen wir es durch: Ein einziger zusätzlicher Auftrag pro Monat deckt das Abo meist mehrfach. Im Pilot starten Sie ausserdem zu reduzierten Konditionen.",
   },
   {
-    q: "„Wir haben keine Zeit dafür.“",
-    a: "Genau dafür ist es da – ReinigungsPilot AI übernimmt die Büroarbeit im Verkauf. Das Setup machen wir für Sie.",
+    q: "„Wir haben keine Zeit für ein neues System.“",
+    a: "Genau deshalb übernehmen wir das Setup. Sie bekommen ein fertig eingerichtetes Verkaufsbüro – das spart ab Tag 1 Zeit, statt welche zu kosten.",
   },
   {
-    q: "„Wir haben schon eine Lösung.“",
-    a: "ReinigungsPilot AI ist auf Reinigungsfirmen spezialisiert: Offerten, Follow-up und aktive B2B-Akquise in einem System – nicht nur ein CRM.",
+    q: "„Kann ich das auch einmalig kaufen?“",
+    a: "Nein, ReinigungsPilot AI ist ein laufender Service (Einrichtung + monatliches Abo). So bleiben Updates, Optimierung und Support enthalten. Der Einstieg läuft über das Pilotprogramm.",
   },
 ];
 
@@ -230,7 +242,7 @@ export default function DemoScriptPage() {
         </Section>
 
         {/* Objections */}
-        <Section icon={MessageSquare} eyebrow="Einwände" title="Häufige Einwände & Antworten">
+        <Section icon={MessageSquare} eyebrow="Einwände" title="Typische Einwände und Antworten">
           <div className="mt-2 space-y-3">
             {OBJECTIONS.map((item) => (
               <div

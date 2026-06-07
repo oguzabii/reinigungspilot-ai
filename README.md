@@ -6,9 +6,10 @@ verkaufsfähige Produkt- und Demo-Basis** (nicht das bestehende Clean24-Projekt)
 
 ## Aktuelle Version
 
-**v0.1.1** — Brand- & Demo-Politur auf der v0.1-Foundation: eigenes Logo/Favicon,
-stärkere Landingpage, klarere Demo mit Demo-Story, interner Demo-Skript-Leitfaden.
-Weiterhin reine, paketbasierte Frontend-Demo mit lokalen Demo-Daten.
+**v0.1.2** — Sales Readiness Pack auf der v0.1.1-Politur: dedizierte Seiten für
+Preise, Pilot und FAQ, klarere Navigation, sichtbare Paket-Empfehlungslogik,
+ehrliche Produktabgrenzung und ein erweitertes internes Demo-Skript. Weiterhin
+reine, paketbasierte Frontend-Demo mit lokalen Demo-Daten.
 
 ## Tech-Stack
 
@@ -34,6 +35,9 @@ npm run start    # Produktionsserver (nach build)
 | -------------- | -------------------------------------------------------------- |
 | `/`            | Öffentliche Landingpage (Verkauf): Hero, Trust-Bar, Problem, Lösung (6 Schritte), Module, Pakete, Add-ons, Vergleich, 12-Monats-Plan, Pilot-CTA |
 | `/demo`        | Interaktive Sales-Demo mit Paketumschalter (Starter / Pro / Premium), Demo-Story und Modulansichten |
+| `/pricing`     | Preisseite: Pakete mit exakten Limiten, „Für wen geeignet?“, enthalten / nicht enthalten, Add-ons, Abgrenzung |
+| `/pilot`       | Pilotprogramm: Angebot, für wen (nicht), 60-Tage-Ablauf, Konditionen, Pilotgespräch-CTA |
+| `/faq`         | Häufige Fragen und Einwände (Accordion) |
 | `/demo-script` | **Intern** (noindex): Gesprächsleitfaden für die Live-Demo – 5-Minuten-Flow, Paket-Pitches, Einwände, Pilot-Abschluss |
 
 ## Architektur
@@ -112,15 +116,23 @@ zentral in `lib/packages.ts` und `lib/package-gates.ts`.
 - Kein Backend / keine echte Datenpersistenz
 - Keine Anbindung an Clean24 (bewusst getrenntes Produkt)
 
-## Nächste geplante Phase
+## Interne nächste Schritte
 
-Backend-Fundament (separat freizugeben):
+**v0.1.3 (geplant)** – weiterhin reine Frontend- / Sales-Readiness-Arbeit:
 
-- Supabase als Datenbank + Auth (Mehrmandantenfähigkeit pro Reinigungsfirma)
-- Echte Lead-Erfassung (Web-Formular-Integration, Postfach-Anbindung)
-- AI-Anbindung für Lead-Scoring, Offerttexte, Outreach und Marketing-Content
-- PDF-Generierung der Offerten und E-Mail-/Follow-up-Versand
-- Zahlungen & Abo-Verwaltung (Stripe), Add-on-Buchung
-- Enforcement der Paket-Limiten gegen echte Nutzungsdaten
+- Verfeinerung der deutschen Verkaufstexte
+- Inhalte für Broschüre / PDF
+- Pilot-Outreach-Texte
+- Visuelles QA
+
+**Phase 2 (später)** – Backend-Fundament, separat freizugeben:
+
+- Supabase-Datenmodell (Mehrmandantenfähigkeit pro Reinigungsfirma)
+- Authentifizierung
+- Echte Lead-Erfassung (Web-Formular, Postfach-Anbindung)
+- AI-Integration (Scoring, Offerttexte, Outreach, Content)
+- PDF-Generierung der Offerten
+- E-Mail-/Follow-up-Versand
+- Zahlungen & Abo-Verwaltung (Stripe), Limiten-Enforcement
 
 > Alle Daten im aktuellen Stand sind fiktiv und dienen ausschliesslich der Demonstration.

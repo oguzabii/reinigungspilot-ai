@@ -3,12 +3,9 @@ import { ArrowRight } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
 const NAV = [
-  { label: "Lösung", href: "#loesung" },
-  { label: "Module", href: "#module" },
-  { label: "Pakete", href: "#pakete" },
-  { label: "Add-ons", href: "#addons" },
-  { label: "Vergleich", href: "#vergleich" },
-  { label: "Pilot", href: "#pilot" },
+  { label: "Preise", href: "/pricing" },
+  { label: "Pilot", href: "/pilot" },
+  { label: "FAQ", href: "/faq" },
 ];
 
 export function SiteHeader() {
@@ -38,6 +35,21 @@ export function SiteHeader() {
           Demo ansehen
           <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
         </Link>
+      </div>
+
+      {/* Mobile navigation row */}
+      <div className="border-t border-white/10 md:hidden">
+        <nav className="mx-auto flex max-w-6xl items-center justify-center gap-6 px-4 py-2">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="text-sm font-medium text-navy-200 transition-colors hover:text-white"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </header>
   );

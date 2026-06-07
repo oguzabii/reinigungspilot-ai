@@ -19,23 +19,23 @@ export function SiteFooter() {
             <p className="text-sm font-semibold text-white">Produkt</p>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
-                <Link href="#module" className="transition-colors hover:text-white">
-                  Module
-                </Link>
-              </li>
-              <li>
-                <Link href="#pakete" className="transition-colors hover:text-white">
-                  Pakete
-                </Link>
-              </li>
-              <li>
-                <Link href="#addons" className="transition-colors hover:text-white">
-                  Add-ons
-                </Link>
-              </li>
-              <li>
                 <Link href="/demo" className="transition-colors hover:text-white">
-                  Live-Demo
+                  Demo
+                </Link>
+              </li>
+              <li>
+                <Link href="/pricing" className="transition-colors hover:text-white">
+                  Preise
+                </Link>
+              </li>
+              <li>
+                <Link href="/pilot" className="transition-colors hover:text-white">
+                  Pilot
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="transition-colors hover:text-white">
+                  FAQ
                 </Link>
               </li>
             </ul>

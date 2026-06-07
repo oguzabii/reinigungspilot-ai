@@ -6,10 +6,11 @@ verkaufsfähige Produkt- und Demo-Basis** (nicht das bestehende Clean24-Projekt)
 
 ## Aktuelle Version
 
-**v0.1.2** — Sales Readiness Pack auf der v0.1.1-Politur: dedizierte Seiten für
-Preise, Pilot und FAQ, klarere Navigation, sichtbare Paket-Empfehlungslogik,
-ehrliche Produktabgrenzung und ein erweitertes internes Demo-Skript. Weiterhin
-reine, paketbasierte Frontend-Demo mit lokalen Demo-Daten.
+**v0.1.3** — Copy Refinement + Sales Material Pack: verfeinerte deutsche
+Verkaufstexte über alle Seiten, ausgebautes Pilotprogramm, vertrauensbildende
+FAQ sowie zwei neue Seiten – ein internes Sales-Kit und eine Broschüren-Seite
+(Grundlage für ein späteres PDF). Weiterhin reine, paketbasierte Frontend-Demo
+mit lokalen Demo-Daten.
 
 ## Tech-Stack
 
@@ -38,7 +39,9 @@ npm run start    # Produktionsserver (nach build)
 | `/pricing`     | Preisseite: Pakete mit exakten Limiten, „Für wen geeignet?“, enthalten / nicht enthalten, Add-ons, Abgrenzung |
 | `/pilot`       | Pilotprogramm: Angebot, für wen (nicht), 60-Tage-Ablauf, Konditionen, Pilotgespräch-CTA |
 | `/faq`         | Häufige Fragen und Einwände (Accordion) |
+| `/brochure`    | Öffentliche Verkaufsbroschüre (Grundlage für späteres PDF): Problem, Lösung, Module, Pakete, Pilot, Add-ons, 12-Monats-Plan, Abgrenzung |
 | `/demo-script` | **Intern** (noindex): Gesprächsleitfaden für die Live-Demo – 5-Minuten-Flow, Paket-Pitches, Einwände, Pilot-Abschluss |
+| `/sales-kit`   | **Intern** (noindex): Positionierung, 30s-/2min-Pitch, Cold-E-Mails, Nachrichten, Telefonskript, Einwände, Abschlusssätze |
 
 ## Architektur
 
@@ -118,12 +121,15 @@ zentral in `lib/packages.ts` und `lib/package-gates.ts`.
 
 ## Interne nächste Schritte
 
-**v0.1.3 (geplant)** – weiterhin reine Frontend- / Sales-Readiness-Arbeit:
+**v0.1.3 (erledigt)** – verfeinerte Verkaufstexte, ausgebautes Pilotprogramm,
+vertrauensbildende FAQ, internes Sales-Kit (`/sales-kit`) und Broschüren-Seite
+(`/brochure`).
 
-- Verfeinerung der deutschen Verkaufstexte
-- Inhalte für Broschüre / PDF
-- Pilot-Outreach-Texte
-- Visuelles QA
+**Nächster Schritt** – weiterhin reine Frontend- / Sales-Readiness-Arbeit:
+
+- Visuelles QA über alle Seiten (Desktop & Mobile)
+- Echte Kontaktdaten statt Platzhalter (`kontakt@reinigungspilot.ai`)
+- PDF-Export der Broschüre (noch offen)
 
 **Phase 2 (später)** – Backend-Fundament, separat freizugeben:
 

@@ -41,7 +41,11 @@ export function Hero() {
             </Link>
           </div>
 
-          <p className="mt-6 text-sm text-navy-300">
+          <p className="mt-6 text-sm text-navy-200">
+            Die AI bereitet vor – Sie geben frei. Keine automatischen
+            Massen-Mails.
+          </p>
+          <p className="mt-2 text-sm text-navy-300">
             Demo-Unternehmen:{" "}
             <span className="font-medium text-navy-100">
               Muster Reinigung GmbH

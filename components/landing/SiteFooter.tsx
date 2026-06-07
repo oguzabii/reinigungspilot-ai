@@ -38,6 +38,14 @@ export function SiteFooter() {
                   FAQ
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/brochure"
+                  className="transition-colors hover:text-white"
+                >
+                  Broschüre
+                </Link>
+              </li>
             </ul>
           </div>
 

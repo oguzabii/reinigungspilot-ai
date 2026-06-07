@@ -87,6 +87,10 @@ export function SolutionSection() {
             );
           })}
         </div>
+        <p className="mx-auto mt-10 max-w-2xl text-center text-sm text-slate-600">
+          In jedem Schritt gilt: Die AI bereitet vor, Sie behalten die Kontrolle
+          und geben frei – keine automatischen Massen-Mails.
+        </p>
       </div>
     </section>
   );

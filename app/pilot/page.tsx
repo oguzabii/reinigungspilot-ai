@@ -8,6 +8,9 @@ import {
   UserX,
   BadgeCheck,
   ClipboardList,
+  ListChecks,
+  ChartColumn,
+  CalendarCheck,
   Check,
   X,
 } from "lucide-react";
@@ -35,9 +38,9 @@ export default function PilotPage() {
       <SiteHeader />
       <main>
         <PageHero
-          eyebrow="Pilotprogramm"
+          eyebrow="Pilotprogramm · begrenzt"
           title={`Werden Sie eine unserer ${PILOT.slots} Pilotfirmen.`}
-          description="Wir richten ReinigungsPilot AI in 60 Tagen gemeinsam auf Ihren Betrieb ein – zu einmaligen Pilot-Konditionen und mit persönlicher Begleitung."
+          description="Wir richten ReinigungsPilot AI in 60 Tagen gemeinsam auf Ihren Betrieb ein – zu einmaligen Pilot-Konditionen und mit persönlicher Begleitung. Ernst gemeint, eng begleitet, klar messbar."
         >
           <a
             href={PILOT_MAILTO}
@@ -54,7 +57,7 @@ export default function PilotPage() {
           </Link>
         </PageHero>
 
-        {/* Offer summary */}
+        {/* Offer summary + price rationale */}
         <section className="bg-white py-16 sm:py-20">
           <div className="mx-auto max-w-5xl px-4 lg:px-6">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -63,15 +66,58 @@ export default function PilotPage() {
               <Stat label="Monatlich" value={formatChf(PILOT.monthlyChf)} />
               <Stat label="Laufzeit" value={`${PILOT.durationDays} Tage`} />
             </div>
-            <p className="mt-4 text-center text-sm text-slate-500">
-              Danach Wechsel zu {PILOT.afterPilot}. Der Pilotpreis ist kein
-              öffentlicher Standardpreis.
-            </p>
+
+            <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50/60 p-6">
+              <h3 className="font-semibold text-navy-900">
+                Warum der Pilotpreis nicht der Standardpreis ist
+              </h3>
+              <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                {PILOT.priceRationale.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-start gap-2 text-sm text-navy-900"
+                  >
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" strokeWidth={2.4} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-sm text-slate-600">
+                Danach Wechsel zu {PILOT.afterPilot}. Der Pilotpreis ist kein
+                öffentlicher Standardpreis.
+              </p>
+            </div>
           </div>
         </section>
 
-        {/* For whom / not for whom */}
+        {/* Why we run pilots */}
         <section className="bg-slate-50 py-16 sm:py-20">
+          <div className="mx-auto max-w-5xl px-4 lg:px-6">
+            <SectionHeader
+              align="center"
+              eyebrow="Hintergrund"
+              title="Warum wir Pilotfirmen aufnehmen"
+            />
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {PILOT.why.map((reason, index) => (
+                <div
+                  key={reason}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                >
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-navy-900 text-sm font-semibold text-white">
+                    {index + 1}
+                  </span>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-700">
+                    {reason}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Fit: for whom / not / good pilot brings */}
+        <section className="bg-white py-16 sm:py-20">
           <div className="mx-auto max-w-5xl px-4 lg:px-6">
             <SectionHeader
               align="center"
@@ -94,11 +140,20 @@ export default function PilotPage() {
                 items={PILOT.notForWhom}
               />
             </div>
+            <div className="mt-6">
+              <ChecklistCard
+                icon={ListChecks}
+                accent="navy"
+                marker="check"
+                title="Was eine gute Pilotfirma mitbringen sollte"
+                items={PILOT.goodPilotBrings}
+              />
+            </div>
           </div>
         </section>
 
-        {/* 60-day timeline */}
-        <section className="bg-white py-16 sm:py-20">
+        {/* 60-day timeline + what we measure */}
+        <section className="bg-slate-50 py-16 sm:py-20">
           <div className="mx-auto max-w-6xl px-4 lg:px-6">
             <SectionHeader
               align="center"
@@ -129,11 +184,20 @@ export default function PilotPage() {
                 </div>
               ))}
             </div>
+            <div className="mx-auto mt-6 max-w-3xl">
+              <ChecklistCard
+                icon={ChartColumn}
+                accent="blue"
+                marker="check"
+                title="Was wir in den 60 Tagen gemeinsam messen"
+                items={PILOT.measure}
+              />
+            </div>
           </div>
         </section>
 
         {/* Gets / we need */}
-        <section className="bg-slate-50 py-16 sm:py-20">
+        <section className="bg-white py-16 sm:py-20">
           <div className="mx-auto max-w-5xl px-4 lg:px-6">
             <div className="grid gap-6 md:grid-cols-2">
               <ChecklistCard
@@ -151,21 +215,36 @@ export default function PilotPage() {
                 items={PILOT.weNeed}
               />
             </div>
-            <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Gut zu wissen
-              </p>
-              <ul className="mt-2 space-y-1.5">
-                {PILOT.notes.map((note) => (
-                  <li
-                    key={note}
-                    className="flex items-start gap-2 text-sm text-slate-600"
-                  >
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-slate-400" />
-                    {note}
-                  </li>
-                ))}
-              </ul>
+          </div>
+        </section>
+
+        {/* After 60 days + notes */}
+        <section className="bg-slate-50 py-16 sm:py-20">
+          <div className="mx-auto max-w-5xl px-4 lg:px-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <ChecklistCard
+                icon={CalendarCheck}
+                accent="emerald"
+                marker="check"
+                title="Was nach den 60 Tagen passiert"
+                items={PILOT.afterPilotSteps}
+              />
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Gut zu wissen
+                </p>
+                <ul className="mt-3 space-y-2">
+                  {PILOT.notes.map((note) => (
+                    <li
+                      key={note}
+                      className="flex items-start gap-2 text-sm text-slate-600"
+                    >
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-slate-400" />
+                      {note}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </section>

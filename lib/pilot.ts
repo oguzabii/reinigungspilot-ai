@@ -74,4 +74,43 @@ export const PILOT = {
     "Der Pilotpreis ist kein öffentlicher Standardpreis.",
     "Nach 60 Tagen erfolgt der Wechsel zu Pro oder Premium.",
   ] as string[],
+
+  // Warum wir Pilotfirmen aufnehmen
+  why: [
+    "Wir schärfen ReinigungsPilot AI an echten Schweizer Reinigungsbetrieben – nicht im Labor.",
+    "Pilotfirmen prägen mit, welche Funktionen als Nächstes entstehen.",
+    "Im Gegenzug bieten wir intensive Begleitung und faire Konditionen.",
+  ] as string[],
+
+  // Was eine gute Pilotfirma mitbringen sollte
+  goodPilotBrings: [
+    "Eine Ansprechperson, die Entscheidungen treffen kann",
+    "Bereitschaft, 60 Tage aktiv mitzuarbeiten und ehrlich Feedback zu geben",
+    "Genügend reale Anfragen, damit wir echte Ergebnisse sehen",
+    "Offenheit, die eigenen Verkaufsabläufe zu hinterfragen",
+  ] as string[],
+
+  // Was wir in den 60 Tagen gemeinsam messen
+  measure: [
+    "Reaktionszeit auf neue Anfragen",
+    "Anzahl erstellter Offerten pro Woche",
+    "Follow-up-Quote – wie konsequent nachgefasst wird",
+    "Gewonnene Aufträge und Conversion im Vergleich zur Baseline",
+  ] as string[],
+
+  // Was nach den 60 Tagen passiert
+  afterPilotSteps: [
+    "Gemeinsames Review der Ergebnisse aus den 60 Tagen",
+    "Entscheid für Pro oder Premium – oder ein sauberer Abschluss ohne Verpflichtung",
+    "Ihre Daten und Einstellungen bleiben erhalten und laufen nahtlos weiter",
+    "Kein automatischer Vertrag: Sie entscheiden bewusst",
+  ] as string[],
+
+  // Warum der Pilotpreis nicht der Standardpreis ist
+  priceRationale: [
+    "Sie steigen früh ein und arbeiten mit einem System, das noch wächst.",
+    "Sie investieren Zeit und Feedback – das ist Teil der Vereinbarung.",
+    "Der reguläre Einrichtungspreis von Pro und Premium liegt deutlich höher.",
+    "Die Pilot-Konditionen gelten nur für die ersten 3 Betriebe.",
+  ] as string[],
 };

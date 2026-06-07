@@ -10,9 +10,10 @@ import {
   Handshake,
   MessageSquare,
 } from "lucide-react";
-import { Logo } from "@/components/Logo";
+import { InternalHeader } from "@/components/InternalHeader";
 import { PACKAGES } from "@/lib/packages";
 import { formatChf } from "@/lib/format";
+import { OBJECTIONS } from "@/lib/objections";
 
 export const metadata: Metadata = {
   title: "Demo-Skript (intern) – ReinigungsPilot AI",
@@ -72,33 +73,6 @@ const FIRST_TIPS = [
   "Sprache des Inhabers sprechen: Aufträge, Umsatz, Zeitersparnis – nicht Technik.",
 ];
 
-const OBJECTIONS: { q: string; a: string }[] = [
-  {
-    q: "„Wir haben schon ein CRM.“",
-    a: "Super – ReinigungsPilot AI ersetzt es nicht zwingend. Der Fokus liegt auf dem Verkauf: Anfragen, Offerten, Follow-up und aktive B2B-Akquise. Vieles davon leistet ein klassisches CRM nicht.",
-  },
-  {
-    q: "„Wir bekommen genug Anfragen.“",
-    a: "Sehr gut. Dann geht es nicht ums Finden, sondern ums Gewinnen: schnellere Offerten und konsequentes Nachfassen holen aus denselben Anfragen mehr Aufträge.",
-  },
-  {
-    q: "„AI ist mir zu unsicher.“",
-    a: "Verständlich. Die AI schlägt nur vor – Sie geben jeden Versand frei. Nichts geht unkontrolliert raus, und Ihre Daten gehören Ihnen.",
-  },
-  {
-    q: "„Das ist zu teuer.“",
-    a: "Rechnen wir es durch: Ein einziger zusätzlicher Auftrag pro Monat deckt das Abo meist mehrfach. Im Pilot starten Sie ausserdem zu reduzierten Konditionen.",
-  },
-  {
-    q: "„Wir haben keine Zeit für ein neues System.“",
-    a: "Genau deshalb übernehmen wir das Setup. Sie bekommen ein fertig eingerichtetes Verkaufsbüro – das spart ab Tag 1 Zeit, statt welche zu kosten.",
-  },
-  {
-    q: "„Kann ich das auch einmalig kaufen?“",
-    a: "Nein, ReinigungsPilot AI ist ein laufender Service (Einrichtung + monatliches Abo). So bleiben Updates, Optimierung und Support enthalten. Der Einstieg läuft über das Pilotprogramm.",
-  },
-];
-
 function pitchPoints(id: "starter" | "pro" | "premium"): string[] {
   return PACKAGES[id].focus;
 }
@@ -106,25 +80,7 @@ function pitchPoints(id: "starter" | "pro" | "premium"): string[] {
 export default function DemoScriptPage() {
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Internal header */}
-      <header className="border-b border-white/10 bg-navy-900">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
-          <Link href="/">
-            <Logo variant="light" />
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-amber-400/20 px-2.5 py-1 text-xs font-semibold text-amber-200 ring-1 ring-inset ring-amber-400/30">
-              Intern
-            </span>
-            <Link
-              href="/demo"
-              className="text-sm font-medium text-navy-200 transition-colors hover:text-white"
-            >
-              Zur Demo
-            </Link>
-          </div>
-        </div>
-      </header>
+      <InternalHeader />
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">

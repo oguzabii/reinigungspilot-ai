@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { Hero } from "@/components/landing/Hero";
+import { TrustBar } from "@/components/landing/TrustBar";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { SolutionSection } from "@/components/landing/SolutionSection";
 import { ModulesOverview } from "@/components/landing/ModulesOverview";
@@ -16,6 +17,7 @@ export default function Home() {
       <SiteHeader />
       <main>
         <Hero />
+        <TrustBar />
         <ProblemSection />
         <SolutionSection />
         <ModulesOverview />

@@ -4,9 +4,11 @@ Das AI-Vertriebsbüro für Reinigungsfirmen in der Schweiz — der verkaufsstark
 paketbasierte Master-Demo-Foundation. Dieses Repository ist die **eigenständige,
 verkaufsfähige Produkt- und Demo-Basis** (nicht das bestehende Clean24-Projekt).
 
-Phase 1: polierte Frontend-Demo mit lokalen Demo-Daten. Kein Supabase, keine
-Authentifizierung, keine externen APIs, kein E-Mail-Versand, keine Zahlungen,
-keine AI-API-Aufrufe.
+## Aktuelle Version
+
+**v0.1.1** — Brand- & Demo-Politur auf der v0.1-Foundation: eigenes Logo/Favicon,
+stärkere Landingpage, klarere Demo mit Demo-Story, interner Demo-Skript-Leitfaden.
+Weiterhin reine, paketbasierte Frontend-Demo mit lokalen Demo-Daten.
 
 ## Tech-Stack
 
@@ -28,10 +30,11 @@ npm run start    # Produktionsserver (nach build)
 
 ## Routen
 
-| Route   | Zweck                                                          |
-| ------- | -------------------------------------------------------------- |
-| `/`     | Öffentliche Landingpage (Verkauf): Hero, Problem, Lösung, Module, Pakete, Add-ons, Vergleich, 12-Monats-Plan, CTA |
-| `/demo` | Interaktive Sales-Demo mit Paketumschalter (Starter / Pro / Premium) |
+| Route          | Zweck                                                          |
+| -------------- | -------------------------------------------------------------- |
+| `/`            | Öffentliche Landingpage (Verkauf): Hero, Trust-Bar, Problem, Lösung (6 Schritte), Module, Pakete, Add-ons, Vergleich, 12-Monats-Plan, Pilot-CTA |
+| `/demo`        | Interaktive Sales-Demo mit Paketumschalter (Starter / Pro / Premium), Demo-Story und Modulansichten |
+| `/demo-script` | **Intern** (noindex): Gesprächsleitfaden für die Live-Demo – 5-Minuten-Flow, Paket-Pitches, Einwände, Pilot-Abschluss |
 
 ## Architektur
 
@@ -58,10 +61,16 @@ components/          # Wiederverwendbare UI-Bausteine
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
+  icon.svg           # Favicon (Brand-Mark)
   page.tsx           # Landingpage
   demo/page.tsx      # Demo-Dashboard
+  demo-script/page.tsx # Interner Demo-Leitfaden (noindex)
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
 ```
+
+Der Brand-Mark liegt als wiederverwendbare SVG-Komponente in
+`components/LogoMark.tsx` (gleiche Geometrie wie `app/icon.svg`): eine aufsteigende
+Sales-Pipeline mit hervorgehobenem Zielknoten.
 
 ### Paket-Gating
 
@@ -82,15 +91,36 @@ app/
 Gesperrte Module rendern eine `LockedFeature`-Upgrade-Ansicht; im Demo wechselt
 der Upgrade-Button direkt in das passende Paket.
 
-## Phase 2 (Ausblick)
+## Paketmodell
+
+| Paket   | Produktname        | Setup     | Monatlich | Fokus                                                                     |
+| ------- | ------------------ | --------- | --------- | ------------------------------------------------------------------------- |
+| Starter | AI Offer Büro      | CHF 2'490 | CHF 299   | Eingehende Leads, Preise, PDF-Offerten, Follow-ups                        |
+| **Pro** | AI Sales Autopilot | CHF 4'990 | CHF 599   | **Empfohlen** – Starter + AI Lead Hunter, Scoring, Aufträge, Chef-Report  |
+| Premium | AI Growth Office   | CHF 7'490 | CHF 999   | Pro + B2B-Pipeline, Landingpage, Strategie-Reports, höhere Limiten        |
+
+Erweiterbar über Add-ons (`lib/addons.ts`). Genaue Limiten und das Gating liegen
+zentral in `lib/packages.ts` und `lib/package-gates.ts`.
+
+## Bewusst NICHT enthalten (v0.1 / v0.1.1)
+
+- Kein Supabase, keine Datenbank
+- Keine Authentifizierung / kein Login
+- Keine Zahlungen / kein Stripe
+- Kein E-Mail-Versand (Pilot-CTA nutzt nur einen `mailto:`-Platzhalter `kontakt@reinigungspilot.ai`)
+- Keine externen APIs, keine AI-API-Aufrufe
+- Kein Backend / keine echte Datenpersistenz
+- Keine Anbindung an Clean24 (bewusst getrenntes Produkt)
+
+## Nächste geplante Phase
+
+Backend-Fundament (separat freizugeben):
 
 - Supabase als Datenbank + Auth (Mehrmandantenfähigkeit pro Reinigungsfirma)
 - Echte Lead-Erfassung (Web-Formular-Integration, Postfach-Anbindung)
 - AI-Anbindung für Lead-Scoring, Offerttexte, Outreach und Marketing-Content
-- PDF-Generierung der Offerten
-- E-Mail-/Follow-up-Versand
+- PDF-Generierung der Offerten und E-Mail-/Follow-up-Versand
 - Zahlungen & Abo-Verwaltung (Stripe), Add-on-Buchung
 - Enforcement der Paket-Limiten gegen echte Nutzungsdaten
-- Owner-Reports (wöchentlich/monatlich) mit echten Kennzahlen
 
 > Alle Daten im aktuellen Stand sind fiktiv und dienen ausschliesslich der Demonstration.

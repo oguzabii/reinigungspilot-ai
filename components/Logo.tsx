@@ -1,5 +1,5 @@
-import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { LogoMark } from "./LogoMark";
 
 interface LogoProps {
   variant?: "dark" | "light";
@@ -12,12 +12,7 @@ export function Logo({ variant = "dark", showName = true, className }: LogoProps
   const isLight = variant === "light";
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <span
-        className="inline-flex h-9 w-9 items-center justify-center rounded-xl shadow-sm ring-1 ring-white/10"
-        style={{ backgroundImage: "linear-gradient(135deg, #3b82f6 0%, #0f1e3c 95%)" }}
-      >
-        <Sparkles className="h-5 w-5 text-white" strokeWidth={2.2} />
-      </span>
+      <LogoMark size={34} className="rounded-[8px] shadow-sm" />
       {showName && (
         <span
           className={cn(

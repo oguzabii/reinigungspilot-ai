@@ -1,4 +1,4 @@
-import { Check, Minus } from "lucide-react";
+import { Check, Minus, Star } from "lucide-react";
 import type { PackageId, PackageLimits } from "@/lib/packages";
 import { PACKAGE_LIST } from "@/lib/packages";
 import { formatChf, formatNumber } from "@/lib/format";
@@ -65,6 +65,7 @@ export function ComparisonTable({
                   key={p.id}
                   className={cn(
                     "px-4 py-4 text-center align-top",
+                    p.highlight && "border-t-2 border-blue-500",
                     active && "bg-blue-50/50",
                   )}
                 >
@@ -74,6 +75,7 @@ export function ComparisonTable({
                     monthly={formatChf(p.monthlyChf)}
                     setup={formatChf(p.setupChf)}
                     active={active}
+                    highlight={p.highlight}
                     onClick={
                       onSelectPackage ? () => onSelectPackage(p.id) : undefined
                     }
@@ -114,6 +116,7 @@ interface PackageHeadProps {
   monthly: string;
   setup: string;
   active: boolean;
+  highlight: boolean;
   onClick?: () => void;
 }
 
@@ -123,10 +126,17 @@ function PackageHead({
   monthly,
   setup,
   active,
+  highlight,
   onClick,
 }: PackageHeadProps) {
   const content = (
     <>
+      {highlight && (
+        <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+          <Star className="h-3 w-3 fill-amber-300 text-amber-300" />
+          Empfohlen
+        </span>
+      )}
       <span className="block text-[11px] font-semibold uppercase tracking-wide text-blue-600">
         {productName}
       </span>
@@ -139,7 +149,7 @@ function PackageHead({
       </span>
       <span className="block text-xs text-slate-500">{setup} Setup</span>
       {active && (
-        <span className="mt-1.5 inline-block rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+        <span className="mt-1.5 inline-block rounded-full bg-navy-900 px-2 py-0.5 text-[10px] font-semibold text-white">
           Aktuell
         </span>
       )}

@@ -17,6 +17,7 @@ import { cn } from "@/lib/cn";
 
 import { Logo } from "@/components/Logo";
 import { PackageToggle } from "@/components/PackageToggle";
+import { DemoContextBar } from "@/components/DemoContextBar";
 
 import { BossDashboard } from "@/components/modules/BossDashboard";
 import { LeadInbox } from "@/components/modules/LeadInbox";
@@ -175,7 +176,8 @@ export function DemoShell() {
             </div>
           </div>
 
-          <div className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
+          <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8">
+            <DemoContextBar pkg={pkg} />
             {renderView()}
           </div>
         </main>

@@ -2,26 +2,35 @@ import { Inbox, Clock, BellRing, Crosshair } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { SectionHeader } from "@/components/SectionHeader";
 
-const PROBLEMS: { icon: LucideIcon; title: string; text: string }[] = [
+const PROBLEMS: {
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  impact: string;
+}[] = [
   {
     icon: Inbox,
-    title: "Anfragen gehen unter",
-    text: "Leads aus Web, Telefon, E-Mail und Empfehlungen landen verstreut – manche bleiben einfach liegen.",
+    title: "Verpasste Anfragen",
+    text: "Anfragen aus Web, Telefon und E-Mail landen verstreut. Wer zu spät reagiert, verliert den Auftrag an die Konkurrenz.",
+    impact: "Verlorene Aufträge",
   },
   {
     icon: Clock,
-    title: "Offerten dauern zu lange",
-    text: "Manuelle Offerten kosten Stunden. Oft gewinnt der schnellste Anbieter den Auftrag – nicht zwingend der beste.",
+    title: "Zu späte Offerten",
+    text: "Manuelle Offerten kosten Stunden. Oft gewinnt schlicht der schnellste Anbieter – nicht der beste Betrieb.",
+    impact: "Tiefere Abschlussquote",
   },
   {
     icon: BellRing,
-    title: "Niemand fasst nach",
-    text: "Ohne konsequentes Follow-up bleibt bares Geld liegen. Die meisten Abschlüsse passieren erst nach mehreren Kontakten.",
+    title: "Vergessene Follow-ups",
+    text: "Die meisten Abschlüsse brauchen mehrere Kontakte. Ohne System bleibt planbarer Umsatz einfach liegen.",
+    impact: "Umsatz bleibt liegen",
   },
   {
     icon: Crosshair,
-    title: "Keine aktive Akquise",
-    text: "Neue B2B-Kunden wie Verwaltungen oder Praxen kommen nicht von allein. Wer nur wartet, wächst nicht.",
+    title: "Keine systematische B2B-Akquise",
+    text: "Verwaltungen, Praxen und Büros gewinnt man nicht durch Warten, sondern durch gezielte, konsequente Ansprache.",
+    impact: "Kein planbares Wachstum",
   },
 ];
 
@@ -33,7 +42,7 @@ export function ProblemSection() {
           align="center"
           eyebrow="Das Problem"
           title="Gute Reinigungsfirmen verlieren Aufträge – nicht wegen der Qualität."
-          description="Die Arbeit stimmt. Es hakt im Verkauf: bei Tempo, beim Nachfassen und bei der aktiven Akquise."
+          description="Die Arbeit stimmt. Es hakt im Verkauf: bei Tempo, beim Nachfassen und bei der aktiven Akquise neuer B2B-Kunden."
         />
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {PROBLEMS.map((problem) => {
@@ -41,7 +50,7 @@ export function ProblemSection() {
             return (
               <div
                 key={problem.title}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
               >
                 <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600 ring-1 ring-inset ring-amber-100">
                   <Icon className="h-5 w-5" strokeWidth={2} />
@@ -49,8 +58,12 @@ export function ProblemSection() {
                 <h3 className="mt-4 font-semibold text-navy-900">
                   {problem.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">
                   {problem.text}
+                </p>
+                <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  {problem.impact}
                 </p>
               </div>
             );

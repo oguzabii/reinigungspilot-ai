@@ -8,6 +8,7 @@ const NAV = [
   { label: "Pakete", href: "#pakete" },
   { label: "Add-ons", href: "#addons" },
   { label: "Vergleich", href: "#vergleich" },
+  { label: "Pilot", href: "#pilot" },
 ];
 
 export function SiteHeader() {
@@ -34,7 +35,7 @@ export function SiteHeader() {
           href="/demo"
           className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
         >
-          Live-Demo
+          Demo ansehen
           <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
         </Link>
       </div>

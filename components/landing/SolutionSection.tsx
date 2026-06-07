@@ -1,4 +1,11 @@
-import { Inbox, FileText, Gauge } from "lucide-react";
+import {
+  Crosshair,
+  Gauge,
+  FileText,
+  BellRing,
+  CalendarCheck,
+  ChartColumn,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { SectionHeader } from "@/components/SectionHeader";
 
@@ -10,21 +17,39 @@ const STEPS: {
 }[] = [
   {
     step: 1,
-    icon: Inbox,
-    title: "Leads sammeln & finden",
-    text: "Alle Anfragen landen zentral in der Inbox. Der AI Lead Hunter findet zusätzlich aktiv neue B2B-Kunden in Ihrer Region.",
+    icon: Crosshair,
+    title: "Leads finden",
+    text: "AI Lead Hunter & zentrale Inbox für alle Anfragen.",
   },
   {
     step: 2,
-    icon: FileText,
-    title: "Offerten & Follow-ups automatisch",
-    text: "Die Offerten-Engine berechnet Preise, erstellt PDF-Offerten und E-Mail-Entwürfe. Follow-ups werden automatisch getaktet.",
+    icon: Gauge,
+    title: "Leads bewerten",
+    text: "Automatisches Scoring nach Potenzial und Dringlichkeit.",
   },
   {
     step: 3,
-    icon: Gauge,
-    title: "Aufträge & Umsatz im Blick",
-    text: "Gewonnene Offerten werden zu geplanten Aufträgen. Das Chef-Dashboard zeigt Pipeline und erwarteten Umsatz.",
+    icon: FileText,
+    title: "Offerten erstellen",
+    text: "Preisvorschlag, PDF-Offerte und E-Mail in Minuten.",
+  },
+  {
+    step: 4,
+    icon: BellRing,
+    title: "Follow-up",
+    text: "24h-, 48h- und 5-Tage-Sequenzen automatisch getaktet.",
+  },
+  {
+    step: 5,
+    icon: CalendarCheck,
+    title: "Aufträge organisieren",
+    text: "Gewonnene Offerten werden zu geplanten Aufträgen.",
+  },
+  {
+    step: 6,
+    icon: ChartColumn,
+    title: "Umsatz reporten",
+    text: "Pipeline und Prognose im Chef-Dashboard.",
   },
 ];
 
@@ -35,29 +60,27 @@ export function SolutionSection() {
         <SectionHeader
           align="center"
           eyebrow="Die Lösung"
-          title="ReinigungsPilot AI übernimmt Ihr Verkaufsbüro."
-          description="Von der ersten Anfrage bis zum geplanten Auftrag – in einem System, sauber nach Paket gestaffelt."
+          title="Ein durchgängiger Verkaufsprozess – statt Zettelwirtschaft."
+          description="ReinigungsPilot AI führt jeden Lead durch denselben sauberen Ablauf: von der ersten Anfrage bis zum gewonnenen Auftrag und Umsatz-Report."
         />
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {STEPS.map((item) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.step}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
               >
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
                     <Icon className="h-5 w-5" strokeWidth={2} />
                   </span>
-                  <span className="text-sm font-semibold text-blue-600">
-                    Schritt {item.step}
+                  <span className="text-sm font-semibold text-slate-300 tabular-nums">
+                    {item.step.toString().padStart(2, "0")}
                   </span>
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-navy-900">
-                  {item.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                <h3 className="mt-4 font-semibold text-navy-900">{item.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
                   {item.text}
                 </p>
               </div>

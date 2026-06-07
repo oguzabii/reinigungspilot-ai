@@ -1,5 +1,6 @@
 "use client";
 
+import { Star } from "lucide-react";
 import type { PackageId } from "@/lib/packages";
 import { PACKAGE_LIST } from "@/lib/packages";
 import { cn } from "@/lib/cn";
@@ -30,9 +31,7 @@ export function PackageToggle({
       aria-label="Paket auswählen"
       className={cn(
         "inline-flex rounded-xl p-1 ring-1 ring-inset",
-        isDark
-          ? "bg-navy-950/40 ring-white/10"
-          : "bg-slate-100 ring-slate-200",
+        isDark ? "bg-navy-950/50 ring-white/10" : "bg-slate-100 ring-slate-200",
         className,
       )}
     >
@@ -46,17 +45,27 @@ export function PackageToggle({
             aria-selected={active}
             onClick={() => onChange(pkg.id)}
             className={cn(
-              "rounded-lg font-medium transition-colors",
+              "inline-flex items-center gap-1.5 rounded-lg font-semibold transition-colors",
               size === "sm" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm",
               active
-                ? "bg-white text-navy-900 shadow-sm"
+                ? "bg-white text-navy-900 shadow-sm ring-1 ring-black/5"
                 : isDark
                   ? "text-navy-100 hover:text-white"
                   : "text-slate-600 hover:text-navy-900",
             )}
           >
-            {pkg.name}
-            {suffix ? ` ${suffix}` : ""}
+            {suffix ? `${pkg.name} ${suffix}` : pkg.name}
+            {pkg.highlight && (
+              <Star
+                className={cn(
+                  "h-3 w-3",
+                  active
+                    ? "fill-amber-400 text-amber-400"
+                    : "fill-amber-300 text-amber-300",
+                )}
+                aria-hidden="true"
+              />
+            )}
           </button>
         );
       })}

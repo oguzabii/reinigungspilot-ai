@@ -141,18 +141,117 @@ zentral in `lib/packages.ts` und `lib/package-gates.ts`.
 - Kein Backend / keine echte Datenpersistenz
 - Keine öffentliche Clean24-Integration (interner Proof, getrennt)
 
+## Data Safety / Backup-Strategie
+
+**Aktueller Stand (v0.1.x):**
+
+- Reine Frontend-/Demo-Anwendung.
+- Speichert keine echten Kundendaten (nur lokale Seed-Daten).
+- Code ist über Git-Commits wiederherstellbar.
+- Deployment lässt sich später über Vercel zurückrollen (Rollback).
+- Echte Kundendaten dürfen erst live gehen, wenn eine Backup-/Recovery-Architektur existiert.
+
+**Produktionsanforderungen (vor echten Kundendaten):**
+
+- Vercel-Rollback für Code-/Deployment-Recovery
+- Supabase-Datenbank-Backups
+- Point-in-Time-Recovery (PITR) für die Produktion
+- Tägliche externe Exporte (ausserhalb von Supabase)
+- Backup-Strategie für Storage / Dateien
+- Dokumentierte und getestete Restore-Prozedur (Restore-Test)
+- Soft-Delete / Restore für Kundendaten
+- Audit-Log für kritische Aktionen
+
+## Security & Datenschutz-Anforderungen
+
+Bevor echte Kundendaten produktiv gehen, muss das System umsetzen:
+
+- Authentifizierter Zugriff (Login)
+- Rollenbasierte Berechtigungen (RBAC)
+- Mandantentrennung über `company_id`
+- Supabase Row Level Security (RLS)
+- Audit-Logs für kritische Aktionen
+- Soft-Delete / Restore
+- Eingabevalidierung (Input Validation)
+- Rate-Limiting für API-Routen
+- Sichere Webhook-Secrets
+- Security-Header / Content-Security-Policy (CSP)
+- Privater Storage mit signierten URLs (Signed URLs)
+- Beschränkung von Dateityp und Dateigrösse
+- Malware-/Viren-Scan-Strategie für Uploads
+- Verschlüsselte bexio-Tokens
+- Kein Logging von Secrets / Tokens
+- AI: menschliche Freigabe (Human-Approval) für riskante Aktionen
+
+> **Harte Regel: „No Security = No Customer Data."**
+> Kein echtes Kundenkonto, keine Firmendaten, kein bexio-Token, kein Datei-Upload und
+> keine echten Lead-/Offerten-/Auftragsdaten gehen live, bevor die Security- und
+> Backup-Architektur implementiert ist.
+
+## Lead-Hunter-Architektur
+
+Der AI Lead Hunter **scrapt nicht unkontrolliert das Internet**. Er ist eine
+kontrollierte Discovery- und Qualifizierungs-Pipeline:
+
+```
+Branchenvorlage → Zielregion → Ziel-Kundentyp → freigegebene Quelle/Provider
+→ Query-Generierung → Ergebnis-Normalisierung → Duplikatsprüfung → Anreicherung
+→ Lead-Scoring → Quellen-Tracking → Begründung/Erklärung → Nachrichten-Entwurf
+→ menschliche Freigabe → CRM-Pipeline
+```
+
+**Mögliche Datenquellen (Kandidaten, noch nicht implementiert):**
+
+- Manuelle Importe / CSV
+- Freigegebene öffentliche Branchenverzeichnisse
+- Google Places / Maps API
+- ZEFIX / Handelsregister-Validierung
+- Bestehende, kundeneigene Lead-Listen
+- Website-/Profil-Signale
+
+**Lead-Qualitätsfelder:**
+
+- `source` – Quelle
+- `searchQuery` – verwendete Suchanfrage
+- `category` – Kategorie
+- `regionMatch` – Regions-Übereinstimmung
+- `serviceFit` – Service-Passung
+- `score`
+- `confidence` – Konfidenz
+- `reason` – Begründung, warum relevant
+- `suggestedNextAction` – vorgeschlagene nächste Aktion
+- `approvalStatus` – Freigabestatus
+
+**Compliance-Regeln:**
+
+- Kein unkontrolliertes Scraping
+- Keine automatische Kaltakquise
+- Kein Bulk-Spam
+- Quelle muss gespeichert werden
+- Menschliche Freigabe vor ausgehenden Nachrichten
+- Opt-out / Abmeldung muss später behandelt werden
+
 ## Interne nächste Schritte
 
 **v0.1.5 (erledigt)** – finales visuelles QA, zentrale Kontaktadresse
 (`info@reinigungspilot.ai`), bereinigtes Wording sowie klarere Demo- und
 bexio-Texte.
 
-**Danach – genau EINER der beiden Wege, nicht beide gleichzeitig:**
+**v0.1.6 (erledigt)** – Produktions-Voraussetzungen dokumentiert: Data Safety /
+Backup-Strategie, Security & Datenschutz und Lead-Hunter-Architektur (siehe oben).
 
-- **Deploy / Visual Review:** Live-Deployment und visuelle Abnahme über alle Seiten (Desktop & Mobile), echtes E-Mail-Postfach `info@reinigungspilot.ai`, PDF-Export der Broschüre, Produktion des Erklärvideos.
-- **Phase 2 / Datenmodell:** Start des Backend-Fundaments (siehe unten), beginnend mit dem Supabase-Datenmodell.
+## Empfohlener nächster Schritt
 
-**Phase 2 (später)** – Backend-Fundament, separat freizugeben:
+Nach v0.1.6 genau **einen** Weg wählen, nicht beide gleichzeitig:
+
+- **A) Deploy / Visual Review** – Live-Deployment und visuelle Abnahme über alle Seiten (Desktop & Mobile), echtes E-Mail-Postfach `info@reinigungspilot.ai`, PDF-Export der Broschüre, Produktion des Erklärvideos.
+- **B) Phase 2 / Architektur-Plan** – Start des Backend-Fundaments (siehe unten), beginnend mit dem Supabase-Datenmodell.
+
+**Empfehlung: zuerst A (Deploy / Visual Review), danach B (Phase 2-Architektur).**
+
+## Phase 2 (später)
+
+Backend-Fundament, separat freizugeben:
 
 - Supabase-Datenmodell (Mehrmandantenfähigkeit pro KMU)
 - Authentifizierung

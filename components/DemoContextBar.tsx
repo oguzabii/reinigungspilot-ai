@@ -44,6 +44,10 @@ export function DemoContextBar({ pkg }: { pkg: PackageId }) {
               <span className="font-semibold">{DEMO_COMPANY.name}</span> mit
               ReinigungsPilot AI arbeiten.
             </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Demo zeigt die Branchenvorlage Reinigung. Weitere Branchenvorlagen
+              können bei der Einrichtung gewählt werden.
+            </p>
           </div>
         </div>
 

@@ -134,6 +134,10 @@ export function BexioHandoff({ pkg, onSelectPackage }: Props) {
             An bexio übergeben
           </button>
         </div>
+        <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+          ReinigungsPilot AI ersetzt bexio nicht – es bereitet die Übergabe vor.
+          Die API-Anbindung wird im produktiven Setup eingerichtet.
+        </p>
         {isPlus && (
           <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-blue-50/70 px-3 py-2 text-xs font-medium text-blue-800">
             <ReceiptText className="h-4 w-4" />

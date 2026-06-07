@@ -14,6 +14,7 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import { PageHero } from "@/components/PageHero";
 import { SectionHeader } from "@/components/SectionHeader";
 import { BERATUNG, BERATUNG_MAILTO } from "@/lib/beratung";
+import { CONTACT_EMAIL } from "@/lib/contact";
 import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = {
@@ -148,6 +149,15 @@ export default function BeratungPage() {
                 <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
               </Link>
             </div>
+            <p className="mt-4 text-sm text-navy-200">
+              oder direkt an{" "}
+              <a
+                href={BERATUNG_MAILTO}
+                className="font-medium text-white underline-offset-2 hover:underline"
+              >
+                {CONTACT_EMAIL}
+              </a>
+            </p>
           </div>
         </section>
       </main>

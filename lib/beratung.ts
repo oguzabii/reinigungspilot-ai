@@ -57,5 +57,4 @@ export const BERATUNG = {
   ] as string[],
 };
 
-export const BERATUNG_MAILTO =
-  "mailto:kontakt@reinigungspilot.ai?subject=Beratung%20-%20ReinigungsPilot%20AI";
+export { CONTACT_MAILTO as BERATUNG_MAILTO } from "./contact";

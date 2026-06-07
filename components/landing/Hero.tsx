@@ -12,7 +12,7 @@ export function Hero() {
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-blue-200 ring-1 ring-inset ring-white/15">
             <Sparkles className="h-3.5 w-3.5" />
-            KI-Vertriebsbüro · Schweiz
+            KI-Verkaufsbüro · Schweiz
           </span>
 
           <h1 className="mt-5 text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl">

@@ -13,7 +13,7 @@ import { PACKAGE_LIST } from "@/lib/packages";
 export const metadata: Metadata = {
   title: "Preise & Pakete – ReinigungsPilot AI",
   description:
-    "Transparente Preise für ReinigungsPilot AI: Starter, Pro und Premium mit exakten Limiten, plus flexible Add-ons. Demo ansehen oder Pilot anfragen.",
+    "Transparente Preise für ReinigungsPilot AI: Starter, Pro und Premium mit exakten Limiten, plus flexible Add-ons. Demo ansehen oder Beratung anfragen.",
 };
 
 export default function PricingPage() {

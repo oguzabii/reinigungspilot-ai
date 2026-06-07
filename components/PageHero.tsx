@@ -7,7 +7,7 @@ interface PageHeroProps {
   children?: ReactNode;
 }
 
-/** Compact dark page header used on public sub-pages (Pricing, Pilot, FAQ). */
+/** Compact dark page header used on public sub-pages (Pricing, Beratung, FAQ). */
 export function PageHero({ eyebrow, title, description, children }: PageHeroProps) {
   return (
     <section className="surface-hero">

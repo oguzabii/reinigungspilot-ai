@@ -7,11 +7,11 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.1.4** — Repositionierung auf Schweizer KMU plus bexio- und Video-Konzepte:
-Reinigung ist nur noch die erste Branchenvorlage, der öffentliche Pilot wurde
-durch eine Beratungsseite ersetzt, bexio Connect ist ab Pro Kernfunktion (Demo,
-keine echte API) und ein 1-Minuten-Erklärvideo ist als Konzept angelegt.
-Weiterhin reine, paketbasierte Frontend-Demo mit lokalen Demo-Daten.
+**v0.1.5** — Finales visuelles QA und Kontakt-Politur auf der KMU-Repositionierung:
+zentrale Kontaktadresse (`info@reinigungspilot.ai`, `lib/contact.ts`),
+bereinigte Wording-Reste, klarerer Demo-Hinweis (aktive Branchenvorlage
+Reinigung) und professionellere bexio-Übergabe-Texte. Weiterhin reine,
+paketbasierte Frontend-Demo mit lokalen Demo-Daten; Strategie wie in v0.1.4.
 
 ### Strategie
 
@@ -134,7 +134,7 @@ zentral in `lib/packages.ts` und `lib/package-gates.ts`.
 - Kein Supabase, keine Datenbank
 - Keine Authentifizierung / kein Login
 - Keine Zahlungen / kein Stripe
-- Kein E-Mail-Versand (Beratungs-CTA nutzt nur einen `mailto:`-Platzhalter `kontakt@reinigungspilot.ai`)
+- Kein E-Mail-Versand (Beratungs-CTA öffnet nur einen `mailto:`-Link an `info@reinigungspilot.ai`)
 - Keine externen APIs, keine AI-API-Aufrufe, kein Scraping
 - Keine echte bexio-API – die bexio-Übergabe ist nur eine Demo
 - Kein fertiges Video (Erklärvideo nur als Konzept/Storyboard)
@@ -143,15 +143,14 @@ zentral in `lib/packages.ts` und `lib/package-gates.ts`.
 
 ## Interne nächste Schritte
 
-**v0.1.4 (erledigt)** – Repositionierung auf Schweizer KMU, Branchenvorlagen,
-`/beratung` statt `/pilot`, bexio Connect ab Pro (Demo) und Video-Storyboard
-(`/video-script`).
+**v0.1.5 (erledigt)** – finales visuelles QA, zentrale Kontaktadresse
+(`info@reinigungspilot.ai`), bereinigtes Wording sowie klarere Demo- und
+bexio-Texte.
 
-**Nächster Schritt** – weiterhin reine Frontend- / Sales-Readiness-Arbeit:
+**Danach – genau EINER der beiden Wege, nicht beide gleichzeitig:**
 
-- Visuelles QA über alle Seiten (Desktop & Mobile)
-- Echte Kontaktdaten statt Platzhalter (`kontakt@reinigungspilot.ai`)
-- PDF-Export der Broschüre und Produktion des Erklärvideos (noch offen)
+- **Deploy / Visual Review:** Live-Deployment und visuelle Abnahme über alle Seiten (Desktop & Mobile), echtes E-Mail-Postfach `info@reinigungspilot.ai`, PDF-Export der Broschüre, Produktion des Erklärvideos.
+- **Phase 2 / Datenmodell:** Start des Backend-Fundaments (siehe unten), beginnend mit dem Supabase-Datenmodell.
 
 **Phase 2 (später)** – Backend-Fundament, separat freizugeben:
 

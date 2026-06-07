@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { CONTACT_EMAIL, CONTACT_MAILTO } from "@/lib/contact";
 
 export function SiteFooter() {
   return (
@@ -12,6 +13,15 @@ export function SiteFooter() {
               Das AI-Verkaufsbüro für Schweizer KMU – Anfragen bündeln, schneller
               offerieren, konsequent nachfassen und Aufträge an die Buchhaltung
               übergeben.
+            </p>
+            <p className="mt-3 text-sm text-navy-300">
+              Kontakt:{" "}
+              <a
+                href={CONTACT_MAILTO}
+                className="text-navy-100 transition-colors hover:text-white"
+              >
+                {CONTACT_EMAIL}
+              </a>
             </p>
           </div>
 

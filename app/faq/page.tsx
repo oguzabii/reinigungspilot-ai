@@ -66,10 +66,10 @@ export default function FaqPage() {
                 <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
               </Link>
               <Link
-                href="/pilot"
+                href="/beratung"
                 className="inline-flex items-center gap-1.5 rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
               >
-                Pilot anfragen
+                Beratung anfragen
               </Link>
             </div>
           </div>

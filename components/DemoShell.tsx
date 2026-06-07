@@ -29,6 +29,8 @@ import { MarketingAssistant } from "@/components/modules/MarketingAssistant";
 import { AddOnStore } from "@/components/modules/AddOnStore";
 import { PackageComparison } from "@/components/modules/PackageComparison";
 import { CustomerSuccess } from "@/components/modules/CustomerSuccess";
+import { IndustryPresets } from "@/components/modules/IndustryPresets";
+import { BexioHandoff } from "@/components/modules/BexioHandoff";
 
 export function DemoShell() {
   const [pkg, setPkg] = useState<PackageId>("pro");
@@ -39,6 +41,8 @@ export function DemoShell() {
     switch (activeView) {
       case "dashboard":
         return <BossDashboard pkg={pkg} onSelectPackage={setPkg} />;
+      case "industries":
+        return <IndustryPresets />;
       case "leadInbox":
         return <LeadInbox pkg={pkg} />;
       case "leadHunter":
@@ -49,6 +53,8 @@ export function DemoShell() {
         return <FollowUpCenter />;
       case "jobOrganizer":
         return <JobOrganizer pkg={pkg} onSelectPackage={setPkg} />;
+      case "bexio":
+        return <BexioHandoff pkg={pkg} onSelectPackage={setPkg} />;
       case "marketingAssistant":
         return <MarketingAssistant pkg={pkg} onSelectPackage={setPkg} />;
       case "addOns":

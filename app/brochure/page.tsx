@@ -9,7 +9,7 @@ import { PRODUCT_MODULES } from "@/lib/modules";
 import { PACKAGE_LIST, getPackageName } from "@/lib/packages";
 import { ADDONS } from "@/lib/addons";
 import type { AddOn } from "@/lib/addons";
-import { PILOT } from "@/lib/pilot";
+import { INDUSTRIES } from "@/lib/industries";
 import { NOT_INCLUDED_V1 } from "@/lib/scope";
 import { DEMO_SUCCESS_TIMELINE } from "@/lib/demo-data";
 import { formatChf, formatChfRange } from "@/lib/format";
@@ -17,7 +17,7 @@ import { formatChf, formatChfRange } from "@/lib/format";
 export const metadata: Metadata = {
   title: "Broschüre – ReinigungsPilot AI",
   description:
-    "Verkaufsbroschüre für ReinigungsPilot AI: Problem, Lösung, Module, Pakete, Pilotprogramm, Add-ons, 12-Monats-Plan und Abgrenzung.",
+    "Verkaufsbroschüre für ReinigungsPilot AI: Problem, Lösung, Branchenvorlagen, Module, Pakete, bexio, Add-ons, 12-Monats-Plan und Abgrenzung.",
 };
 
 function addonShort(a: AddOn): string {
@@ -94,6 +94,28 @@ export default function BrochurePage() {
             </p>
           </DocSection>
 
+          {/* Branchen */}
+          <DocSection title="Branchenvorlagen">
+            <p className="text-slate-600">
+              ReinigungsPilot AI ist für Schweizer KMU. Reinigung ist die erste
+              Branchenvorlage – weitere sind vorbereitet und werden beim Setup
+              angepasst.
+            </p>
+            <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+              {INDUSTRIES.map((industry) => (
+                <li
+                  key={industry.id}
+                  className="border-b border-slate-100 pb-2 text-sm last:border-0"
+                >
+                  <span className="font-semibold text-navy-900">
+                    {industry.label}
+                  </span>
+                  <span className="text-slate-500"> · {industry.tagline}</span>
+                </li>
+              ))}
+            </ul>
+          </DocSection>
+
           {/* Modules */}
           <DocSection title="Module">
             <ul className="space-y-3">
@@ -136,20 +158,13 @@ export default function BrochurePage() {
             </div>
           </DocSection>
 
-          {/* Pilot */}
-          <DocSection title="Pilotprogramm">
-            <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-5">
-              <p className="text-sm font-medium text-navy-900">
-                Für die ersten {PILOT.slots} Pilotfirmen:{" "}
-                {formatChf(PILOT.setupChf)} Einrichtung ·{" "}
-                {formatChf(PILOT.monthlyChf)} / Monat · {PILOT.durationDays} Tage
-                · danach {PILOT.afterPilot}.
-              </p>
-              <p className="mt-2 text-sm text-slate-600">
-                Persönliche Begleitung, klare Erfolgsmessung, kein automatischer
-                Vertrag. Der Pilotpreis ist kein öffentlicher Standardpreis.
-              </p>
-            </div>
+          {/* bexio */}
+          <DocSection title="bexio Connect">
+            <p className="text-slate-600">
+              Gewonnene Aufträge werden mit Kundendaten, Leistung und MwSt. an die
+              Buchhaltung übergeben – inklusive Rechnungsentwurf. bexio Connect ist
+              ab dem Pro-Paket enthalten, Premium bietet bexio Connect Plus.
+            </p>
           </DocSection>
 
           {/* Add-ons */}
@@ -207,11 +222,11 @@ export default function BrochurePage() {
                 <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
               </Link>
               <Link
-                href="/pilot"
+                href="/beratung"
                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
               >
                 <Check className="h-4 w-4" strokeWidth={2.2} />
-                Pilot anfragen
+                Beratung anfragen
               </Link>
             </div>
           </DocSection>

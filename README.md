@@ -1,16 +1,26 @@
 # ReinigungsPilot AI
 
-Das AI-Vertriebsbüro für Reinigungsfirmen in der Schweiz — der verkaufsstarke,
-paketbasierte Master-Demo-Foundation. Dieses Repository ist die **eigenständige,
-verkaufsfähige Produkt- und Demo-Basis** (nicht das bestehende Clean24-Projekt).
+Das AI-Verkaufsbüro für Schweizer KMU — der verkaufsstarke, paketbasierte
+Master-Demo-Foundation. Dieses Repository ist die **eigenständige,
+verkaufsfähige Produkt- und Demo-Basis**. Clean24 dient ausschliesslich als
+interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.1.3** — Copy Refinement + Sales Material Pack: verfeinerte deutsche
-Verkaufstexte über alle Seiten, ausgebautes Pilotprogramm, vertrauensbildende
-FAQ sowie zwei neue Seiten – ein internes Sales-Kit und eine Broschüren-Seite
-(Grundlage für ein späteres PDF). Weiterhin reine, paketbasierte Frontend-Demo
-mit lokalen Demo-Daten.
+**v0.1.4** — Repositionierung auf Schweizer KMU plus bexio- und Video-Konzepte:
+Reinigung ist nur noch die erste Branchenvorlage, der öffentliche Pilot wurde
+durch eine Beratungsseite ersetzt, bexio Connect ist ab Pro Kernfunktion (Demo,
+keine echte API) und ein 1-Minuten-Erklärvideo ist als Konzept angelegt.
+Weiterhin reine, paketbasierte Frontend-Demo mit lokalen Demo-Daten.
+
+### Strategie
+
+- **Positionierung:** AI-Verkaufsbüro für Schweizer KMU – Dienstleister, Handwerk, Reinigung, Umzug, Gartenbau, Hauswartung, Maler/Gipser, lokale Service-Betriebe.
+- **Reinigung = erste Branchenvorlage**, nicht das ganze Produkt (`lib/industries.ts`).
+- **Öffentlicher Pilot entfernt:** `/pilot` ist durch `/beratung` ersetzt.
+- **Clean24** ist interner Pilot/Proof – nicht öffentlich integriert, kein öffentlicher Case.
+- **bexio Connect** ab Pro, **bexio Connect Plus** ab Premium (Demo-Übergabe, echte API später).
+- Demo-Firma: **Muster Service GmbH**.
 
 ## Tech-Stack
 
@@ -32,16 +42,17 @@ npm run start    # Produktionsserver (nach build)
 
 ## Routen
 
-| Route          | Zweck                                                          |
-| -------------- | -------------------------------------------------------------- |
-| `/`            | Öffentliche Landingpage (Verkauf): Hero, Trust-Bar, Problem, Lösung (6 Schritte), Module, Pakete, Add-ons, Vergleich, 12-Monats-Plan, Pilot-CTA |
-| `/demo`        | Interaktive Sales-Demo mit Paketumschalter (Starter / Pro / Premium), Demo-Story und Modulansichten |
-| `/pricing`     | Preisseite: Pakete mit exakten Limiten, „Für wen geeignet?“, enthalten / nicht enthalten, Add-ons, Abgrenzung |
-| `/pilot`       | Pilotprogramm: Angebot, für wen (nicht), 60-Tage-Ablauf, Konditionen, Pilotgespräch-CTA |
-| `/faq`         | Häufige Fragen und Einwände (Accordion) |
-| `/brochure`    | Öffentliche Verkaufsbroschüre (Grundlage für späteres PDF): Problem, Lösung, Module, Pakete, Pilot, Add-ons, 12-Monats-Plan, Abgrenzung |
-| `/demo-script` | **Intern** (noindex): Gesprächsleitfaden für die Live-Demo – 5-Minuten-Flow, Paket-Pitches, Einwände, Pilot-Abschluss |
-| `/sales-kit`   | **Intern** (noindex): Positionierung, 30s-/2min-Pitch, Cold-E-Mails, Nachrichten, Telefonskript, Einwände, Abschlusssätze |
+| Route           | Zweck                                                        |
+| --------------- | ------------------------------------------------------------ |
+| `/`             | Öffentliche Landingpage: Hero, Trust-Bar, „In 1 Minute erklärt“, Problem, Lösung, Module, Pakete, Add-ons, Vergleich, 12-Monats-Plan, Beratungs-CTA |
+| `/demo`         | Interaktive Sales-Demo: Paketumschalter, Demo-Story, Branchenvorlagen, bexio-Übergabe und Modulansichten |
+| `/pricing`      | Preisseite: Pakete mit exakten Limiten, „Für wen geeignet?“, enthalten / nicht enthalten, Add-ons, Abgrenzung |
+| `/beratung`     | Beratungsseite (ersetzt `/pilot`): für wen, Ablauf, was wir prüfen, was Sie erhalten, Beratungs-CTA |
+| `/faq`          | Häufige Fragen und Einwände (Accordion), inkl. bexio & Branchen |
+| `/brochure`     | Öffentliche Verkaufsbroschüre (Grundlage für späteres PDF): Problem, Lösung, Branchen, Module, Pakete, bexio, Add-ons, 12-Monats-Plan, Abgrenzung |
+| `/demo-script`  | **Intern** (noindex): Gesprächsleitfaden für die Live-Demo – 5-Minuten-Flow, Paket-Pitches, Einwände, Abschluss |
+| `/sales-kit`    | **Intern** (noindex): Positionierung, Pitches, Cold-E-Mails, Nachrichten, Telefonskript, Einwände, Abschlusssätze |
+| `/video-script` | **Intern** (noindex): 60-Sekunden-Storyboard mit deutschem Voiceover für das geplante Erklärvideo |
 
 ## Architektur
 
@@ -51,11 +62,19 @@ sondern liegen in zentralen Config-Dateien.
 
 ```
 lib/
-  packages.ts        # Pakete (Starter/Pro/Premium): Preise + Limiten — Source of Truth
-  addons.ts          # Add-on-Katalog mit strukturierten Preisen
+  packages.ts        # Pakete (Starter/Pro/Premium): Preise + Limiten (inkl. bexio) — Source of Truth
   package-gates.ts   # Modul-Gating-Matrix (full | limited | locked) je Paket
   modules.ts         # Demo-Navigation + Modul-Metadaten (Marketing-Übersicht)
-  demo-data.ts       # Zentrale Seed-Daten (Muster Reinigung GmbH)
+  industries.ts      # Branchenvorlagen (Reinigung = erste Vorlage)
+  addons.ts          # Add-on-Katalog mit strukturierten Preisen
+  beratung.ts        # Beratungs-Inhalte (ersetzt Pilot)
+  faq.ts             # FAQ / Einwände
+  objections.ts      # Gemeinsame Einwandbehandlung (Demo-Skript + Sales-Kit)
+  sales-kit.ts       # Internes Sales-Kit (Pitches, E-Mails, Skripte)
+  brochure.ts        # Broschüren-Texte
+  video-script.ts    # 60-Sekunden-Video-Storyboard
+  scope.ts           # „Was nicht enthalten ist“
+  demo-data.ts       # Zentrale Seed-Daten (Muster Service GmbH) + bexio-Übergabe
   format.ts          # Deterministische CHF-/Zahlenformatierung (SSR-sicher)
   cn.ts              # className-Helper
 
@@ -70,8 +89,8 @@ app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
   icon.svg           # Favicon (Brand-Mark)
   page.tsx           # Landingpage
-  demo/page.tsx      # Demo-Dashboard
-  demo-script/page.tsx # Interner Demo-Leitfaden (noindex)
+  demo/  pricing/  beratung/  faq/  brochure/   # öffentliche Seiten
+  demo-script/  sales-kit/  video-script/       # interne Seiten (noindex)
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
 ```
 
@@ -94,6 +113,7 @@ Sales-Pipeline mit hervorgehobenem Zielknoten.
 | `advancedReports`    | locked  | limited | full    |
 | `landingPage`        | locked  | locked  | full    |
 | `b2bPipeline`        | locked  | locked  | full    |
+| `bexio`              | locked  | full    | full    |
 
 Gesperrte Module rendern eine `LockedFeature`-Upgrade-Ansicht; im Demo wechselt
 der Upgrade-Button direkt in das passende Paket.
@@ -103,40 +123,43 @@ der Upgrade-Button direkt in das passende Paket.
 | Paket   | Produktname        | Setup     | Monatlich | Fokus                                                                     |
 | ------- | ------------------ | --------- | --------- | ------------------------------------------------------------------------- |
 | Starter | AI Offer Büro      | CHF 2'490 | CHF 299   | Eingehende Leads, Preise, PDF-Offerten, Follow-ups                        |
-| **Pro** | AI Sales Autopilot | CHF 4'990 | CHF 599   | **Empfohlen** – Starter + AI Lead Hunter, Scoring, Aufträge, Chef-Report  |
-| Premium | AI Growth Office   | CHF 7'490 | CHF 999   | Pro + B2B-Pipeline, Landingpage, Strategie-Reports, höhere Limiten        |
+| **Pro** | AI Sales Autopilot | CHF 4'990 | CHF 599   | **Empfohlen** – Starter + AI Lead Hunter, Aufträge, bexio Connect, Chef-Report |
+| Premium | AI Growth Office   | CHF 7'490 | CHF 999   | Pro + bexio Connect Plus, B2B-Pipeline, Strategie-Reports, höhere Limiten |
 
 Erweiterbar über Add-ons (`lib/addons.ts`). Genaue Limiten und das Gating liegen
 zentral in `lib/packages.ts` und `lib/package-gates.ts`.
 
-## Bewusst NICHT enthalten (v0.1 / v0.1.1)
+## Bewusst NICHT enthalten
 
 - Kein Supabase, keine Datenbank
 - Keine Authentifizierung / kein Login
 - Keine Zahlungen / kein Stripe
-- Kein E-Mail-Versand (Pilot-CTA nutzt nur einen `mailto:`-Platzhalter `kontakt@reinigungspilot.ai`)
-- Keine externen APIs, keine AI-API-Aufrufe
+- Kein E-Mail-Versand (Beratungs-CTA nutzt nur einen `mailto:`-Platzhalter `kontakt@reinigungspilot.ai`)
+- Keine externen APIs, keine AI-API-Aufrufe, kein Scraping
+- Keine echte bexio-API – die bexio-Übergabe ist nur eine Demo
+- Kein fertiges Video (Erklärvideo nur als Konzept/Storyboard)
 - Kein Backend / keine echte Datenpersistenz
-- Keine Anbindung an Clean24 (bewusst getrenntes Produkt)
+- Keine öffentliche Clean24-Integration (interner Proof, getrennt)
 
 ## Interne nächste Schritte
 
-**v0.1.3 (erledigt)** – verfeinerte Verkaufstexte, ausgebautes Pilotprogramm,
-vertrauensbildende FAQ, internes Sales-Kit (`/sales-kit`) und Broschüren-Seite
-(`/brochure`).
+**v0.1.4 (erledigt)** – Repositionierung auf Schweizer KMU, Branchenvorlagen,
+`/beratung` statt `/pilot`, bexio Connect ab Pro (Demo) und Video-Storyboard
+(`/video-script`).
 
 **Nächster Schritt** – weiterhin reine Frontend- / Sales-Readiness-Arbeit:
 
 - Visuelles QA über alle Seiten (Desktop & Mobile)
 - Echte Kontaktdaten statt Platzhalter (`kontakt@reinigungspilot.ai`)
-- PDF-Export der Broschüre (noch offen)
+- PDF-Export der Broschüre und Produktion des Erklärvideos (noch offen)
 
 **Phase 2 (später)** – Backend-Fundament, separat freizugeben:
 
-- Supabase-Datenmodell (Mehrmandantenfähigkeit pro Reinigungsfirma)
+- Supabase-Datenmodell (Mehrmandantenfähigkeit pro KMU)
 - Authentifizierung
 - Echte Lead-Erfassung (Web-Formular, Postfach-Anbindung)
 - AI-Integration (Scoring, Offerttexte, Outreach, Content)
+- Echte bexio-Anbindung (sowie weitere Buchhaltung wie CashCtrl)
 - PDF-Generierung der Offerten
 - E-Mail-/Follow-up-Versand
 - Zahlungen & Abo-Verwaltung (Stripe), Limiten-Enforcement

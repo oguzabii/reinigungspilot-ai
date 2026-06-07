@@ -18,7 +18,7 @@ import { OBJECTIONS } from "@/lib/objections";
 export const metadata: Metadata = {
   title: "Demo-Skript (intern) – ReinigungsPilot AI",
   description:
-    "Interner Gesprächsleitfaden für die Live-Demo von ReinigungsPilot AI bei Reinigungsfirmen.",
+    "Interner Gesprächsleitfaden für die Live-Demo von ReinigungsPilot AI bei Schweizer KMU.",
   robots: { index: false, follow: false },
 };
 
@@ -61,8 +61,8 @@ const FLOW: FlowStep[] = [
   },
   {
     time: "4:30 – 5:00",
-    show: "Paketvergleich & Pilot-Abschluss",
-    say: "Mein Vorschlag: Sie starten als eine unserer Pilotfirmen mit dem Pro-Paket. Wir richten alles gemeinsam ein.",
+    show: "Paketvergleich & Abschluss",
+    say: "Mein Vorschlag: Wir prüfen in einer kurzen Beratung Ihren Verkaufsprozess und richten ReinigungsPilot AI – idealerweise mit dem Pro-Paket – für Ihren Betrieb ein.",
   },
 ];
 
@@ -91,7 +91,7 @@ export default function DemoScriptPage() {
         </h1>
         <p className="mt-3 text-base leading-relaxed text-slate-600">
           Gesprächsleitfaden, um ReinigungsPilot AI in rund 5 Minuten überzeugend
-          zu zeigen – immer am Beispiel der Muster Reinigung GmbH. Diese Seite ist
+          zu zeigen – immer am Beispiel der Muster Service GmbH. Diese Seite ist
           nur für den internen Gebrauch gedacht, nicht für Kunden.
         </p>
 
@@ -215,13 +215,13 @@ export default function DemoScriptPage() {
         </Section>
 
         {/* Close */}
-        <Section icon={Handshake} eyebrow="Abschluss" title="Mit dem Pilot-Angebot schliessen">
+        <Section icon={Handshake} eyebrow="Abschluss" title="Mit einem klaren nächsten Schritt schliessen">
           <div className="mt-2 rounded-2xl border border-blue-200 bg-blue-50/60 p-5">
             <p className="text-sm leading-relaxed text-navy-900">
-              Schliessen Sie immer mit einem klaren nächsten Schritt: dem
-              Pilotprogramm. „Wir nehmen aktuell wenige Reinigungsfirmen als
-              Pilotfirmen auf, richten alles gemeinsam ein und Sie erhalten
-              Vorzugskonditionen. Starten wir mit dem Pro-Paket?“
+              Schliessen Sie immer mit einem klaren nächsten Schritt: einer
+              kurzen, unverbindlichen Beratung oder einer Demo am eigenen
+              Beispiel. „Am besten schauen wir Ihren Verkaufsprozess gemeinsam an
+              – idealerweise mit dem Pro-Paket. Passt diese oder nächste Woche?“
             </p>
             <Link
               href="/demo"

@@ -2,19 +2,19 @@
  * Brochure narrative content.
  *
  * Sales-oriented prose for the (future-PDF) brochure at /brochure. Structured
- * lists (modules, packages, add-ons, pilot, scope, success plan) are pulled from
- * the existing central config — this file only holds the connecting copy.
+ * lists (industries, modules, packages, add-ons, scope, success plan) are pulled
+ * from the existing central config — this file only holds the connecting copy.
  */
 
 export const BROCHURE = {
   title: "ReinigungsPilot AI",
-  subtitle: "Das AI-Verkaufsbüro für Reinigungsfirmen in der Schweiz.",
+  subtitle: "Das AI-Verkaufsbüro für Schweizer KMU.",
   intro:
-    "ReinigungsPilot AI bündelt Anfragen, erstellt schneller Offerten und fasst konsequent nach – damit aus Anfragen planbar Aufträge werden. Die AI bereitet vor, entscheiden tun Sie.",
+    "ReinigungsPilot AI bündelt Anfragen, erstellt schneller Offerten, fasst konsequent nach und übergibt gewonnene Aufträge an die Buchhaltung. Reinigung ist die erste Branchenvorlage. Die AI bereitet vor, entscheiden tun Sie.",
 
   problemTitle: "Die Ausgangslage",
   problemText:
-    "Gute Reinigungsfirmen verlieren Aufträge nicht wegen der Qualität, sondern im Verkauf. Im Tagesgeschäft fehlt die Zeit für schnelle Offerten und konsequentes Nachfassen.",
+    "Gute KMU verlieren Aufträge nicht wegen der Qualität, sondern im Verkauf. Im Tagesgeschäft fehlt die Zeit für schnelle Offerten und konsequentes Nachfassen.",
   problems: [
     "Anfragen aus Web, Telefon und E-Mail gehen verloren",
     "Offerten dauern zu lange – der schnellste Anbieter gewinnt",
@@ -24,13 +24,14 @@ export const BROCHURE = {
 
   solutionTitle: "Die Lösung",
   solutionText:
-    "Ein durchgängiger Verkaufsprozess in einem System – von der Anfrage bis zum geplanten Auftrag und zum Umsatz-Report.",
+    "Ein durchgängiger Verkaufsprozess in einem System – von der Anfrage bis zur Übergabe an die Buchhaltung.",
   steps: [
     "Anfragen zentral sammeln",
     "Leads nach Potenzial bewerten",
     "Offerten in Minuten erstellen",
     "Automatisch nachfassen (24h / 48h / 5 Tage)",
     "Aufträge planen und organisieren",
+    "An die Buchhaltung (bexio) übergeben",
     "Umsatz im Chef-Dashboard verfolgen",
   ] as string[],
 
@@ -39,5 +40,5 @@ export const BROCHURE = {
 
   closingTitle: "Der nächste Schritt",
   closingText:
-    "Aktuell nehmen wir die ersten drei Pilotfirmen auf – 60 Tage, reduzierte Konditionen, persönliche Begleitung. Sehen Sie sich die Demo an oder melden Sie Ihr Interesse für ein Pilotgespräch.",
+    "Vereinbaren Sie eine unverbindliche Beratung oder sehen Sie sich die Demo an – wir prüfen gemeinsam, wie ReinigungsPilot AI zu Ihrem Betrieb passt.",
 };

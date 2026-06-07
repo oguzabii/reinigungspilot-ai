@@ -26,7 +26,7 @@ export const OBJECTIONS: Objection[] = [
   },
   {
     q: "„Das ist zu teuer.“",
-    a: "Rechnen wir es an Ihren Zahlen durch: Schon ein zusätzlicher Auftrag pro Monat deckt das Abo meist mehrfach. Im Pilot starten Sie zudem zu reduzierten Konditionen.",
+    a: "Rechnen wir es an Ihren Zahlen durch: Schon ein zusätzlicher Auftrag pro Monat deckt das Abo meist mehrfach. In einer kurzen Beratung machen wir die Rechnung konkret.",
   },
   {
     q: "„Wir haben keine Zeit für ein neues System.“",
@@ -34,6 +34,6 @@ export const OBJECTIONS: Objection[] = [
   },
   {
     q: "„Kann ich das auch einmalig kaufen?“",
-    a: "Nein, ReinigungsPilot AI ist ein laufender Service (Einrichtung plus monatliches Abo). So bleiben Betreuung, Optimierung und Updates enthalten. Der Einstieg läuft über das Pilotprogramm.",
+    a: "Nein, ReinigungsPilot AI ist ein laufender Service (Einrichtung plus monatliches Abo). So bleiben Betreuung, Optimierung und Updates enthalten. Den passenden Einstieg klären wir in einer kurzen Beratung.",
   },
 ];

@@ -5,6 +5,7 @@ const LINKS = [
   { label: "Demo", href: "/demo" },
   { label: "Demo-Skript", href: "/demo-script" },
   { label: "Sales-Kit", href: "/sales-kit" },
+  { label: "Video-Skript", href: "/video-script" },
 ];
 
 /** Header for internal (noindex) tool pages: demo script, sales kit. */

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
-import { DEMO_DASHBOARD, DEMO_LEADS } from "@/lib/demo-data";
+import { ArrowRight, Sparkles, Play } from "lucide-react";
+import { DEMO_DASHBOARD, DEMO_LEADS, DEMO_COMPANY } from "@/lib/demo-data";
 import { formatChf } from "@/lib/format";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { StatusBadge, leadStatusTone } from "@/components/StatusBadge";
@@ -16,13 +16,14 @@ export function Hero() {
           </span>
 
           <h1 className="mt-5 text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl">
-            Das AI-Verkaufsbüro für Reinigungsfirmen.
+            Das AI-Verkaufsbüro für Schweizer KMU.
           </h1>
 
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-navy-100">
-            ReinigungsPilot AI findet neue B2B-Kunden, qualifiziert Anfragen,
-            erstellt Offerten und übernimmt Follow-ups – damit aus Anfragen
-            planbar Aufträge werden, statt im Alltag unterzugehen.
+            Für Dienstleister, Handwerk und lokale Service-Betriebe:
+            ReinigungsPilot AI bündelt Anfragen, erstellt schneller Offerten,
+            fasst konsequent nach und übergibt gewonnene Aufträge an die
+            Buchhaltung.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -34,10 +35,11 @@ export function Hero() {
               <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
             </Link>
             <Link
-              href="/pilot"
+              href="#erklaert"
               className="inline-flex items-center gap-1.5 rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
             >
-              Pilotfirma werden
+              <Play className="h-4 w-4" strokeWidth={2.2} />
+              In 1 Minute erklärt
             </Link>
           </div>
 
@@ -48,7 +50,7 @@ export function Hero() {
           <p className="mt-2 text-sm text-navy-300">
             Demo-Unternehmen:{" "}
             <span className="font-medium text-navy-100">
-              Muster Reinigung GmbH
+              {DEMO_COMPANY.name}
             </span>{" "}
             · Region Zürich
           </p>

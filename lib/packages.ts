@@ -36,6 +36,8 @@ export interface PackageLimits {
   monthlyStrategyReport: boolean;
   /** Advanced B2B pipeline included. */
   advancedB2bPipeline: boolean;
+  /** bexio handover level: none | connect | plus. */
+  bexio: "none" | "connect" | "plus";
 }
 
 export interface PackageDef {
@@ -94,6 +96,7 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
       leadHunterProspects: 0,
       campaignLandingPages: 0,
       supportHoursPerMonth: 1,
+      bexio: "none",
       jobOrganizer: false,
       weeklyOwnerReport: false,
       monthlyStrategyReport: false,
@@ -106,19 +109,19 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
     productName: "AI Sales Autopilot",
     tagline: "Der Verkaufsmotor, der aktiv neue B2B-Kunden findet.",
     description:
-      "Alles aus Starter – plus AI Lead Hunter, Lead-Scoring, Outreach, Auftrags- und Kalenderplanung sowie ein wöchentlicher Chef-Report.",
+      "Alles aus Starter – plus AI Lead Hunter, Auftrags- und Kalenderplanung, bexio Connect und ein wöchentlicher Chef-Report.",
     audienceTag: "Beste Wahl",
     audience:
-      "Die beste Wahl für die meisten Reinigungsfirmen: für Betriebe, die aktiv neue B2B-Kunden gewinnen und ihren Verkauf systematisieren wollen.",
+      "Die beste Wahl für die meisten Service-Betriebe: für KMU, die aktiv neue B2B-Kunden gewinnen und ihren Verkauf systematisieren wollen.",
     setupChf: 4990,
     monthlyChf: 599,
     highlight: true,
     badge: "Beliebteste Wahl",
     focus: [
       "Alles aus Starter",
-      "AI Lead Hunter findet B2B-Kunden",
-      "Lead-Scoring & Outreach",
+      "AI Lead Hunter findet neue B2B-Kunden",
       "Auftrags- & Kalenderplanung",
+      "bexio Connect: Übergabe an die Buchhaltung",
       "Wöchentlicher Chef-Report",
     ],
     limits: {
@@ -132,6 +135,7 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
       leadHunterProspects: 100,
       campaignLandingPages: 0,
       supportHoursPerMonth: 2,
+      bexio: "connect",
       jobOrganizer: true,
       weeklyOwnerReport: true,
       monthlyStrategyReport: false,
@@ -144,7 +148,7 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
     productName: "AI Growth Office",
     tagline: "Das komplette Wachstumsbüro für ambitionierte Betriebe.",
     description:
-      "Alles aus Pro – plus erweiterte B2B-Pipeline, inklusive Kampagnen-Landingpage, Content- und Strategie-Reports sowie deutlich höhere Limiten.",
+      "Alles aus Pro – plus bexio Connect Plus, erweiterte B2B-Pipeline, Content- und Strategie-Reports sowie deutlich höhere Limiten.",
     audienceTag: "Für Wachstum & B2B",
     audience:
       "Für wachstumsorientierte Betriebe mit mehreren Teams und ehrgeiziger B2B-Expansion über mehrere Regionen.",
@@ -153,8 +157,8 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
     highlight: false,
     focus: [
       "Alles aus Pro",
+      "bexio Connect Plus",
       "Erweiterte B2B-Pipeline",
-      "Kampagnen-Landingpage inklusive",
       "Content- & Strategie-Reports",
       "Mehr Nutzer & höhere Limiten",
     ],
@@ -169,6 +173,7 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
       leadHunterProspects: 250,
       campaignLandingPages: 1,
       supportHoursPerMonth: 4,
+      bexio: "plus",
       jobOrganizer: true,
       weeklyOwnerReport: true,
       monthlyStrategyReport: true,

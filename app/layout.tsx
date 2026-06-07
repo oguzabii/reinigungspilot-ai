@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ReinigungsPilot AI – Das AI-Vertriebsbüro für Reinigungsfirmen",
+  title: "ReinigungsPilot AI – Das AI-Verkaufsbüro für Schweizer KMU",
   description:
-    "ReinigungsPilot AI findet neue B2B-Kunden, sammelt Anfragen, erstellt Offerten und plant Follow-ups und Aufträge – das verkaufsstarke AI-Büro für Reinigungsunternehmen in der Schweiz.",
+    "ReinigungsPilot AI bündelt Anfragen, erstellt Offerten, plant Follow-ups und Aufträge und übergibt sie an die Buchhaltung (bexio) – das AI-Verkaufsbüro für Schweizer KMU. Reinigung ist die erste Branchenvorlage.",
 };
 
 export default function RootLayout({

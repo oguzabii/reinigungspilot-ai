@@ -4,7 +4,7 @@ import { Logo } from "@/components/Logo";
 
 const NAV = [
   { label: "Preise", href: "/pricing" },
-  { label: "Pilot", href: "/pilot" },
+  { label: "Beratung", href: "/beratung" },
   { label: "FAQ", href: "/faq" },
 ];
 

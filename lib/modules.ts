@@ -22,6 +22,8 @@ import {
   ChartColumn,
   Workflow,
   Globe,
+  Layers,
+  PlugZap,
 } from "lucide-react";
 import type { ModuleId } from "./package-gates";
 import type { PackageId } from "./packages";
@@ -29,11 +31,13 @@ import { PACKAGE_ORDER } from "./packages";
 
 export type DemoViewId =
   | "dashboard"
+  | "industries"
   | "leadInbox"
   | "leadHunter"
   | "offerEngine"
   | "followUp"
   | "jobOrganizer"
+  | "bexio"
   | "marketingAssistant"
   | "addOns"
   | "comparison"
@@ -62,6 +66,13 @@ export const DEMO_VIEWS: DemoView[] = [
     label: "Chef-Dashboard",
     description: "Überblick über Leads, Offerten, Follow-ups und Umsatz.",
     icon: Gauge,
+    group: "Überblick",
+  },
+  {
+    id: "industries",
+    label: "Branchenvorlagen",
+    description: "Vorlagen je Branche – Reinigung, Umzug, Handwerk und mehr.",
+    icon: Layers,
     group: "Überblick",
   },
   {
@@ -103,6 +114,14 @@ export const DEMO_VIEWS: DemoView[] = [
     icon: CalendarCheck,
     group: "Betrieb",
     gate: "jobOrganizer",
+  },
+  {
+    id: "bexio",
+    label: "bexio Übergabe",
+    description: "Gewonnene Aufträge an die Buchhaltung übergeben.",
+    icon: PlugZap,
+    group: "Betrieb",
+    gate: "bexio",
   },
   {
     id: "marketingAssistant",
@@ -199,6 +218,14 @@ export const PRODUCT_MODULES: ProductModule[] = [
     description:
       "Wöchentlicher Überblick für die Inhaberin oder den Inhaber: Leads, Conversion, Umsatz und nächste Schritte.",
     icon: ChartColumn,
+    availableFrom: "pro",
+  },
+  {
+    id: "bexio",
+    label: "bexio Connect",
+    description:
+      "Gewonnene Aufträge mit Kundendaten, Leistung und MwSt. an die Buchhaltung übergeben – Rechnungsentwurf inklusive.",
+    icon: PlugZap,
     availableFrom: "pro",
   },
   {

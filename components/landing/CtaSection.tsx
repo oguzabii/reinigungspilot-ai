@@ -1,30 +1,30 @@
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 
-const PILOT_POINTS = [
-  "Früher Zugang zu ReinigungsPilot AI",
-  "Enge Begleitung beim Setup & Go-Live",
-  "Vorzugskonditionen als Pilotfirma",
+const POINTS = [
+  "Unverbindlich & kostenlos",
+  "Demo an Ihrem Beispiel",
+  "Empfehlung für das passende Paket",
 ];
 
 export function CtaSection() {
   return (
-    <section id="pilot" className="surface-hero">
+    <section id="beratung" className="surface-hero">
       <div className="mx-auto max-w-4xl px-4 py-20 text-center lg:px-6">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-blue-200 ring-1 ring-inset ring-white/15">
-          Pilotprogramm
+          Beratung
         </span>
         <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          Werden Sie eine unserer Pilotfirmen.
+          Prüfen wir gemeinsam, ob es zu Ihrem Betrieb passt.
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-navy-100">
-          Wir nehmen eine begrenzte Zahl von Reinigungsfirmen ins Pilotprogramm
-          auf und richten ReinigungsPilot AI gemeinsam auf Ihren Betrieb ein.
-          Sehen Sie zuerst die Demo – oder melden Sie direkt Ihr Interesse an.
+          In einer kurzen, unverbindlichen Beratung schauen wir uns Ihren
+          Verkaufsprozess an und zeigen ReinigungsPilot AI an Ihrem Beispiel – mit
+          der passenden Branchenvorlage.
         </p>
 
         <ul className="mx-auto mt-6 flex max-w-2xl flex-wrap justify-center gap-x-6 gap-y-2">
-          {PILOT_POINTS.map((point) => (
+          {POINTS.map((point) => (
             <li
               key={point}
               className="inline-flex items-center gap-1.5 text-sm text-navy-100"
@@ -37,10 +37,10 @@ export function CtaSection() {
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
-            href="/pilot"
+            href="/beratung"
             className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
           >
-            Pilot anfragen
+            Beratung anfragen
             <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
           </Link>
           <Link

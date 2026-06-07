@@ -41,7 +41,7 @@ export function ProblemSection() {
         <SectionHeader
           align="center"
           eyebrow="Das Problem"
-          title="Gute Reinigungsfirmen verlieren Aufträge – nicht wegen der Qualität."
+          title="Gute Betriebe verlieren Aufträge – nicht wegen der Qualität."
           description="Die Arbeit stimmt. Es hakt im Verkauf: bei Tempo, beim Nachfassen und bei der aktiven Akquise neuer B2B-Kunden."
         />
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

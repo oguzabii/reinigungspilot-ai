@@ -28,6 +28,11 @@ const ROWS: Row[] = [
       l.leadHunterProspects > 0 ? formatNumber(l.leadHunterProspects) : false,
   },
   { label: "Auftrags- & Kalenderplanung", value: (l) => l.jobOrganizer },
+  {
+    label: "bexio Connect",
+    value: (l) =>
+      l.bexio === "none" ? false : l.bexio === "plus" ? "Connect Plus" : "Connect",
+  },
   { label: "Wöchentlicher Chef-Report", value: (l) => l.weeklyOwnerReport },
   { label: "Monatlicher Strategie-Report", value: (l) => l.monthlyStrategyReport },
   { label: "Erweiterte B2B-Pipeline", value: (l) => l.advancedB2bPipeline },

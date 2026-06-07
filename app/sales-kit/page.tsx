@@ -34,7 +34,7 @@ export default function SalesKitPage() {
           Sales-Kit
         </h1>
         <p className="mt-3 text-base leading-relaxed text-slate-600">
-          Kopierfertige Verkaufsmaterialien für Gespräche mit Reinigungsfirmen.
+          Kopierfertige Verkaufsmaterialien für Gespräche mit Schweizer KMU.
           Nur für den internen Gebrauch. Tipp: Text markieren und kopieren,
           Platzhalter wie [Name] und [Firma] ersetzen.
         </p>

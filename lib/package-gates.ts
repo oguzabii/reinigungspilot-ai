@@ -23,7 +23,8 @@ export type ModuleId =
   | "marketingAssistant"
   | "advancedReports"
   | "landingPage"
-  | "b2bPipeline";
+  | "b2bPipeline"
+  | "bexio";
 
 export type ModuleAccess = "full" | "limited" | "locked";
 
@@ -37,6 +38,7 @@ export const MODULE_GATES: Record<ModuleId, Record<PackageId, ModuleAccess>> = {
   advancedReports: { starter: "locked", pro: "limited", premium: "full" },
   landingPage: { starter: "locked", pro: "locked", premium: "full" },
   b2bPipeline: { starter: "locked", pro: "locked", premium: "full" },
+  bexio: { starter: "locked", pro: "full", premium: "full" },
 };
 
 export function getModuleAccess(pkg: PackageId, moduleId: ModuleId): ModuleAccess {

@@ -25,7 +25,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Wem gehören die Daten?",
-    a: "Ihre Daten gehören Ihnen – Kunden, Offerten und Aufträge. Sie werden nicht verkauft und nicht für andere Betriebe verwendet. Im Pilotprogramm dürfen wir ausschliesslich anonymisierte, nicht personenbezogene Erkenntnisse zur Produktverbesserung nutzen; Ihre konkreten Kundendaten bleiben aussen vor.",
+    a: "Ihre Daten gehören Ihnen – Kunden, Offerten und Aufträge. Sie werden nicht verkauft und nicht für andere Betriebe verwendet. Zur Produktverbesserung nutzen wir ausschliesslich anonymisierte, nicht personenbezogene Erkenntnisse; Ihre konkreten Kundendaten bleiben aussen vor.",
   },
   {
     q: "Was passiert nach der Einrichtung?",
@@ -45,7 +45,23 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Kann ich das auch einmalig kaufen?",
-    a: "Nein. ReinigungsPilot AI ist ein laufender Service: einmalige Einrichtung plus monatliches Abo. So sind Betreuung, Optimierung und Updates dauerhaft enthalten – statt einer Software, die nach dem Kauf veraltet. Den günstigen Einstieg bietet das Pilotprogramm.",
+    a: "Nein. ReinigungsPilot AI ist ein laufender Service: einmalige Einrichtung plus monatliches Abo. So sind Betreuung, Optimierung und Updates dauerhaft enthalten – statt einer Software, die nach dem Kauf veraltet. Den passenden Einstieg klären wir in einer kurzen Beratung.",
+  },
+  {
+    q: "Ersetzt das System bexio?",
+    a: "Nein. ReinigungsPilot AI ersetzt Ihre Buchhaltung nicht. Es übergibt gewonnene Aufträge mit Kundendaten, Leistung und MwSt. an bexio und erstellt dort einen Rechnungsentwurf – gebucht wird wie gewohnt in bexio.",
+  },
+  {
+    q: "Ist bexio im Pro-Paket enthalten?",
+    a: "Ja. bexio Connect ist ab dem Pro-Paket enthalten, Premium bietet bexio Connect Plus mit erweitertem Funktionsumfang. Im Starter ist die bexio-Übergabe nicht enthalten.",
+  },
+  {
+    q: "Was, wenn ich CashCtrl nutze?",
+    a: "Aktuell konzentrieren wir uns auf die bexio-Anbindung. Weitere Buchhaltungslösungen wie CashCtrl sind für später geplant – sprechen Sie uns in der Beratung darauf an.",
+  },
+  {
+    q: "Muss ich meine Buchhaltung wechseln?",
+    a: "Nein. Sie behalten Ihre Buchhaltung. ReinigungsPilot AI liefert die Auftragsdaten sauber an bexio – ein Wechsel Ihrer Buchhaltung ist nicht nötig.",
   },
   {
     q: "Kann ich später upgraden?",
@@ -56,8 +72,12 @@ export const FAQ_ITEMS: FaqItem[] = [
     a: "Das Abo läuft monatlich. Bei einer Kündigung endet der Zugang zum Ende der laufenden Periode; Ihre Daten stellen wir Ihnen vorher zur Verfügung.",
   },
   {
-    q: "Ist das nur für Umzugsreinigung?",
-    a: "Nein. ReinigungsPilot AI ist für Reinigungsfirmen allgemein gedacht: Unterhalts-, Büro-, Praxis-, Treppenhaus-, Bau- und Umzugsreinigung. Umzugsreinigung ist nur eines von vielen Beispielen.",
+    q: "Ist das nur für Reinigungsfirmen?",
+    a: "Nein. ReinigungsPilot AI ist ein AI-Verkaufsbüro für Schweizer KMU – Dienstleister, Handwerk, Umzug, Gartenbau, Hauswartung, Maler/Gipser und mehr. Reinigung ist unsere erste Branchenvorlage, nicht das ganze Produkt.",
+  },
+  {
+    q: "Wie wird das System pro Branche eingerichtet?",
+    a: "Über Branchenvorlagen. Für jede Branche sind typische Leads, Offertfelder, Follow-ups und Abläufe vorkonfiguriert. Beim Setup passen wir die passende Vorlage an Ihren Betrieb an.",
   },
   {
     q: "Kann das System meine bestehenden Preise übernehmen?",

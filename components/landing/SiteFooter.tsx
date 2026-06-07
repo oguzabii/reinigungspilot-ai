@@ -9,9 +9,9 @@ export function SiteFooter() {
           <div className="md:col-span-2">
             <Logo variant="light" />
             <p className="mt-3 max-w-sm text-sm text-navy-300">
-              Das AI-Vertriebsbüro für Reinigungsfirmen in der Schweiz – Leads
-              finden, Offerten erstellen und Aufträge gewinnen, ohne Zeit im Büro
-              zu verlieren.
+              Das AI-Verkaufsbüro für Schweizer KMU – Anfragen bündeln, schneller
+              offerieren, konsequent nachfassen und Aufträge an die Buchhaltung
+              übergeben.
             </p>
           </div>
 
@@ -29,8 +29,8 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/pilot" className="transition-colors hover:text-white">
-                  Pilot
+                <Link href="/beratung" className="transition-colors hover:text-white">
+                  Beratung
                 </Link>
               </li>
               <li>
@@ -52,7 +52,7 @@ export function SiteFooter() {
           <div>
             <p className="text-sm font-semibold text-white">Demo-Unternehmen</p>
             <ul className="mt-3 space-y-2 text-sm">
-              <li className="font-medium text-white">Muster Reinigung GmbH</li>
+              <li className="font-medium text-white">Muster Service GmbH</li>
               <li>Region Zürich</li>
               <li>Starter · Pro · Premium</li>
             </ul>

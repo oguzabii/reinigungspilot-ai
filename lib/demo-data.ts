@@ -2,15 +2,15 @@
  * Central demo seed data for ReinigungsPilot AI.
  *
  * Everything here is local, fictional demo data for the sales demo of the
- * example company "Muster Reinigung GmbH". No external sources.
+ * example company "Muster Service GmbH". No external sources.
  */
 
 export const DEMO_COMPANY = {
-  name: "Muster Reinigung GmbH",
+  name: "Muster Service GmbH",
   owner: "Daniel Muster",
   ownerRole: "Inhaber",
   region: "Zürich & Umgebung",
-  initials: "MR",
+  initials: "MS",
 };
 
 /* -------------------------------------------------------------------------- */
@@ -359,7 +359,7 @@ export const DEMO_OFFERS: OfferDraft[] = [
         "Im Anhang finden Sie unsere Offerte für die Unterhaltsreinigung von Treppenhaus, Eingang und Lift Ihrer Liegenschaft in Dübendorf. Wir arbeiten mit einem festen Team und einem digitalen Übergabeprotokoll, damit die Qualität jederzeit nachvollziehbar bleibt.",
         "Gerne vereinbaren wir einen kurzen Besichtigungstermin, um letzte Details abzustimmen. Passt Ihnen ein Termin in der nächsten Woche?",
       ],
-      signature: "Freundliche Grüsse\nDaniel Muster\nMuster Reinigung GmbH",
+      signature: "Freundliche Grüsse\nDaniel Muster\nMuster Service GmbH",
     },
   },
   {
@@ -405,7 +405,7 @@ export const DEMO_OFFERS: OfferDraft[] = [
         "Anbei erhalten Sie unsere Offerte für die wöchentliche Treppenhausreinigung Ihrer Liegenschaft in Zürich-Oerlikon inklusive Kellerabgänge und Waschküche.",
         "Wir würden gerne mit einer kurzen Erstbegehung starten. Wann passt es Ihnen am besten?",
       ],
-      signature: "Freundliche Grüsse\nDaniel Muster\nMuster Reinigung GmbH",
+      signature: "Freundliche Grüsse\nDaniel Muster\nMuster Service GmbH",
     },
   },
   {
@@ -447,7 +447,7 @@ export const DEMO_OFFERS: OfferDraft[] = [
         "Im Anhang finden Sie unsere Offerte für die Reinigung von Gastraum, Sanitär und Küche nach Betriebsschluss. So bleibt Ihr Lokal jeden Morgen einladend sauber.",
         "Melden Sie sich gerne, falls Sie Anpassungen am Rhythmus wünschen.",
       ],
-      signature: "Freundliche Grüsse\nDaniel Muster\nMuster Reinigung GmbH",
+      signature: "Freundliche Grüsse\nDaniel Muster\nMuster Service GmbH",
     },
   },
 ];
@@ -898,3 +898,46 @@ export const DEMO_SUCCESS_TIMELINE: SuccessMonth[] = [
       "Verlängerung mit Treue-Konditionen und Ausblick auf das nächste Wachstumsjahr.",
   },
 ];
+
+/* -------------------------------------------------------------------------- */
+/* bexio handover (demo only — no real API)                                   */
+/* -------------------------------------------------------------------------- */
+
+export interface BexioHandoff {
+  jobId: string;
+  company: string;
+  contact: string;
+  service: string;
+  location: string;
+  netChf: number;
+  vatRatePct: number;
+  vatChf: number;
+  grossChf: number;
+  customer: { address: string; email: string; uid: string };
+  steps: { label: string; done: boolean }[];
+  invoiceDraftRef: string;
+}
+
+export const DEMO_BEXIO_HANDOFF: BexioHandoff = {
+  jobId: "job-2",
+  company: "Helvetia Immobilien AG",
+  contact: "Frau Keller",
+  service: "Unterhaltsreinigung Treppenhaus & Eingang",
+  location: "Dübendorf",
+  netChf: 2600,
+  vatRatePct: 8.1,
+  vatChf: 211,
+  grossChf: 2811,
+  customer: {
+    address: "Bahnhofstrasse 12, 8600 Dübendorf",
+    email: "buchhaltung@helvetia-immobilien.ch",
+    uid: "CHE-123.456.789 MWST",
+  },
+  steps: [
+    { label: "Auftrag angenommen", done: true },
+    { label: "Kundendaten vollständig", done: true },
+    { label: "Leistung, Preis & MwSt. erfasst", done: true },
+    { label: "Buchhaltung bereit", done: true },
+  ],
+  invoiceDraftRef: "RE-2026-0087",
+};

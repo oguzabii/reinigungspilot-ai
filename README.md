@@ -7,14 +7,21 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.1.7** — Public-Rebrand auf **Klarsa** plus Mobile-Politur: neuer Markenname,
-Logo (`public/brand/klarsa-logo.png`) und „K"-Favicon, Kontakt `info@klarsa.ch`,
-Positionierung „Das KI-Verkaufsbüro für Schweizer KMU" sowie verbesserte
-responsive Layouts. Weiterhin reine, paketbasierte Frontend-Demo mit lokalen
-Demo-Daten.
+**v0.2.0** — Start von **Klarsa Core** als Multi-Tenant-SaaS (Architektur-Phase).
+Dieser Schritt liefert **nur Dokumentation, Typen und ein statisches Skelett** —
+**kein** Backend: kein Supabase, kein Auth, keine bexio-API, kein E-Mail-Versand,
+kein Scraping, keine echten Kundendaten. Neu: Architektur-Docs unter `docs/`,
+Core-Typen (`lib/klarsa-core-types.ts`), Erst-Tenant-Config
+(`lib/tenant-clean24.ts`) und die interne Foundation-Seite `/workspace`.
+**Clean24 Memis GmbH** ist der **erste Tenant / Live-Proof** in Klarsa. Die
+verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert bestehen.
 
 > Öffentliche Marke = **Klarsa**. Das interne Repo/Paket heisst weiterhin
-> `reinigungspilot-ai`.
+> `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
+> ein **getrenntes** System und wird nicht eingebunden.
+
+> **Nächster Schritt:** v0.2.1 — Supabase-Schema-Fundament (Tabellen + RLS +
+> Soft-Delete + Audit). **Keine echten Daten** vor Auth, RLS, Security und Backup.
 
 ### Strategie
 
@@ -56,6 +63,7 @@ npm run start    # Produktionsserver (nach build)
 | `/demo-script`  | **Intern** (noindex): Gesprächsleitfaden für die Live-Demo – 5-Minuten-Flow, Paket-Pitches, Einwände, Abschluss |
 | `/sales-kit`    | **Intern** (noindex): Positionierung, Pitches, Cold-E-Mails, Nachrichten, Telefonskript, Einwände, Abschlusssätze |
 | `/video-script` | **Intern** (noindex): 60-Sekunden-Storyboard mit deutschem Voiceover für das geplante Erklärvideo |
+| `/workspace`    | **Intern** (noindex): Klarsa App Foundation – Architektur-Plan, Clean24 als erster Tenant, geplante Module. Noch kein Login, keine echten Kundendaten |
 
 ## Architektur
 
@@ -80,6 +88,9 @@ lib/
   demo-data.ts       # Zentrale Seed-Daten (Muster Service GmbH) + bexio-Übergabe
   format.ts          # Deterministische CHF-/Zahlenformatierung (SSR-sicher)
   cn.ts              # className-Helper
+  # Klarsa Core (Phase 2, nur Typen/Config — kein Backend):
+  klarsa-core-types.ts # Multi-Tenant-Domänentypen (Plan, vgl. docs/data-model.md)
+  tenant-clean24.ts    # Erst-Tenant-Config: Clean24 Memis GmbH (ohne Secrets/echte Daten)
 
 components/          # Wiederverwendbare UI-Bausteine
   PackageToggle, PackageCard, LockedFeature, DashboardMetricCard,
@@ -94,7 +105,12 @@ app/
   page.tsx           # Landingpage
   demo/  pricing/  beratung/  faq/  brochure/   # öffentliche Seiten
   demo-script/  sales-kit/  video-script/       # interne Seiten (noindex)
+  workspace/         # interne Klarsa-App-Foundation (noindex, statisch)
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
+
+docs/                # Klarsa Core Architektur-Plan (Phase 2)
+  phase-2-architecture.md  data-model.md  security-architecture.md
+  lead-hunter-engine.md    bexio-architecture.md
 ```
 
 Das Original-Logo liegt unter `public/brand/klarsa-logo.png`. Eingebunden wird
@@ -235,6 +251,34 @@ Branchenvorlage → Zielregion → Ziel-Kundentyp → freigegebene Quelle/Provid
 - Menschliche Freigabe vor ausgehenden Nachrichten
 - Opt-out / Abmeldung muss später behandelt werden
 
+## Klarsa Core (Phase 2) — Multi-Tenant-Plan
+
+Ab **v0.2.0** beginnt das echte Core-System: **Klarsa als Multi-Tenant-SaaS** für
+Schweizer KMU. Viele Firmen (Tenants) teilen sich Anwendung und Datenbank, sind
+aber strikt über `company_id` getrennt (Supabase RLS).
+
+- **Clean24 Memis GmbH = erster Tenant / Live-Proof** (Branche Reinigung, Schweiz).
+  Typisierte Erst-Config: [`lib/tenant-clean24.ts`](lib/tenant-clean24.ts).
+- **Abgrenzung:** Der alte, eigenständige **Clean24 Lead Autopilot** bleibt ein
+  **getrenntes** System — keine Migration, kein Import, keine Kopplung.
+- **Core-Typen:** [`lib/klarsa-core-types.ts`](lib/klarsa-core-types.ts) (Plan,
+  vgl. Datenmodell).
+- **Foundation-Seite:** `/workspace` (intern, statisch) — zeigt Plan + Tenant +
+  Module, mit Warnung „Noch kein Login, keine echten Kundendaten."
+
+**Architektur-Dokumentation** (`docs/`):
+
+| Dokument | Inhalt |
+| --- | --- |
+| [phase-2-architecture.md](docs/phase-2-architecture.md) | Multi-Tenant-Überblick, Clean24 als Tenant, Module, Implementierungsphasen |
+| [data-model.md](docs/data-model.md) | 20 geplante Tabellen, `company_id`-Strategie, Soft-Delete/Audit |
+| [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
+| [lead-hunter-engine.md](docs/lead-hunter-engine.md) | Kontrollierte Discovery-Pipeline mit Human-Approval |
+| [bexio-architecture.md](docs/bexio-architecture.md) | Connect/Connect Plus, verschlüsselte Tokens, Handoff-Queue |
+
+> Reihenfolge ist verbindlich: **keine echten Kundendaten** vor Auth, RLS,
+> Audit-Logs und getesteter Backup-/Restore-Architektur.
+
 ## Interne nächste Schritte
 
 **v0.1.5 (erledigt)** – finales visuelles QA, zentrale Kontaktadresse
@@ -247,26 +291,37 @@ Backup-Strategie, Security & Datenschutz und Lead-Hunter-Architektur (siehe oben
 **v0.1.7 (erledigt)** – Public-Rebrand auf **Klarsa** (Marke, Logo, „K"-Favicon,
 Kontakt `info@klarsa.ch`, Positionierung „KI-Verkaufsbüro") und Mobile-Politur.
 
+**v0.2.0 (erledigt)** – Start von **Klarsa Core**: Architektur-Docs (`docs/`),
+Core-Typen, Erst-Tenant-Config (Clean24), `/workspace`-Foundation. Nur Doku/Typen/
+Skelett — kein Backend.
+
+**v0.2.1 (nächster Schritt)** – **Supabase-Schema-Fundament**: Tabellen + RLS +
+Soft-Delete + `audit_logs` gemäss `docs/data-model.md` und
+`docs/security-architecture.md`. Migrationen ohne echte Daten.
+
 ## Empfohlener nächster Schritt
 
-Nach v0.1.6 genau **einen** Weg wählen, nicht beide gleichzeitig:
+Der **Architektur-Plan (B)** ist mit v0.2.0 gestartet (siehe `docs/`). Parallel
+bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment,
+echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-- **A) Deploy / Visual Review** – Live-Deployment und visuelle Abnahme über alle Seiten (Desktop & Mobile), echtes E-Mail-Postfach `info@klarsa.ch`, PDF-Export der Broschüre, Produktion des Erklärvideos.
-- **B) Phase 2 / Architektur-Plan** – Start des Backend-Fundaments (siehe unten), beginnend mit dem Supabase-Datenmodell.
+**Empfehlung:** als Nächstes **v0.2.1 — Supabase-Schema-Fundament** (Tabellen +
+RLS + Soft-Delete + Audit), strikt nach dem Datenmodell. Erst danach Auth und
+schrittweise echte Tenant-Daten von Clean24 — nie vor der Security-/Backup-Basis.
 
-**Empfehlung: zuerst A (Deploy / Visual Review), danach B (Phase 2-Architektur).**
+## Phase 2 — Klarsa Core (Plan dokumentiert)
 
-## Phase 2 (später)
+Das Backend-Fundament ist als Architektur-Plan dokumentiert (`docs/`, siehe
+„Klarsa Core" oben). Umsetzung schrittweise und separat freizugeben:
 
-Backend-Fundament, separat freizugeben:
-
-- Supabase-Datenmodell (Mehrmandantenfähigkeit pro KMU)
-- Authentifizierung
+- Supabase-Datenmodell (Multi-Tenant pro KMU) — `docs/data-model.md`
+- Authentifizierung, RBAC, RLS, Audit, Backup — `docs/security-architecture.md`
 - Echte Lead-Erfassung (Web-Formular, Postfach-Anbindung)
-- KI-Integration (Scoring, Offerttexte, Outreach, Content)
-- Echte bexio-Anbindung (sowie weitere Buchhaltung wie CashCtrl)
-- PDF-Generierung der Offerten
-- E-Mail-/Follow-up-Versand
+- Kontrollierter Lead Hunter — `docs/lead-hunter-engine.md`
+- KI-Integration (Scoring, Offerttexte, Outreach, Content) mit Human-Approval
+- Echte bexio-Anbindung — `docs/bexio-architecture.md`
+- PDF-Generierung der Offerten, E-Mail-/Follow-up-Versand
 - Zahlungen & Abo-Verwaltung (Stripe), Limiten-Enforcement
 
-> Alle Daten im aktuellen Stand sind fiktiv und dienen ausschliesslich der Demonstration.
+> Aktueller Stand: Die Verkaufs-Demo nutzt ausschliesslich fiktive lokale Daten;
+> Klarsa Core existiert bisher nur als Plan (Doku/Typen/Skelett), ohne Backend.

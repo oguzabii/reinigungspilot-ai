@@ -10,7 +10,7 @@ export function IndustryPresets() {
       <ModuleHeader
         icon={Layers}
         title="Branchenvorlagen"
-        description="ReinigungsPilot AI ist ein Verkaufsbüro für Schweizer KMU. Jede Branche hat eine eigene Vorlage – mit typischen Leads, Offertfeldern, Follow-ups und Abläufen."
+        description="Klarsa ist ein Verkaufsbüro für Schweizer KMU. Jede Branche hat eine eigene Vorlage – mit typischen Leads, Offertfeldern, Follow-ups und Abläufen."
         badge={<StatusBadge label={`${INDUSTRIES.length} Branchen`} tone="accent" />}
       />
 

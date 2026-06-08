@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ReinigungsPilot AI – Das AI-Verkaufsbüro für Schweizer KMU",
+  title: "Klarsa – Das KI-Verkaufsbüro für Schweizer KMU",
   description:
-    "ReinigungsPilot AI bündelt Anfragen, erstellt Offerten, plant Follow-ups und Aufträge und übergibt sie an die Buchhaltung (bexio) – das AI-Verkaufsbüro für Schweizer KMU. Reinigung ist die erste Branchenvorlage.",
+    "Klarsa sammelt Anfragen, bewertet Chancen, erstellt Offerten, plant Follow-ups, organisiert Aufträge und übergibt gewonnene Jobs sauber an bexio – das KI-Verkaufsbüro für Schweizer KMU.",
 };
 
 export default function RootLayout({

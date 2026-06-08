@@ -13,7 +13,7 @@ export interface VideoScene {
 }
 
 export const VIDEO_SCRIPT = {
-  title: "1-Minuten-Erklärvideo",
+  title: "Klarsa in 1 Minute erklärt",
   subtitle:
     "60-Sekunden-Storyboard mit deutschem Voiceover. Konzept für ein späteres Video – aktuell kein fertiges Video.",
   scenes: [
@@ -21,7 +21,7 @@ export const VIDEO_SCRIPT = {
       time: "0:00 – 0:08",
       visual: "Logo, Inhaber eines KMU am Tablet, ruhige Bürosituation.",
       voiceover:
-        "ReinigungsPilot AI ist das AI-Verkaufsbüro für Schweizer KMU – für Dienstleister, Handwerk und lokale Betriebe.",
+        "Klarsa ist das KI-Verkaufsbüro für Schweizer KMU – für Dienstleister, Handwerk und lokale Betriebe.",
     },
     {
       time: "0:08 – 0:18",
@@ -33,13 +33,13 @@ export const VIDEO_SCRIPT = {
       time: "0:18 – 0:28",
       visual: "Leads mit Score-Badges, Sortierung nach Potenzial.",
       voiceover:
-        "Die AI bewertet jeden Lead nach Potenzial, damit Sie sofort sehen, wo sich der Aufwand lohnt.",
+        "Die KI bewertet jeden Lead nach Potenzial, damit Sie sofort sehen, wo sich der Aufwand lohnt.",
     },
     {
       time: "0:28 – 0:38",
       visual: "Aus einem Lead entsteht eine PDF-Offerte mit Preisvorschlag.",
       voiceover:
-        "Aus einem Lead wird in Minuten eine fertige Offerte. Die AI bereitet vor – freigeben tun Sie.",
+        "Aus einem Lead wird in Minuten eine fertige Offerte. Die KI bereitet vor – freigeben tun Sie.",
     },
     {
       time: "0:38 – 0:46",
@@ -57,7 +57,7 @@ export const VIDEO_SCRIPT = {
       time: "0:54 – 1:00",
       visual: "bexio-Übergabe mit Rechnungsentwurf, danach Logo und CTA.",
       voiceover:
-        "Und der Auftrag geht direkt an Ihre Buchhaltung in bexio. ReinigungsPilot AI – mehr Aufträge, weniger Büro.",
+        "Und der Auftrag geht direkt an Ihre Buchhaltung in bexio. Klarsa – mehr Aufträge, weniger Büro.",
     },
   ] as VideoScene[],
 };

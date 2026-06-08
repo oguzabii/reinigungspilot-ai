@@ -6,10 +6,10 @@
  * not send mail itself.
  */
 
-export const CONTACT_EMAIL = "info@reinigungspilot.ai";
+export const CONTACT_EMAIL = "info@klarsa.ch";
 
 export function contactMailto(subject: string): string {
   return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}`;
 }
 
-export const CONTACT_MAILTO = contactMailto("Beratung – ReinigungsPilot AI");
+export const CONTACT_MAILTO = contactMailto("Beratung – Klarsa");

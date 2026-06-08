@@ -15,7 +15,7 @@ import { SALES_KIT } from "@/lib/sales-kit";
 import { OBJECTIONS } from "@/lib/objections";
 
 export const metadata: Metadata = {
-  title: "Sales-Kit (intern) – ReinigungsPilot AI",
+  title: "Sales-Kit (intern) – Klarsa",
   description:
     "Internes Sales-Kit: Positionierung, Pitches, Cold-E-Mails, Nachrichten, Telefonskript, Einwandbehandlung und Abschlusssätze.",
   robots: { index: false, follow: false },

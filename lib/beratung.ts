@@ -25,7 +25,7 @@ export const BERATUNG = {
     },
     {
       title: "System prüfen",
-      text: "Wir zeigen, wie ReinigungsPilot AI mit der passenden Branchenvorlage für Ihren Betrieb aussieht.",
+      text: "Wir zeigen, wie Klarsa mit der passenden Branchenvorlage für Ihren Betrieb aussieht.",
     },
     {
       title: "Demo",
@@ -53,7 +53,7 @@ export const BERATUNG = {
 
   notes: [
     "Unverbindlich und kostenlos.",
-    "Cleaning ist unsere erste Branchenvorlage – weitere Branchen folgen.",
+    "Reinigung ist unsere erste Branchenvorlage – weitere Branchen folgen.",
   ] as string[],
 };
 

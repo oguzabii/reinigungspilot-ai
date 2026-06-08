@@ -85,7 +85,7 @@ export const DEMO_VIEWS: DemoView[] = [
   },
   {
     id: "leadHunter",
-    label: "AI Lead Hunter",
+    label: "KI Lead Hunter",
     description: "Findet aktiv neue B2B-Kunden in Ihrer Region.",
     icon: Crosshair,
     group: "Vertrieb",
@@ -93,7 +93,7 @@ export const DEMO_VIEWS: DemoView[] = [
   },
   {
     id: "offerEngine",
-    label: "AI Offerten-Engine",
+    label: "KI Offerten-Engine",
     description: "Preisvorschlag, PDF-Offerte und E-Mail in Minuten.",
     icon: FileText,
     group: "Vertrieb",
@@ -125,7 +125,7 @@ export const DEMO_VIEWS: DemoView[] = [
   },
   {
     id: "marketingAssistant",
-    label: "AI Marketing-Assistent",
+    label: "KI Marketing-Assistent",
     description: "Content für Google, Social Media und lokales SEO.",
     icon: Megaphone,
     group: "Wachstum",
@@ -182,7 +182,7 @@ export const PRODUCT_MODULES: ProductModule[] = [
   },
   {
     id: "offerEngine",
-    label: "AI Offerten-Engine",
+    label: "KI Offerten-Engine",
     description:
       "Berechnet faire Preise, erstellt PDF-Offerten und formuliert die passende E-Mail – in Minuten statt Stunden.",
     icon: FileText,
@@ -198,7 +198,7 @@ export const PRODUCT_MODULES: ProductModule[] = [
   },
   {
     id: "leadHunter",
-    label: "AI Lead Hunter",
+    label: "KI Lead Hunter",
     description:
       "Findet aktiv neue B2B-Kunden – Verwaltungen, Praxen, Büros, Umzugsfirmen und Gewerbe – inklusive Erstnachricht.",
     icon: Crosshair,
@@ -230,7 +230,7 @@ export const PRODUCT_MODULES: ProductModule[] = [
   },
   {
     id: "marketingAssistant",
-    label: "AI Marketing-Assistent",
+    label: "KI Marketing-Assistent",
     description:
       "Erstellt Google-Business-Posts, Social-Captions, Kampagnenideen und lokale SEO-Themen.",
     icon: Megaphone,

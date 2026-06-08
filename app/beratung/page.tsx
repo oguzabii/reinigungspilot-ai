@@ -18,9 +18,9 @@ import { CONTACT_EMAIL } from "@/lib/contact";
 import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = {
-  title: "Beratung – ReinigungsPilot AI",
+  title: "Beratung – Klarsa",
   description:
-    "Unverbindliche Beratung: Wir prüfen gemeinsam, ob ReinigungsPilot AI zu Ihrem KMU passt – mit Demo an Ihrem Beispiel und der passenden Branchenvorlage.",
+    "Unverbindliche Beratung: Wir prüfen gemeinsam, ob Klarsa zu Ihrem KMU passt – mit Demo an Ihrem Beispiel und der passenden Branchenvorlage.",
 };
 
 export default function BeratungPage() {
@@ -31,7 +31,7 @@ export default function BeratungPage() {
         <PageHero
           eyebrow="Beratung"
           title="Wir prüfen gemeinsam, ob es zu Ihrem Betrieb passt."
-          description="In einer kurzen, unverbindlichen Beratung schauen wir uns Ihren Verkaufsprozess an und zeigen ReinigungsPilot AI an Ihrem Beispiel – mit der passenden Branchenvorlage."
+          description="In einer kurzen, unverbindlichen Beratung schauen wir uns Ihren Verkaufsprozess an und zeigen Klarsa an Ihrem Beispiel – mit der passenden Branchenvorlage."
         >
           <a
             href={BERATUNG_MAILTO}

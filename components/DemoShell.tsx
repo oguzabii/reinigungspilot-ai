@@ -77,8 +77,7 @@ export function DemoShell() {
       <header className="sticky top-0 z-30 border-b border-white/10 bg-navy-900">
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-6">
           <Link href="/" className="inline-flex items-center">
-            <Logo variant="light" className="hidden sm:inline-flex" />
-            <Logo variant="light" showName={false} className="sm:hidden" />
+            <Logo priority className="h-8 sm:h-9" />
           </Link>
 
           <div className="order-3 flex max-w-full justify-center overflow-x-auto sm:order-2 sm:w-auto sm:justify-start">

@@ -135,8 +135,9 @@ export function BexioHandoff({ pkg, onSelectPackage }: Props) {
           </button>
         </div>
         <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
-          ReinigungsPilot AI ersetzt bexio nicht – es bereitet die Übergabe vor.
-          Die API-Anbindung wird im produktiven Setup eingerichtet.
+          Klarsa ersetzt bexio nicht. Das System arbeitet vor Ihrer Buchhaltung
+          und übergibt gewonnene Aufträge sauber an bexio. Die API-Anbindung wird
+          im produktiven Setup eingerichtet.
         </p>
         {isPlus && (
           <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-blue-50/70 px-3 py-2 text-xs font-medium text-blue-800">

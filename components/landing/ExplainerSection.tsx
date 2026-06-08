@@ -16,8 +16,8 @@ export function ExplainerSection() {
       <div className="mx-auto max-w-5xl px-4 lg:px-6">
         <SectionHeader
           align="center"
-          eyebrow="In 1 Minute erklärt"
-          title="So funktioniert ReinigungsPilot AI."
+          eyebrow="Klarsa in 1 Minute erklärt"
+          title="So funktioniert Klarsa."
           description="Von der Anfrage bis zur Übergabe an die Buchhaltung – in sechs Schritten."
         />
 

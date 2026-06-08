@@ -23,7 +23,7 @@ const ROWS: Row[] = [
   },
   { label: "Postfächer", value: (l) => l.mailboxes },
   {
-    label: "AI Lead Hunter (Prospects / Monat)",
+    label: "KI Lead Hunter (Prospects / Monat)",
     value: (l) =>
       l.leadHunterProspects > 0 ? formatNumber(l.leadHunterProspects) : false,
   },

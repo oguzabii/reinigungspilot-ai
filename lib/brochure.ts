@@ -7,10 +7,10 @@
  */
 
 export const BROCHURE = {
-  title: "ReinigungsPilot AI",
-  subtitle: "Das AI-Verkaufsbüro für Schweizer KMU.",
+  title: "Klarsa",
+  subtitle: "Das KI-Verkaufsbüro für Schweizer KMU.",
   intro:
-    "ReinigungsPilot AI bündelt Anfragen, erstellt schneller Offerten, fasst konsequent nach und übergibt gewonnene Aufträge an die Buchhaltung. Reinigung ist die erste Branchenvorlage. Die AI bereitet vor, entscheiden tun Sie.",
+    "Klarsa bündelt Anfragen, erstellt schneller Offerten, fasst konsequent nach und übergibt gewonnene Aufträge an die Buchhaltung. Reinigung ist die erste Branchenvorlage. Die KI bereitet vor, entscheiden tun Sie.",
 
   problemTitle: "Die Ausgangslage",
   problemText:
@@ -36,9 +36,9 @@ export const BROCHURE = {
   ] as string[],
 
   controlNote:
-    "In jedem Schritt gilt: Die AI bereitet vor, Sie behalten die Kontrolle und geben frei. Keine automatischen Massen-Mails.",
+    "In jedem Schritt gilt: Die KI bereitet vor, Sie behalten die Kontrolle und geben frei. Keine automatischen Massen-Mails.",
 
   closingTitle: "Der nächste Schritt",
   closingText:
-    "Vereinbaren Sie eine unverbindliche Beratung oder sehen Sie sich die Demo an – wir prüfen gemeinsam, wie ReinigungsPilot AI zu Ihrem Betrieb passt.",
+    "Vereinbaren Sie eine unverbindliche Beratung oder sehen Sie sich die Demo an – wir prüfen gemeinsam, wie Klarsa zu Ihrem Betrieb passt.",
 };

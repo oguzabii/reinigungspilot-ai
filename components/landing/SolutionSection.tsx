@@ -19,7 +19,7 @@ const STEPS: {
     step: 1,
     icon: Crosshair,
     title: "Leads finden",
-    text: "AI Lead Hunter & zentrale Inbox für alle Anfragen.",
+    text: "KI Lead Hunter & zentrale Inbox für alle Anfragen.",
   },
   {
     step: 2,
@@ -61,7 +61,7 @@ export function SolutionSection() {
           align="center"
           eyebrow="Die Lösung"
           title="Ein durchgängiger Verkaufsprozess – statt Zettelwirtschaft."
-          description="ReinigungsPilot AI führt jeden Lead durch denselben sauberen Ablauf: von der ersten Anfrage bis zum gewonnenen Auftrag und Umsatz-Report."
+          description="Klarsa führt jeden Lead durch denselben sauberen Ablauf: von der ersten Anfrage bis zum gewonnenen Auftrag und Umsatz-Report."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {STEPS.map((item) => {
@@ -88,7 +88,7 @@ export function SolutionSection() {
           })}
         </div>
         <p className="mx-auto mt-10 max-w-2xl text-center text-sm text-slate-600">
-          In jedem Schritt gilt: Die AI bereitet vor, Sie behalten die Kontrolle
+          In jedem Schritt gilt: Die KI bereitet vor, Sie behalten die Kontrolle
           und geben frei – keine automatischen Massen-Mails.
         </p>
       </div>

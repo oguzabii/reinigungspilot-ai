@@ -26,7 +26,7 @@ export function OfferEngine({ pkg }: { pkg: PackageId }) {
     <div className="space-y-6">
       <ModuleHeader
         icon={FileText}
-        title="AI Offerten-Engine"
+        title="KI Offerten-Engine"
         description="Vom Lead zur fertigen Offerte: Preisvorschlag, PDF-Entwurf und passende E-Mail – in wenigen Minuten."
         badge={
           <StatusBadge

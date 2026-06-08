@@ -1,29 +1,26 @@
+import Image from "next/image";
 import { cn } from "@/lib/cn";
-import { LogoMark } from "./LogoMark";
 
 interface LogoProps {
-  variant?: "dark" | "light";
-  showName?: boolean;
   className?: string;
+  priority?: boolean;
 }
 
-/** ReinigungsPilot AI brand lockup. `light` is for use on dark surfaces. */
-export function Logo({ variant = "dark", showName = true, className }: LogoProps) {
-  const isLight = variant === "light";
+/**
+ * Klarsa brand logo — renders the official asset (public/brand/klarsa-logo.png).
+ * The logo is a self-contained square lockup, so it works on light and dark
+ * surfaces. Size it via `className` (height utilities), e.g. `h-8 sm:h-10`.
+ */
+export function Logo({ className, priority = false }: LogoProps) {
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <LogoMark size={34} className="rounded-[8px] shadow-sm" />
-      {showName && (
-        <span
-          className={cn(
-            "text-lg font-semibold tracking-tight",
-            isLight ? "text-white" : "text-navy-900",
-          )}
-        >
-          ReinigungsPilot
-          <span className={isLight ? "text-blue-300" : "text-blue-600"}> AI</span>
-        </span>
-      )}
-    </span>
+    <Image
+      src="/brand/klarsa-logo-web.png"
+      alt="Klarsa"
+      width={320}
+      height={320}
+      priority={priority}
+      sizes="40px"
+      className={cn("h-9 w-auto rounded-md", className)}
+    />
   );
 }

@@ -1,5 +1,5 @@
 /**
- * Central add-on catalogue for ReinigungsPilot AI.
+ * Central add-on catalogue for Klarsa.
  *
  * Add-ons extend any package. Pricing fields are structured so the UI can
  * render consistent price labels (setup / monthly / one-time / range).
@@ -39,7 +39,7 @@ export const ADDONS: AddOn[] = [
     id: "extra-lead-hunter",
     name: "Extra Lead Hunter",
     description:
-      "Zusätzliches AI-Lead-Hunter-Kontingent für mehr qualifizierte B2B-Prospects pro Monat.",
+      "Zusätzliches KI-Lead-Hunter-Kontingent für mehr qualifizierte B2B-Prospects pro Monat.",
     category: "Leads",
     monthlyChf: 249,
     popular: true,
@@ -143,7 +143,7 @@ export const ADDONS: AddOn[] = [
     id: "datenmigration",
     name: "Datenmigration",
     description:
-      "Übernahme Ihrer bestehenden Kunden-, Service- und Offertendaten in ReinigungsPilot AI.",
+      "Übernahme Ihrer bestehenden Kunden-, Service- und Offertendaten in Klarsa.",
     category: "Setup & Daten",
     setupFromChf: 490,
     setupToChf: 1500,

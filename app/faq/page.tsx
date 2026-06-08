@@ -8,9 +8,9 @@ import { NotIncludedSection } from "@/components/NotIncludedSection";
 import { FAQ_ITEMS } from "@/lib/faq";
 
 export const metadata: Metadata = {
-  title: "FAQ – ReinigungsPilot AI",
+  title: "FAQ – Klarsa",
   description:
-    "Antworten auf häufige Fragen zu ReinigungsPilot AI: CRM, Datenhoheit, Automatisierung, Preise, Upgrades, Kündigung und mehr.",
+    "Antworten auf häufige Fragen zu Klarsa: CRM, Datenhoheit, Automatisierung, Preise, Upgrades, Kündigung und mehr.",
 };
 
 export default function FaqPage() {
@@ -21,7 +21,7 @@ export default function FaqPage() {
         <PageHero
           eyebrow="FAQ"
           title="Häufige Fragen – ehrlich beantwortet."
-          description="Was ReinigungsPilot AI kann, was nicht, und wie die Zusammenarbeit abläuft."
+          description="Was Klarsa kann, was nicht, und wie die Zusammenarbeit abläuft."
         />
 
         <section className="bg-white py-16 sm:py-20">

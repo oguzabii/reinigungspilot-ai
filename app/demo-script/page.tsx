@@ -16,9 +16,9 @@ import { formatChf } from "@/lib/format";
 import { OBJECTIONS } from "@/lib/objections";
 
 export const metadata: Metadata = {
-  title: "Demo-Skript (intern) – ReinigungsPilot AI",
+  title: "Demo-Skript (intern) – Klarsa",
   description:
-    "Interner Gesprächsleitfaden für die Live-Demo von ReinigungsPilot AI bei Schweizer KMU.",
+    "Interner Gesprächsleitfaden für die Live-Demo von Klarsa bei Schweizer KMU.",
   robots: { index: false, follow: false },
 };
 
@@ -41,7 +41,7 @@ const FLOW: FlowStep[] = [
   },
   {
     time: "1:30 – 2:30",
-    show: "AI Offerten-Engine",
+    show: "KI Offerten-Engine",
     say: "Aus diesem Lead wird in Minuten eine fertige PDF-Offerte mit passender E-Mail – inklusive Preisvorschlag und Marge. Das spart Ihnen jeden Tag Stunden.",
   },
   {
@@ -51,7 +51,7 @@ const FLOW: FlowStep[] = [
   },
   {
     time: "3:15 – 4:00",
-    show: "AI Lead Hunter & Auftrags-Organizer",
+    show: "KI Lead Hunter & Auftrags-Organizer",
     say: "Ab Pro sucht das System aktiv neue B2B-Kunden – Verwaltungen, Praxen, Büros – inklusive Erstnachricht. Gewonnene Offerten werden gleich als Aufträge eingeplant.",
   },
   {
@@ -62,14 +62,14 @@ const FLOW: FlowStep[] = [
   {
     time: "4:30 – 5:00",
     show: "Paketvergleich & Abschluss",
-    say: "Mein Vorschlag: Wir prüfen in einer kurzen Beratung Ihren Verkaufsprozess und richten ReinigungsPilot AI – idealerweise mit dem Pro-Paket – für Ihren Betrieb ein.",
+    say: "Mein Vorschlag: Wir prüfen in einer kurzen Beratung Ihren Verkaufsprozess und richten Klarsa – idealerweise mit dem Pro-Paket – für Ihren Betrieb ein.",
   },
 ];
 
 const FIRST_TIPS = [
   "Immer mit dem Chef-Dashboard starten – Überblick schafft Vertrauen.",
   "Dann Lead Inbox → Offerten-Engine: das ist der „Aha“-Moment.",
-  "AI Lead Hunter als Wachstums-Hebel zeigen (nur Pro/Premium).",
+  "KI Lead Hunter als Wachstums-Hebel zeigen (nur Pro/Premium).",
   "Sprache des Inhabers sprechen: Aufträge, Umsatz, Zeitersparnis – nicht Technik.",
 ];
 
@@ -90,7 +90,7 @@ export default function DemoScriptPage() {
           Demo-Skript für die Live-Demo
         </h1>
         <p className="mt-3 text-base leading-relaxed text-slate-600">
-          Gesprächsleitfaden, um ReinigungsPilot AI in rund 5 Minuten überzeugend
+          Gesprächsleitfaden, um Klarsa in rund 5 Minuten überzeugend
           zu zeigen – immer am Beispiel der Muster Service GmbH. Diese Seite ist
           nur für den internen Gebrauch gedacht, nicht für Kunden.
         </p>

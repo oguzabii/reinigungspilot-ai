@@ -29,12 +29,12 @@ export function MarketingAssistant({ pkg, onSelectPackage }: Props) {
       <div className="space-y-6">
         <ModuleHeader
           icon={Megaphone}
-          title="AI Marketing-Assistent"
+          title="KI Marketing-Assistent"
           description="Erstellt Content für Google Business, Social Media, Kampagnen und lokales SEO."
           badge={<StatusBadge label="Gesperrt" tone="neutral" />}
         />
         <LockedFeature
-          title="AI Marketing-Assistent"
+          title="KI Marketing-Assistent"
           requiredPackageName="Pro"
           description="Erstellt fertige Inhalte für Ihre Kanäle: Google-Business-Posts, Social-Captions, Kampagnenideen und lokale SEO-Themen."
           icon={Megaphone}
@@ -55,7 +55,7 @@ export function MarketingAssistant({ pkg, onSelectPackage }: Props) {
     <div className="space-y-6">
       <ModuleHeader
         icon={Megaphone}
-        title="AI Marketing-Assistent"
+        title="KI Marketing-Assistent"
         description="Erstellt Content für Google Business, Social Media, Kampagnen und lokales SEO."
         badge={
           isFull ? (

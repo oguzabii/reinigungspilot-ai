@@ -1,21 +1,24 @@
-# ReinigungsPilot AI
+# Klarsa
 
-Das AI-Verkaufsbüro für Schweizer KMU — der verkaufsstarke, paketbasierte
+Das KI-Verkaufsbüro für Schweizer KMU — der verkaufsstarke, paketbasierte
 Master-Demo-Foundation. Dieses Repository ist die **eigenständige,
 verkaufsfähige Produkt- und Demo-Basis**. Clean24 dient ausschliesslich als
 interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.1.5** — Finales visuelles QA und Kontakt-Politur auf der KMU-Repositionierung:
-zentrale Kontaktadresse (`info@reinigungspilot.ai`, `lib/contact.ts`),
-bereinigte Wording-Reste, klarerer Demo-Hinweis (aktive Branchenvorlage
-Reinigung) und professionellere bexio-Übergabe-Texte. Weiterhin reine,
-paketbasierte Frontend-Demo mit lokalen Demo-Daten; Strategie wie in v0.1.4.
+**v0.1.7** — Public-Rebrand auf **Klarsa** plus Mobile-Politur: neuer Markenname,
+Logo (`public/brand/klarsa-logo.png`) und „K"-Favicon, Kontakt `info@klarsa.ch`,
+Positionierung „Das KI-Verkaufsbüro für Schweizer KMU" sowie verbesserte
+responsive Layouts. Weiterhin reine, paketbasierte Frontend-Demo mit lokalen
+Demo-Daten.
+
+> Öffentliche Marke = **Klarsa**. Das interne Repo/Paket heisst weiterhin
+> `reinigungspilot-ai`.
 
 ### Strategie
 
-- **Positionierung:** AI-Verkaufsbüro für Schweizer KMU – Dienstleister, Handwerk, Reinigung, Umzug, Gartenbau, Hauswartung, Maler/Gipser, lokale Service-Betriebe.
+- **Positionierung:** KI-Verkaufsbüro für Schweizer KMU – Dienstleister, Handwerk, Reinigung, Umzug, Gartenbau, Hauswartung, Maler/Gipser, lokale Service-Betriebe.
 - **Reinigung = erste Branchenvorlage**, nicht das ganze Produkt (`lib/industries.ts`).
 - **Öffentlicher Pilot entfernt:** `/pilot` ist durch `/beratung` ersetzt.
 - **Clean24** ist interner Pilot/Proof – nicht öffentlich integriert, kein öffentlicher Case.
@@ -94,9 +97,10 @@ app/
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
 ```
 
-Der Brand-Mark liegt als wiederverwendbare SVG-Komponente in
-`components/LogoMark.tsx` (gleiche Geometrie wie `app/icon.svg`): eine aufsteigende
-Sales-Pipeline mit hervorgehobenem Zielknoten.
+Das Original-Logo liegt unter `public/brand/klarsa-logo.png`. Eingebunden wird
+über `components/Logo.tsx` (`next/image`) eine web-optimierte Kopie
+(`public/brand/klarsa-logo-web.png`), damit die Auslieferung schlank bleibt. Das
+Favicon (`app/icon.svg`) ist ein „K"-Monogramm in den Klarsa-Farben.
 
 ### Paket-Gating
 
@@ -122,9 +126,9 @@ der Upgrade-Button direkt in das passende Paket.
 
 | Paket   | Produktname        | Setup     | Monatlich | Fokus                                                                     |
 | ------- | ------------------ | --------- | --------- | ------------------------------------------------------------------------- |
-| Starter | AI Offer Büro      | CHF 2'490 | CHF 299   | Eingehende Leads, Preise, PDF-Offerten, Follow-ups                        |
-| **Pro** | AI Sales Autopilot | CHF 4'990 | CHF 599   | **Empfohlen** – Starter + AI Lead Hunter, Aufträge, bexio Connect, Chef-Report |
-| Premium | AI Growth Office   | CHF 7'490 | CHF 999   | Pro + bexio Connect Plus, B2B-Pipeline, Strategie-Reports, höhere Limiten |
+| Starter | KI Offer Büro      | CHF 2'490 | CHF 299   | Eingehende Leads, Preise, PDF-Offerten, Follow-ups                        |
+| **Pro** | KI Sales Autopilot | CHF 4'990 | CHF 599   | **Empfohlen** – Starter + KI Lead Hunter, Aufträge, bexio Connect, Chef-Report |
+| Premium | KI Growth Office   | CHF 7'490 | CHF 999   | Pro + bexio Connect Plus, B2B-Pipeline, Strategie-Reports, höhere Limiten |
 
 Erweiterbar über Add-ons (`lib/addons.ts`). Genaue Limiten und das Gating liegen
 zentral in `lib/packages.ts` und `lib/package-gates.ts`.
@@ -134,8 +138,8 @@ zentral in `lib/packages.ts` und `lib/package-gates.ts`.
 - Kein Supabase, keine Datenbank
 - Keine Authentifizierung / kein Login
 - Keine Zahlungen / kein Stripe
-- Kein E-Mail-Versand (Beratungs-CTA öffnet nur einen `mailto:`-Link an `info@reinigungspilot.ai`)
-- Keine externen APIs, keine AI-API-Aufrufe, kein Scraping
+- Kein E-Mail-Versand (Beratungs-CTA öffnet nur einen `mailto:`-Link an `info@klarsa.ch`)
+- Keine externen APIs, keine KI-API-Aufrufe, kein Scraping
 - Keine echte bexio-API – die bexio-Übergabe ist nur eine Demo
 - Kein fertiges Video (Erklärvideo nur als Konzept/Storyboard)
 - Kein Backend / keine echte Datenpersistenz
@@ -181,7 +185,7 @@ Bevor echte Kundendaten produktiv gehen, muss das System umsetzen:
 - Malware-/Viren-Scan-Strategie für Uploads
 - Verschlüsselte bexio-Tokens
 - Kein Logging von Secrets / Tokens
-- AI: menschliche Freigabe (Human-Approval) für riskante Aktionen
+- KI: menschliche Freigabe (Human-Approval) für riskante Aktionen
 
 > **Harte Regel: „No Security = No Customer Data."**
 > Kein echtes Kundenkonto, keine Firmendaten, kein bexio-Token, kein Datei-Upload und
@@ -190,7 +194,7 @@ Bevor echte Kundendaten produktiv gehen, muss das System umsetzen:
 
 ## Lead-Hunter-Architektur
 
-Der AI Lead Hunter **scrapt nicht unkontrolliert das Internet**. Er ist eine
+Der KI Lead Hunter **scrapt nicht unkontrolliert das Internet**. Er ist eine
 kontrollierte Discovery- und Qualifizierungs-Pipeline:
 
 ```
@@ -234,17 +238,20 @@ Branchenvorlage → Zielregion → Ziel-Kundentyp → freigegebene Quelle/Provid
 ## Interne nächste Schritte
 
 **v0.1.5 (erledigt)** – finales visuelles QA, zentrale Kontaktadresse
-(`info@reinigungspilot.ai`), bereinigtes Wording sowie klarere Demo- und
+(`info@klarsa.ch`), bereinigtes Wording sowie klarere Demo- und
 bexio-Texte.
 
 **v0.1.6 (erledigt)** – Produktions-Voraussetzungen dokumentiert: Data Safety /
 Backup-Strategie, Security & Datenschutz und Lead-Hunter-Architektur (siehe oben).
 
+**v0.1.7 (erledigt)** – Public-Rebrand auf **Klarsa** (Marke, Logo, „K"-Favicon,
+Kontakt `info@klarsa.ch`, Positionierung „KI-Verkaufsbüro") und Mobile-Politur.
+
 ## Empfohlener nächster Schritt
 
 Nach v0.1.6 genau **einen** Weg wählen, nicht beide gleichzeitig:
 
-- **A) Deploy / Visual Review** – Live-Deployment und visuelle Abnahme über alle Seiten (Desktop & Mobile), echtes E-Mail-Postfach `info@reinigungspilot.ai`, PDF-Export der Broschüre, Produktion des Erklärvideos.
+- **A) Deploy / Visual Review** – Live-Deployment und visuelle Abnahme über alle Seiten (Desktop & Mobile), echtes E-Mail-Postfach `info@klarsa.ch`, PDF-Export der Broschüre, Produktion des Erklärvideos.
 - **B) Phase 2 / Architektur-Plan** – Start des Backend-Fundaments (siehe unten), beginnend mit dem Supabase-Datenmodell.
 
 **Empfehlung: zuerst A (Deploy / Visual Review), danach B (Phase 2-Architektur).**
@@ -256,7 +263,7 @@ Backend-Fundament, separat freizugeben:
 - Supabase-Datenmodell (Mehrmandantenfähigkeit pro KMU)
 - Authentifizierung
 - Echte Lead-Erfassung (Web-Formular, Postfach-Anbindung)
-- AI-Integration (Scoring, Offerttexte, Outreach, Content)
+- KI-Integration (Scoring, Offerttexte, Outreach, Content)
 - Echte bexio-Anbindung (sowie weitere Buchhaltung wie CashCtrl)
 - PDF-Generierung der Offerten
 - E-Mail-/Follow-up-Versand

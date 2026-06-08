@@ -1,7 +1,7 @@
 /**
  * Product scope boundaries.
  *
- * Central list of what ReinigungsPilot AI is deliberately NOT in v1 — used to
+ * Central list of what Klarsa is deliberately NOT in v1 — used to
  * set honest expectations on the pricing and FAQ pages.
  */
 export const NOT_INCLUDED_V1: string[] = [

@@ -1,5 +1,5 @@
 /**
- * Central package definitions for ReinigungsPilot AI.
+ * Central package definitions for Klarsa.
  *
  * This is the single source of truth for package pricing and limits.
  * Components must read limits from here — never hardcode them inline.
@@ -22,7 +22,7 @@ export interface PackageLimits {
   pdfOffersPerMonth: number;
   /** Connected mailboxes. */
   mailboxes: number;
-  /** AI Lead Hunter prospects per month (0 = not included). */
+  /** KI Lead Hunter prospects per month (0 = not included). */
   leadHunterProspects: number;
   /** Included campaign landing pages. */
   campaignLandingPages: number;
@@ -44,7 +44,7 @@ export interface PackageDef {
   id: PackageId;
   /** Tier name, e.g. "Pro". */
   name: string;
-  /** Product name, e.g. "AI Sales Autopilot". */
+  /** Product name, e.g. "KI Sales Autopilot". */
   productName: string;
   /** One-line positioning. */
   tagline: string;
@@ -69,7 +69,7 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
   starter: {
     id: "starter",
     name: "Starter",
-    productName: "AI Offer Büro",
+    productName: "KI Offer Büro",
     tagline: "Das digitale Offert-Büro für eingehende Anfragen.",
     description:
       "Sammelt eingehende Leads zentral, berechnet Preise automatisch und erstellt professionelle PDF-Offerten inklusive Follow-up-Erinnerungen.",
@@ -106,10 +106,10 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
   pro: {
     id: "pro",
     name: "Pro",
-    productName: "AI Sales Autopilot",
+    productName: "KI Sales Autopilot",
     tagline: "Der Verkaufsmotor, der aktiv neue B2B-Kunden findet.",
     description:
-      "Alles aus Starter – plus AI Lead Hunter, Auftrags- und Kalenderplanung, bexio Connect und ein wöchentlicher Chef-Report.",
+      "Alles aus Starter – plus KI Lead Hunter, Auftrags- und Kalenderplanung, bexio Connect und ein wöchentlicher Chef-Report.",
     audienceTag: "Beste Wahl",
     audience:
       "Die beste Wahl für die meisten Service-Betriebe: für KMU, die aktiv neue B2B-Kunden gewinnen und ihren Verkauf systematisieren wollen.",
@@ -119,7 +119,7 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
     badge: "Beliebteste Wahl",
     focus: [
       "Alles aus Starter",
-      "AI Lead Hunter findet neue B2B-Kunden",
+      "KI Lead Hunter findet neue B2B-Kunden",
       "Auftrags- & Kalenderplanung",
       "bexio Connect: Übergabe an die Buchhaltung",
       "Wöchentlicher Chef-Report",
@@ -145,7 +145,7 @@ export const PACKAGES: Record<PackageId, PackageDef> = {
   premium: {
     id: "premium",
     name: "Premium",
-    productName: "AI Growth Office",
+    productName: "KI Growth Office",
     tagline: "Das komplette Wachstumsbüro für ambitionierte Betriebe.",
     description:
       "Alles aus Pro – plus bexio Connect Plus, erweiterte B2B-Pipeline, Content- und Strategie-Reports sowie deutlich höhere Limiten.",

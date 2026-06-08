@@ -9,7 +9,7 @@ import { formatChf } from "@/lib/format";
 const BASE_FEATURES = ["Lead Inbox", "Offerten-Engine", "Follow-up"];
 
 const EXTRA_FEATURES: { module: ModuleId; label: string }[] = [
-  { module: "leadHunter", label: "AI Lead Hunter" },
+  { module: "leadHunter", label: "KI Lead Hunter" },
   { module: "jobOrganizer", label: "Auftrags-Organizer" },
   { module: "marketingAssistant", label: "Marketing-Assistent" },
   { module: "b2bPipeline", label: "B2B-Pipeline" },
@@ -42,7 +42,7 @@ export function DemoContextBar({ pkg }: { pkg: PackageId }) {
             <p className="text-sm font-medium text-navy-900 sm:text-base">
               So würde{" "}
               <span className="font-semibold">{DEMO_COMPANY.name}</span> mit
-              ReinigungsPilot AI arbeiten.
+              Klarsa arbeiten.
             </p>
             <p className="mt-1 text-xs text-slate-500">
               Demo zeigt die Branchenvorlage Reinigung. Weitere Branchenvorlagen

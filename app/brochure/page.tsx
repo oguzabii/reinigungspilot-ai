@@ -15,9 +15,9 @@ import { DEMO_SUCCESS_TIMELINE } from "@/lib/demo-data";
 import { formatChf, formatChfRange } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "Broschüre – ReinigungsPilot AI",
+  title: "Broschüre – Klarsa",
   description:
-    "Verkaufsbroschüre für ReinigungsPilot AI: Problem, Lösung, Branchenvorlagen, Module, Pakete, bexio, Add-ons, 12-Monats-Plan und Abgrenzung.",
+    "Verkaufsbroschüre für Klarsa: Problem, Lösung, Branchenvorlagen, Module, Pakete, bexio, Add-ons, 12-Monats-Plan und Abgrenzung.",
 };
 
 function addonShort(a: AddOn): string {
@@ -97,7 +97,7 @@ export default function BrochurePage() {
           {/* Branchen */}
           <DocSection title="Branchenvorlagen">
             <p className="text-slate-600">
-              ReinigungsPilot AI ist für Schweizer KMU. Reinigung ist die erste
+              Klarsa ist für Schweizer KMU. Reinigung ist die erste
               Branchenvorlage – weitere sind vorbereitet und werden beim Setup
               angepasst.
             </p>

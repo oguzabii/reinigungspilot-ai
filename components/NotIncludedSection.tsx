@@ -14,7 +14,7 @@ export function NotIncludedSection({ className }: NotIncludedSectionProps) {
         <SectionHeader
           align="center"
           eyebrow="Klarheit"
-          title="Was ReinigungsPilot AI bewusst nicht ist."
+          title="Was Klarsa bewusst nicht ist."
           description="Ehrliche Abgrenzung – damit Sie genau wissen, was Sie bekommen und was nicht."
         />
         <ul className="mx-auto mt-10 grid gap-3 sm:grid-cols-2">

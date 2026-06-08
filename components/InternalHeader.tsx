@@ -14,7 +14,7 @@ export function InternalHeader() {
     <header className="border-b border-white/10 bg-navy-900">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
         <Link href="/">
-          <Logo variant="light" />
+          <Logo priority />
         </Link>
         <div className="flex items-center gap-3">
           <nav className="hidden items-center gap-4 sm:flex">

@@ -1,5 +1,5 @@
 /**
- * Central demo seed data for ReinigungsPilot AI.
+ * Central demo seed data for Klarsa.
  *
  * Everything here is local, fictional demo data for the sales demo of the
  * example company "Muster Service GmbH". No external sources.
@@ -156,7 +156,7 @@ export const DEMO_LEADS: Lead[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/* Prospects (AI Lead Hunter)                                                  */
+/* Prospects (KI Lead Hunter)                                                  */
 /* -------------------------------------------------------------------------- */
 
 export type ProspectCategory =
@@ -646,7 +646,7 @@ export const DEMO_JOBS: Job[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/* AI Marketing Assistant                                                      */
+/* KI Marketing Assistant                                                      */
 /* -------------------------------------------------------------------------- */
 
 export type MarketingType =
@@ -811,14 +811,14 @@ export const DEMO_SUCCESS_TIMELINE: SuccessMonth[] = [
     label: "Monat 0",
     title: "Setup & Baseline",
     description:
-      "Einrichtung von ReinigungsPilot AI, Import bestehender Kunden und Services, Definition der Preismodelle und Messung der Ausgangslage.",
+      "Einrichtung von Klarsa, Import bestehender Kunden und Services, Definition der Preismodelle und Messung der Ausgangslage.",
   },
   {
     month: 1,
     label: "Monat 1",
     title: "Go-Live & erste Optimierung",
     description:
-      "Live-Schaltung des AI Offer Büros, erste Offerten und Follow-ups, Feinjustierung der Preis- und Textvorlagen.",
+      "Live-Schaltung des KI Offer Büros, erste Offerten und Follow-ups, Feinjustierung der Preis- und Textvorlagen.",
   },
   {
     month: 2,
@@ -839,7 +839,7 @@ export const DEMO_SUCCESS_TIMELINE: SuccessMonth[] = [
     label: "Monat 4",
     title: "Lead-Hunter-Boost",
     description:
-      "Skalierung des AI Lead Hunters auf neue B2B-Segmente und zusätzliche Regionen.",
+      "Skalierung des KI Lead Hunters auf neue B2B-Segmente und zusätzliche Regionen.",
   },
   {
     month: 5,

@@ -8,9 +8,12 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-12 lg:px-6">
         <div className="grid gap-8 md:grid-cols-4">
           <div className="md:col-span-2">
-            <Logo variant="light" />
+            <Logo />
+            <p className="mt-3 text-sm font-medium text-navy-100">
+              Wenn’s klar war, war’s Klarsa.
+            </p>
             <p className="mt-3 max-w-sm text-sm text-navy-300">
-              Das AI-Verkaufsbüro für Schweizer KMU – Anfragen bündeln, schneller
+              Das KI-Verkaufsbüro für Schweizer KMU – Anfragen bündeln, schneller
               offerieren, konsequent nachfassen und Aufträge an die Buchhaltung
               übergeben.
             </p>
@@ -70,7 +73,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 flex flex-wrap justify-between gap-2 border-t border-white/10 pt-6 text-xs text-navy-400">
-          <p>© 2026 ReinigungsPilot AI · Demo-Version</p>
+          <p>© 2026 Klarsa · Demo-Version</p>
           <p>Alle Daten sind fiktiv und dienen ausschliesslich der Demonstration.</p>
         </div>
       </div>

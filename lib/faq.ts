@@ -13,15 +13,15 @@ export interface FaqItem {
 export const FAQ_ITEMS: FaqItem[] = [
   {
     q: "Ist das ein CRM?",
-    a: "Nicht im klassischen Sinn. ReinigungsPilot AI ist ein AI-Verkaufsbüro: Es sammelt Anfragen, erstellt Offerten, fasst nach und plant Aufträge. CRM-Funktionen sind enthalten – der Fokus liegt aber auf Abschlüssen, nicht auf reiner Datenpflege.",
+    a: "Nicht im klassischen Sinn. Klarsa ist ein KI-Verkaufsbüro: Es sammelt Anfragen, erstellt Offerten, fasst nach und plant Aufträge. CRM-Funktionen sind enthalten – der Fokus liegt aber auf Abschlüssen, nicht auf reiner Datenpflege.",
   },
   {
     q: "Garantiert das System neue Kunden?",
-    a: "Nein – eine Umsatz- oder Kundengarantie geben wir bewusst nicht. ReinigungsPilot AI sorgt dafür, dass keine Anfrage liegen bleibt, Offerten schneller draussen sind und konsequent nachgefasst wird. Das verbessert Ihre Abschlusschancen spürbar, bleibt aber ein Werkzeug in den Händen Ihres Teams – kein Automat, der Aufträge garantiert.",
+    a: "Nein – eine Umsatz- oder Kundengarantie geben wir bewusst nicht. Klarsa sorgt dafür, dass keine Anfrage liegen bleibt, Offerten schneller draussen sind und konsequent nachgefasst wird. Das verbessert Ihre Abschlusschancen spürbar, bleibt aber ein Werkzeug in den Händen Ihres Teams – kein Automat, der Aufträge garantiert.",
   },
   {
-    q: "Versendet die AI automatisch Nachrichten?",
-    a: "Nein. Die AI bereitet Offerten, E-Mails und Erstnachrichten vor und legt sie Ihnen vor. Den Versand geben Sie frei – einzeln und kontrolliert. Es gibt kein automatisches Massen- oder Spam-System, und nichts verlässt das Haus ohne Ihr Einverständnis.",
+    q: "Versendet die KI automatisch Nachrichten?",
+    a: "Nein. Die KI bereitet Offerten, E-Mails und Erstnachrichten vor und legt sie Ihnen vor. Den Versand geben Sie frei – einzeln und kontrolliert. Es gibt kein automatisches Massen- oder Spam-System, und nichts verlässt das Haus ohne Ihr Einverständnis.",
   },
   {
     q: "Wem gehören die Daten?",
@@ -33,7 +33,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Brauche ich eine neue Website?",
-    a: "Nein. ReinigungsPilot AI arbeitet unabhängig von Ihrer Website. Sie können Ihr bestehendes Kontakt- oder Web-Formular optional anbinden (Add-on), damit Anfragen direkt in der Inbox landen – nötig ist das nicht, und eine neue Website brauchen Sie dafür sicher nicht.",
+    a: "Nein. Klarsa arbeitet unabhängig von Ihrer Website. Sie können Ihr bestehendes Kontakt- oder Web-Formular optional anbinden (Add-on), damit Anfragen direkt in der Inbox landen – nötig ist das nicht, und eine neue Website brauchen Sie dafür sicher nicht.",
   },
   {
     q: "Funktioniert es auch ohne Google Ads?",
@@ -45,11 +45,11 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Kann ich das auch einmalig kaufen?",
-    a: "Nein. ReinigungsPilot AI ist ein laufender Service: einmalige Einrichtung plus monatliches Abo. So sind Betreuung, Optimierung und Updates dauerhaft enthalten – statt einer Software, die nach dem Kauf veraltet. Den passenden Einstieg klären wir in einer kurzen Beratung.",
+    a: "Nein. Klarsa ist ein laufender Service: einmalige Einrichtung plus monatliches Abo. So sind Betreuung, Optimierung und Updates dauerhaft enthalten – statt einer Software, die nach dem Kauf veraltet. Den passenden Einstieg klären wir in einer kurzen Beratung.",
   },
   {
     q: "Ersetzt das System bexio?",
-    a: "Nein. ReinigungsPilot AI ersetzt Ihre Buchhaltung nicht. Es übergibt gewonnene Aufträge mit Kundendaten, Leistung und MwSt. an bexio und erstellt dort einen Rechnungsentwurf – gebucht wird wie gewohnt in bexio.",
+    a: "Nein. Klarsa ersetzt Ihre Buchhaltung nicht. Es übergibt gewonnene Aufträge mit Kundendaten, Leistung und MwSt. an bexio und erstellt dort einen Rechnungsentwurf – gebucht wird wie gewohnt in bexio.",
   },
   {
     q: "Ist bexio im Pro-Paket enthalten?",
@@ -61,7 +61,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Muss ich meine Buchhaltung wechseln?",
-    a: "Nein. Sie behalten Ihre Buchhaltung. ReinigungsPilot AI liefert die Auftragsdaten sauber an bexio – ein Wechsel Ihrer Buchhaltung ist nicht nötig.",
+    a: "Nein. Sie behalten Ihre Buchhaltung. Klarsa liefert die Auftragsdaten sauber an bexio – ein Wechsel Ihrer Buchhaltung ist nicht nötig.",
   },
   {
     q: "Kann ich später upgraden?",
@@ -73,7 +73,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Ist das nur für Reinigungsfirmen?",
-    a: "Nein. ReinigungsPilot AI ist ein AI-Verkaufsbüro für Schweizer KMU – Dienstleister, Handwerk, Umzug, Gartenbau, Hauswartung, Maler/Gipser und mehr. Reinigung ist unsere erste Branchenvorlage, nicht das ganze Produkt.",
+    a: "Nein. Klarsa ist das KI-Verkaufsbüro für Schweizer KMU – Dienstleister, Handwerk, Umzug, Gartenbau, Hauswartung, Maler/Gipser und mehr. Reinigung ist unsere erste Branchenvorlage, nicht das ganze Produkt.",
   },
   {
     q: "Wie wird das System pro Branche eingerichtet?",

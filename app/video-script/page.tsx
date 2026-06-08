@@ -4,7 +4,7 @@ import { InternalHeader } from "@/components/InternalHeader";
 import { VIDEO_SCRIPT } from "@/lib/video-script";
 
 export const metadata: Metadata = {
-  title: "Video-Skript (intern) – ReinigungsPilot AI",
+  title: "Video-Skript (intern) – Klarsa",
   description:
     "Internes 60-Sekunden-Storyboard mit deutschem Voiceover für das geplante Erklärvideo.",
   robots: { index: false, follow: false },

@@ -1,7 +1,7 @@
 /**
  * Industry presets.
  *
- * ReinigungsPilot AI is an AI sales office for Swiss SMEs ("KMU"). Cleaning is
+ * Klarsa is an AI sales office for Swiss SMEs ("KMU"). Reinigung (cleaning) is
  * the first preset, not the whole product. Each preset configures the typical
  * leads, offer fields, follow-ups, workflow and example services for a trade.
  *

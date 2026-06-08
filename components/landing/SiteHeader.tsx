@@ -12,8 +12,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-navy-900/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 lg:px-6">
-        <Link href="/" aria-label="ReinigungsPilot AI Startseite">
-          <Logo variant="light" />
+        <Link href="/" aria-label="Klarsa Startseite">
+          <Logo priority className="h-8 sm:h-9" />
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">

@@ -8,7 +8,7 @@ import { StatusBadge, leadStatusTone } from "@/components/StatusBadge";
 export function Hero() {
   return (
     <section className="surface-hero relative overflow-hidden">
-      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-6 lg:py-28">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:gap-12 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-6 lg:py-28">
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-blue-200 ring-1 ring-inset ring-white/15">
             <Sparkles className="h-3.5 w-3.5" />
@@ -16,27 +16,26 @@ export function Hero() {
           </span>
 
           <h1 className="mt-5 text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl">
-            Das AI-Verkaufsbüro für Schweizer KMU.
+            Das KI-Verkaufsbüro für Schweizer KMU.
           </h1>
 
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-navy-100">
-            Für Dienstleister, Handwerk und lokale Service-Betriebe:
-            ReinigungsPilot AI bündelt Anfragen, erstellt schneller Offerten,
-            fasst konsequent nach und übergibt gewonnene Aufträge an die
-            Buchhaltung.
+            Klarsa sammelt Anfragen, bewertet Chancen, erstellt Offerten, plant
+            Follow-ups, organisiert Aufträge und übergibt gewonnene Jobs sauber
+            an bexio – für Schweizer KMU.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
               href="/demo"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 sm:w-auto"
             >
               Demo ansehen
               <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
             </Link>
             <Link
               href="#erklaert"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto"
             >
               <Play className="h-4 w-4" strokeWidth={2.2} />
               In 1 Minute erklärt
@@ -44,7 +43,7 @@ export function Hero() {
           </div>
 
           <p className="mt-6 text-sm text-navy-200">
-            Die AI bereitet vor – Sie geben frei. Keine automatischen
+            Die KI bereitet vor – Sie geben frei. Keine automatischen
             Massen-Mails.
           </p>
           <p className="mt-2 text-sm text-navy-300">

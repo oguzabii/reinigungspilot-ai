@@ -1,9 +1,9 @@
 /**
  * Internal sales kit content.
  *
- * Reusable, copy-ready sales material for selling ReinigungsPilot AI to Swiss
- * SMEs ("KMU"). Cleaning is the first industry preset, not the whole product.
- * Tone: professional Swiss B2B, calm, specific, no hype — "AI prepares, the
+ * Reusable, copy-ready sales material for selling Klarsa to Swiss
+ * SMEs ("KMU"). Reinigung is the first industry preset, not the whole product.
+ * Tone: professional Swiss B2B, calm, specific, no hype — "KI prepares, the
  * human stays in control". Close via demo / consultation (no public pilot).
  */
 
@@ -30,19 +30,19 @@ export interface ClosingLine {
 }
 
 export const SALES_KIT = {
-  positioning: "ReinigungsPilot AI ist ein AI-Verkaufsbüro für Schweizer KMU.",
+  positioning: "Klarsa ist das KI-Verkaufsbüro für Schweizer KMU.",
   positioningLong:
-    "Es bündelt Anfragen, erstellt schneller Offerten, fasst konsequent nach und übergibt gewonnene Aufträge an die Buchhaltung (bexio). Reinigung ist die erste Branchenvorlage. Die AI bereitet vor – entscheiden und freigeben tun Menschen.",
+    "Es bündelt Anfragen, erstellt schneller Offerten, fasst konsequent nach und übergibt gewonnene Aufträge an die Buchhaltung (bexio). Reinigung ist die erste Branchenvorlage. Die KI bereitet vor – entscheiden und freigeben tun Menschen.",
 
   pitch30:
-    "ReinigungsPilot AI ist ein AI-Verkaufsbüro für Schweizer KMU – für Dienstleister, Handwerk und lokale Betriebe. Es sammelt alle Anfragen an einem Ort, erstellt in Minuten Offerten und fasst automatisch nach. Ab dem Pro-Paket findet es zusätzlich aktiv neue B2B-Kunden und übergibt gewonnene Aufträge direkt an die Buchhaltung in bexio. Die AI bereitet vor, freigeben tun Sie. So gewinnen KMU mehr Aufträge, ohne mehr Zeit im Büro zu verlieren.",
+    "Klarsa ist das KI-Verkaufsbüro für Schweizer KMU – für Dienstleister, Handwerk und lokale Betriebe. Es sammelt alle Anfragen an einem Ort, erstellt in Minuten Offerten und fasst automatisch nach. Ab dem Pro-Paket findet es zusätzlich aktiv neue B2B-Kunden und übergibt gewonnene Aufträge direkt an die Buchhaltung in bexio. Die KI bereitet vor, freigeben tun Sie. So gewinnen KMU mehr Aufträge, ohne mehr Zeit im Büro zu verlieren.",
 
   pitch120: [
     "Die meisten KMU verlieren Aufträge nicht wegen der Qualität, sondern im Verkauf: Anfragen gehen unter, Offerten dauern zu lange, und nachgefasst wird selten konsequent. Aktive B2B-Akquise kommt im Tagesgeschäft zu kurz.",
-    "ReinigungsPilot AI ist das AI-Verkaufsbüro für Schweizer KMU. Alle Anfragen landen zentral in einer Inbox und werden nach Potenzial bewertet. Aus einem Lead wird in Minuten eine fertige Offerte. Das Follow-up läuft getaktet: nach 24 Stunden, 48 Stunden und 5 Tagen.",
+    "Klarsa ist das KI-Verkaufsbüro für Schweizer KMU. Alle Anfragen landen zentral in einer Inbox und werden nach Potenzial bewertet. Aus einem Lead wird in Minuten eine fertige Offerte. Das Follow-up läuft getaktet: nach 24 Stunden, 48 Stunden und 5 Tagen.",
     "Das System ist branchenfähig: Reinigung ist die erste Branchenvorlage, weitere wie Umzug, Handwerk, Gartenbau oder Hauswartung folgen – mit passenden Leads, Offertfeldern und Abläufen.",
-    "Wichtig: Die AI bereitet vor, entscheiden und freigeben tun Sie. Es gibt keine automatischen Massen-Mails.",
-    "Ab dem Pro-Paket findet der AI Lead Hunter aktiv neue B2B-Kunden, gewonnene Offerten werden zu geplanten Aufträgen, und über bexio Connect geht der Auftrag mit Kundendaten, Leistung und MwSt. direkt an die Buchhaltung – inklusive Rechnungsentwurf.",
+    "Wichtig: Die KI bereitet vor, entscheiden und freigeben tun Sie. Es gibt keine automatischen Massen-Mails.",
+    "Ab dem Pro-Paket findet der KI Lead Hunter aktiv neue B2B-Kunden, gewonnene Offerten werden zu geplanten Aufträgen, und über bexio Connect geht der Auftrag mit Kundendaten, Leistung und MwSt. direkt an die Buchhaltung – inklusive Rechnungsentwurf.",
     "Es gibt drei Pakete: Starter als digitales Offert-Büro, Pro als Verkaufsmotor mit bexio Connect – unsere Empfehlung – und Premium als komplettes Wachstumsbüro mit bexio Connect Plus.",
     "Am besten zeige ich Ihnen das in einer kurzen Demo an Ihrem Beispiel – wann passt es Ihnen diese Woche?",
   ] as string[],
@@ -50,9 +50,9 @@ export const SALES_KIT = {
   coldEmails: [
     {
       audience: "KMU · Inhaber:in",
-      note: "Akquise – ReinigungsPilot AI vorstellen",
+      note: "Akquise – Klarsa vorstellen",
       subject: "Schneller offerieren, konsequenter nachfassen – ohne mehr Büroarbeit",
-      body: "Guten Tag [Name]\n\nviele KMU verlieren Aufträge nicht wegen der Qualität, sondern weil Anfragen liegen bleiben, Offerten zu lange dauern und das Nachfassen untergeht.\n\nReinigungsPilot AI ist ein AI-Verkaufsbüro für Schweizer KMU: Anfragen zentral sammeln, in Minuten Offerten erstellen, automatisch nachfassen und gewonnene Aufträge an die Buchhaltung (bexio) übergeben. Die AI bereitet vor, freigeben tun Sie.\n\nHätten Sie diese Woche 15 Minuten für eine kurze Demo?\n\nFreundliche Grüsse\n[Ihr Name]",
+      body: "Guten Tag [Name]\n\nviele KMU verlieren Aufträge nicht wegen der Qualität, sondern weil Anfragen liegen bleiben, Offerten zu lange dauern und das Nachfassen untergeht.\n\nKlarsa ist das KI-Verkaufsbüro für Schweizer KMU: Anfragen zentral sammeln, in Minuten Offerten erstellen, automatisch nachfassen und gewonnene Aufträge an die Buchhaltung (bexio) übergeben. Die KI bereitet vor, freigeben tun Sie.\n\nHätten Sie diese Woche 15 Minuten für eine kurze Demo?\n\nFreundliche Grüsse\n[Ihr Name]",
     },
     {
       audience: "Immobilienverwaltung",
@@ -77,7 +77,7 @@ export const SALES_KIT = {
   messages: [
     {
       label: "Erste Nachricht (kurz)",
-      text: "Guten Tag [Name], ich arbeite mit Schweizer KMU daran, aus Anfragen schneller Aufträge zu machen – mit einem AI-Verkaufsbüro, das Offerten und Follow-ups vorbereitet. Wäre das für [Firma] interessant?",
+      text: "Guten Tag [Name], ich arbeite mit Schweizer KMU daran, aus Anfragen schneller Aufträge zu machen – mit einem KI-Verkaufsbüro, das Offerten und Follow-ups vorbereitet. Wäre das für [Firma] interessant?",
     },
     {
       label: "Follow-up",
@@ -85,14 +85,14 @@ export const SALES_KIT = {
     },
     {
       label: "Beratung anbieten",
-      text: "Guten Tag [Name], wenn Sie mögen, schaue ich mir Ihren Verkaufsprozess in einer kurzen, unverbindlichen Beratung an und zeige, wie ReinigungsPilot AI für [Firma] aussehen würde. Passt diese oder nächste Woche?",
+      text: "Guten Tag [Name], wenn Sie mögen, schaue ich mir Ihren Verkaufsprozess in einer kurzen, unverbindlichen Beratung an und zeige, wie Klarsa für [Firma] aussehen würde. Passt diese oder nächste Woche?",
     },
   ] as MessageTemplate[],
 
   phoneScript: [
     {
       step: "Opener",
-      text: "Guten Tag [Name], [Ihr Name] von ReinigungsPilot AI. Ich helfe Schweizer KMU, aus Anfragen schneller Aufträge zu machen. Haben Sie zwei Minuten?",
+      text: "Guten Tag [Name], [Ihr Name] von Klarsa. Ich helfe Schweizer KMU, aus Anfragen schneller Aufträge zu machen. Haben Sie zwei Minuten?",
     },
     {
       step: "Problemfrage",
@@ -100,7 +100,7 @@ export const SALES_KIT = {
     },
     {
       step: "Wert erklären",
-      text: "ReinigungsPilot AI sammelt alle Anfragen zentral, erstellt in Minuten Offerten und fasst automatisch nach. Gewonnene Aufträge gehen direkt an Ihre Buchhaltung in bexio. Die AI bereitet vor, freigeben tun Sie.",
+      text: "Klarsa sammelt alle Anfragen zentral, erstellt in Minuten Offerten und fasst automatisch nach. Gewonnene Aufträge gehen direkt an Ihre Buchhaltung in bexio. Die KI bereitet vor, freigeben tun Sie.",
     },
     {
       step: "Demo-Abschluss",

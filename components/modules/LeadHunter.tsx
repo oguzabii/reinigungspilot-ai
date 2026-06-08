@@ -43,14 +43,14 @@ export function LeadHunter({ pkg, onSelectPackage }: Props) {
       <div className="space-y-6">
         <ModuleHeader
           icon={Crosshair}
-          title="AI Lead Hunter"
+          title="KI Lead Hunter"
           description="Findet aktiv neue B2B-Kunden in Ihrer Region – mit Score, Begründung und passender Erstnachricht."
           badge={<StatusBadge label="Gesperrt" tone="neutral" />}
         />
         <LockedFeature
-          title="AI Lead Hunter findet aktiv neue B2B-Kunden"
+          title="KI Lead Hunter findet aktiv neue B2B-Kunden"
           requiredPackageName="Pro"
-          description="Der AI Lead Hunter durchsucht Ihre Region nach passenden Immobilienverwaltungen, Praxen, Büros, Umzugsfirmen und Gewerbebetrieben."
+          description="Der KI Lead Hunter durchsucht Ihre Region nach passenden Immobilienverwaltungen, Praxen, Büros, Umzugsfirmen und Gewerbebetrieben."
           icon={Crosshair}
           bullets={[
             "Qualifizierte B2B-Prospects jeden Monat",
@@ -70,7 +70,7 @@ export function LeadHunter({ pkg, onSelectPackage }: Props) {
     <div className="space-y-6">
       <ModuleHeader
         icon={Crosshair}
-        title="AI Lead Hunter"
+        title="KI Lead Hunter"
         description="Findet aktiv neue B2B-Kunden in Ihrer Region – mit Score, Begründung und passender Erstnachricht."
         badge={
           <StatusBadge
@@ -118,7 +118,7 @@ function ProspectCard({ prospect }: { prospect: Prospect }) {
       <div className="mt-3 rounded-xl bg-slate-50 p-3 ring-1 ring-inset ring-slate-100">
         <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-700">
           <Sparkles className="h-3.5 w-3.5" />
-          AI-Erstnachricht
+          KI-Erstnachricht
         </p>
         <p className="mt-1.5 text-sm leading-relaxed text-slate-700">
           {prospect.suggestedMessage}

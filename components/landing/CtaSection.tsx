@@ -19,7 +19,7 @@ export function CtaSection() {
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-navy-100">
           In einer kurzen, unverbindlichen Beratung schauen wir uns Ihren
-          Verkaufsprozess an und zeigen ReinigungsPilot AI an Ihrem Beispiel – mit
+          Verkaufsprozess an und zeigen Klarsa an Ihrem Beispiel – mit
           der passenden Branchenvorlage.
         </p>
 

@@ -276,6 +276,8 @@ export interface LeadRow extends BaseColumns, TenantColumns {
   source_type: SourceType;
   est_value_chf: number | null;
   prospect_id: string | null;
+  // Free-text notes — added in migration 003 (v0.3.0).
+  notes: string | null;
   deleted_at: string | null;
 }
 

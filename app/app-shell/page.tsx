@@ -161,8 +161,9 @@ const MODULES: Array<{
   icon: typeof Inbox;
   countKey: keyof TenantCounts | null;
   tier: string;
+  href?: string;
 }> = [
-  { name: "Lead Inbox", icon: Inbox, countKey: "leads", tier: "Alle Pakete" },
+  { name: "Lead Inbox", icon: Inbox, countKey: "leads", tier: "Alle Pakete", href: "/app-shell/leads" },
   { name: "Lead Hunter", icon: Sparkles, countKey: "prospects", tier: "Ab Pro" },
   { name: "Offer Engine", icon: FileText, countKey: "offers", tier: "Alle Pakete" },
   { name: "Follow-ups", icon: BellRing, countKey: "followupTasks", tier: "Alle Pakete" },
@@ -235,13 +236,9 @@ function TenantShell({
       <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {MODULES.map((m) => {
           const Icon = m.icon;
-          const value =
-            m.countKey === null ? null : counts[m.countKey];
-          return (
-            <div
-              key={m.name}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-            >
+          const value = m.countKey === null ? null : counts[m.countKey];
+          const inner = (
+            <>
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-2 font-semibold text-navy-900">
                   <Icon className="h-4 w-4 text-blue-600" strokeWidth={2} />
@@ -255,18 +252,39 @@ function TenantShell({
                 {value === null ? "—" : value}
               </p>
               <p className="text-xs text-slate-400">
-                {m.countKey === null ? "geplant" : "Einträge (Staging)"}
+                {m.href
+                  ? "Öffnen →"
+                  : m.countKey === null
+                    ? "geplant"
+                    : "Einträge (Staging)"}
               </p>
+            </>
+          );
+          return m.href ? (
+            <Link
+              key={m.name}
+              href={m.href}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div
+              key={m.name}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+            >
+              {inner}
             </div>
           );
         })}
       </div>
 
       <p className="mt-8 text-sm text-slate-500">
-        Architektur: <code>docs/auth-foundation.md</code> ·{" "}
-        <code>docs/app-shell-staging-connection.md</code>. Nächster Schritt:{" "}
+        Öffnen Sie die <strong className="font-semibold text-navy-900">Lead
+        Inbox</strong>, um Leads anzuzeigen und manuell zu erfassen. Architektur:{" "}
+        <code>docs/clean24-lead-inbox-foundation.md</code>. Nächster Schritt:{" "}
         <strong className="font-semibold text-navy-900">
-          v0.2.8 – Clean24-Tenant-Setup bzw. Rollen-/Onboarding-Härtung
+          v0.3.1 – Lead-Status &amp; Follow-ups
         </strong>
         .
       </p>

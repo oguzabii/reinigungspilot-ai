@@ -11,7 +11,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
-import type { PackageTier } from "@/lib/database-types";
+import type { PackageTier, LeadStatus, SourceType } from "@/lib/database-types";
 
 type CountTable =
   | "prospects"
@@ -82,4 +82,81 @@ export async function getTenantCounts(companyId: string): Promise<TenantCounts> 
     ]);
 
   return { prospects, leads, offers, jobs, followupTasks, bexioHandoffs };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Leads (Lead Inbox)                                                          */
+/* -------------------------------------------------------------------------- */
+
+export interface LeadListItem {
+  id: string;
+  companyName: string;
+  contactName: string | null;
+  email: string | null;
+  phone: string | null;
+  serviceInterest: string | null;
+  status: LeadStatus;
+  sourceType: SourceType;
+  notes: string | null;
+  createdAt: string;
+}
+
+/**
+ * Lead Inbox: the active company's leads, newest first, excluding soft-deleted.
+ * RLS-scoped via the session client (never service-role). Capped for safety.
+ */
+export async function getLeads(companyId: string): Promise<LeadListItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("leads")
+    .select(
+      "id, company_name, contact_name, email, phone, service_interest, status, source_type, notes, created_at",
+    )
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) return [];
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    company_name: string;
+    contact_name: string | null;
+    email: string | null;
+    phone: string | null;
+    service_interest: string | null;
+    status: LeadStatus;
+    source_type: SourceType;
+    notes: string | null;
+    created_at: string;
+  }>;
+
+  return rows.map((row) => ({
+    id: row.id,
+    companyName: row.company_name,
+    contactName: row.contact_name,
+    email: row.email,
+    phone: row.phone,
+    serviceInterest: row.service_interest,
+    status: row.status,
+    sourceType: row.source_type,
+    notes: row.notes,
+    createdAt: row.created_at,
+  }));
+}
+
+/** Active company's service labels (for the new-lead form datalist). RLS-scoped. */
+export async function getServiceLabels(companyId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("company_services")
+    .select("label")
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .order("sort_order", { ascending: true });
+
+  if (error) return [];
+  const rows = (data ?? []) as Array<{ label: string }>;
+  return rows.map((r) => r.label);
 }

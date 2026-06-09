@@ -7,29 +7,29 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.2.4** — **Supabase-Staging-Verifikationsskripte.** Neu unter
-`supabase/verification/`: `001_verify_schema.sql` (read-only: prüft Enums,
-Tabellen, Funktionen, RLS, Policies und dass noch **keine** Daten existieren),
-`002_fake_seed_for_rls_tests.sql` (rein **fiktive** Staging-Daten: zwei
-Demo-Tenants, `@example.test`-Nutzer) und `003_rls_test_queries.sql` (RLS-Tests,
-jede Zeile soll **PASS** ergeben) plus der Runbook `docs/supabase-staging-
-verification.md`. Damit lässt sich Migration `001` sicher auf einem echten
-Staging-Projekt anwenden und prüfen. Weiterhin **nur SQL/Skripte/Docs**: keine
-Credentials, keine `.env.local`, keine Datenbank, keine echten Daten, kein Auth,
-keine bexio-API. Die verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert.
+**v0.2.5** — **Staging-Verifikation dokumentiert.** Die Schema- und
+RLS-Verifikation lief erfolgreich gegen das manuell erstellte Supabase-Projekt
+**`klarsa-staging`** (2026-06-09): Migration `001`, Schema-Prüfung, fiktiver Seed
+und die RLS-Tests sind alle **bestanden** (manuelle Ausführung im SQL-Editor,
+vom Nutzer berichtet). Festgehalten in `docs/supabase-staging-results.md`.
+Weiterhin **nur Docs**: keine Credentials, keine `.env.local`, keine
+App-Anbindung, keine echten Daten (nur `@example.test`-Testdaten). Die
+verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert.
 
 > Klarsa Core (Multi-Tenant-SaaS): v0.2.0 (Docs/Typen, `/workspace`), v0.2.1
 > (Schema-Fundament, Migration `001`), v0.2.2 (Staging-Setup + RLS-Testplan),
-> v0.2.3 (RLS-Rollen-Härtung), v0.2.4 (Verifikationsskripte). **Clean24 Memis
-> GmbH** = **erster Tenant / Live-Proof**.
+> v0.2.3 (RLS-Rollen-Härtung), v0.2.4 (Verifikationsskripte), v0.2.5
+> (Staging-Verifikation bestanden). **Clean24 Memis GmbH** = **erster Tenant /
+> Live-Proof**.
 
 > Öffentliche Marke = **Klarsa**. Das interne Repo/Paket heisst weiterhin
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** v0.2.5 — Migration auf Staging anwenden und
-> Verifikationsergebnisse festhalten, **oder** Auth-Fundament. **Keine echten
-> Daten** vor validiertem Auth, RLS, Security und Backup.
+> **Nächster Schritt:** v0.2.6 — **Auth-Fundament + Supabase-Client-Architektur**
+> (empfohlen, zuerst): Login, Session-Handling und RLS-Kontext, **bevor** echte
+> Tenant-Daten existieren. **Keine echten Daten** vor validiertem Auth, RLS,
+> Security und Backup.
 
 ### Strategie
 
@@ -125,6 +125,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   rls-test-plan.md               # RLS-Testfälle + Rollenmatrix (Mandantentrennung, Rollen, Audit)
   staging-seed-plan.md           # fiktive Testdaten (zwei Demo-Tenants)
   supabase-staging-verification.md # Runbook: Migration anwenden + Skripte 1–4 (v0.2.4)
+  supabase-staging-results.md    # Verifikationsergebnis klarsa-staging (v0.2.5, bestanden)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
   migrations/001_klarsa_core_schema.sql  # Enums, 20 Tabellen, Indizes, RLS (rollenbasiert)
@@ -304,6 +305,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [supabase-schema-notes.md](docs/supabase-schema-notes.md) | Schema-Design zur Migration: Tabellengruppen, RLS-/Soft-Delete-/Audit-Strategie |
 | [supabase-staging-setup.md](docs/supabase-staging-setup.md) | Runbook: Staging-Projekt anlegen, `.env.local`, Migration anwenden, prüfen (v0.2.2) |
 | [supabase-staging-verification.md](docs/supabase-staging-verification.md) | Runbook: Migration + Verifikationsskripte 1–4 ausführen, Clean/Reset (v0.2.4) |
+| [supabase-staging-results.md](docs/supabase-staging-results.md) | Verifikationsergebnis `klarsa-staging` (2026-06-09, bestanden; v0.2.5) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
@@ -352,23 +354,29 @@ Security, Schema-Notizen) aktualisiert. Nur SQL/Docs/Typen, ohne echte Daten.
 (RLS-Tests = PASS) plus Runbook `docs/supabase-staging-verification.md`. Nur
 SQL/Skripte/Docs, ohne Credentials/Projekt/echte Daten.
 
-**v0.2.5 (nächster Schritt)** – **Migration auf Staging anwenden und
-Verifikationsergebnisse festhalten** (Skripte 1–4) **oder** Auth-Fundament.
-Weiterhin keine echten Kundendaten.
+**v0.2.5 (erledigt)** – **Staging-Verifikation dokumentiert**: Migration `001`,
+Schema-Prüfung, fiktiver Seed und RLS-Tests sind auf `klarsa-staging` bestanden
+(2026-06-09, manuelle Ausführung vom Nutzer berichtet). Festgehalten in
+`docs/supabase-staging-results.md`. Nur Docs, ohne Credentials/echte Daten.
+
+**v0.2.6 (nächster Schritt, empfohlen)** – **Auth-Fundament +
+Supabase-Client-Architektur**: Login, Session-Handling und RLS-Kontext, **bevor**
+echte Tenant-Daten existieren. Alternativ: Clean24-Staging-Tenant-Dashboard-
+Fundament. Weiterhin keine echten Kundendaten.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen), v0.2.1
-(Supabase-Schema-Fundament), v0.2.2 (Staging-Setup + RLS-Testplan), v0.2.3
-(RLS-Rollen-Härtung) und v0.2.4 (Verifikationsskripte) sind erledigt. Parallel
-bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment,
-echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.2.4
+(Verifikationsskripte) und v0.2.5 (**Staging-Verifikation bestanden** auf
+`klarsa-staging`) sind erledigt. Parallel bleibt **A) Deploy / Visual Review**
+der Verkaufs-Demo möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`,
+PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.2.5 — Migration auf einem Staging-Projekt
-anwenden und die Verifikation durchführen** (Runbook
-`docs/supabase-staging-verification.md`, Skripte 1–4), Ergebnisse festhalten,
-danach die Auth-Umsetzung. Erst danach schrittweise echte Tenant-Daten von Clean24
-— **nie vor** validiertem Auth, RLS, Security und Backup.
+**Empfehlung:** als Nächstes **v0.2.6 — Auth-Fundament + Supabase-Client-
+Architektur** (Login, Session-Handling, RLS-Kontext) — und zwar **zuerst**, weil
+ohne Login/RLS/Session keine echten Tenant-Daten verarbeitet werden dürfen. Das
+Clean24-Staging-Tenant-Dashboard folgt danach. Erst nach Auth schrittweise echte
+Tenant-Daten von Clean24 — **nie vor** validiertem Auth, RLS, Security und Backup.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

@@ -4,11 +4,13 @@ Database foundation for **Klarsa Core**, the multi-tenant SaaS layer of Klarsa.
 This folder contains **schema migrations and verification scripts only** —
 structure and tests, not data.
 
-> **Status (v0.2.4):** schema foundation + staging setup plan + **verification
-> scripts**. Still **no database is connected**, **no credentials are
-> committed**, and **no real customer data** exists. The migration is applied
-> first to a throwaway **staging** project and validated (verify → fake seed →
-> RLS tests) before anything else.
+> **Status (v0.2.5):** schema + verification scripts **verified on staging**.
+> `klarsa-staging` ran the migration, schema verification, fake seed and RLS
+> tests **successfully** (2026-06-09, manual SQL Editor execution reported by the
+> user) — see [`../docs/supabase-staging-results.md`](../docs/supabase-staging-results.md).
+> Still **no database is connected to the app**, **no credentials are
+> committed**, and **no real customer data** exists (fake `@example.test` data
+> only).
 
 ## Contents
 
@@ -119,7 +121,7 @@ uploads before that — see [`../docs/security-architecture.md`](../docs/securit
 
 ## Next step
 
-**v0.2.5 — apply the migration to a staging project and record the verification
-results** (run scripts 1→4 from the verification runbook), or begin the **auth
-foundation**. Still no real customer data until auth, RLS and backup/restore are
-verified.
+**v0.2.6 — Auth foundation + Supabase client architecture** (recommended): login,
+sessions and RLS context, so that authenticated access exists **before** any real
+tenant data. Staging schema/RLS are already verified (v0.2.5). Still no real
+customer data until auth, RLS and backup/restore are verified.

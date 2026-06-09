@@ -2,14 +2,20 @@
 
 > **Status: RUNBOOK.** Step-by-step to apply migration `001` to a **staging**
 > Supabase project and verify it with the scripts in `supabase/verification/`.
-> **No production data, no committed credentials, no real customer data.** This
-> prepares the run; actually executing it on a live project is v0.2.5.
+> **No production data, no committed credentials, no real customer data.**
 
 Related: [`../supabase/README.md`](../supabase/README.md),
 [`supabase-staging-setup.md`](./supabase-staging-setup.md),
 [`rls-test-plan.md`](./rls-test-plan.md),
 [`supabase-schema-notes.md`](./supabase-schema-notes.md),
 [`security-architecture.md`](./security-architecture.md).
+
+## Latest verification status
+
+✅ **`klarsa-staging` verified (2026-06-09).** Migration `001`, schema
+verification, fake seed, and the RLS tests all ran successfully (manual SQL
+Editor execution, reported by the user). Full record:
+**[supabase-staging-results.md](./supabase-staging-results.md)**.
 
 ## Scripts (run in this order)
 

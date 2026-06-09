@@ -11,6 +11,14 @@ export const metadata: Metadata = {
 };
 
 export default function LoginPage() {
+  // Read the public env on the SERVER via direct static references. NEXT_PUBLIC
+  // values are inlined at build/render time; this is the most reliable gate and
+  // avoids any client-side `process.env[name]` pitfalls.
+  const isConfigured = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  );
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-12">
       <div className="w-full max-w-sm">
@@ -33,7 +41,7 @@ export default function LoginPage() {
             Kundendaten.
           </p>
 
-          <LoginForm />
+          <LoginForm isConfigured={isConfigured} />
         </div>
 
         <p className="mt-6 text-center text-sm text-slate-500">

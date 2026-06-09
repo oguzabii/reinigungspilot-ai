@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { LogIn } from "lucide-react";
+import { LogIn, CircleCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/browser";
-import { isSupabaseConfigured } from "@/lib/env";
 
 type FormState =
   | { kind: "idle" }
@@ -11,15 +10,20 @@ type FormState =
   | { kind: "error"; message: string; detail?: string };
 
 /**
- * Login form for the Klarsa app shell. Functional against a configured Supabase
- * project; when env is absent it shows a clear notice instead of failing.
+ * Login form for the Klarsa app shell.
+ *
+ * `isConfigured` is computed on the SERVER (see app/login/page.tsx) from direct
+ * static `NEXT_PUBLIC_*` references and passed in — the most reliable way to gate
+ * the form (avoids client-side `process.env[name]` pitfalls). The browser client
+ * itself reads the same vars via `lib/env.ts` (also static refs), so sign-in
+ * works once env is present.
  *
  * On success it navigates to `/app-shell`, which is server-protected (it
  * re-checks the session and redirects back here if absent).
  *
  * TODO(v0.2.8): add password reset / magic-link options.
  */
-export function LoginForm() {
+export function LoginForm({ isConfigured }: { isConfigured: boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [state, setState] = useState<FormState>({ kind: "idle" });
@@ -27,7 +31,7 @@ export function LoginForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!isSupabaseConfigured()) {
+    if (!isConfigured) {
       setState({
         kind: "error",
         message:
@@ -64,6 +68,22 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+      {/* Safe diagnostic — no key/URL values are shown. */}
+      {isConfigured ? (
+        <p className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+          <CircleCheck className="h-3.5 w-3.5" strokeWidth={2.4} />
+          Staging env erkannt.
+        </p>
+      ) : (
+        <p
+          role="status"
+          className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-inset ring-amber-200"
+        >
+          Supabase ist in dieser Umgebung nicht konfiguriert. Login wird erst mit
+          Staging-Zugang aktiv.
+        </p>
+      )}
+
       <div>
         <label
           htmlFor="email"
@@ -118,7 +138,7 @@ export function LoginForm() {
 
       <button
         type="submit"
-        disabled={state.kind === "loading"}
+        disabled={!isConfigured || state.kind === "loading"}
         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-800 disabled:opacity-60"
       >
         <LogIn className="h-4 w-4" strokeWidth={2.2} />
@@ -126,7 +146,7 @@ export function LoginForm() {
       </button>
 
       <p className="text-center text-xs text-slate-400">
-        Foundation v0.2.6 – noch keine echten Kundendaten. Zugang nur für Staging.
+        Noch keine echten Kundendaten. Zugang nur für Staging.
       </p>
     </form>
   );

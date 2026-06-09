@@ -24,6 +24,12 @@ zeigt die Seite eine sichere „Setup erforderlich"-Ansicht (build-sicher). Weit
 > an einen Fake-Tenant binden (kein Passwort in SQL). Plus klarere `/login`-Fehlermeldung.
 > Docs: `docs/staging-login-test-users.md`. Nur Docs + Staging-SQL, keine Credentials/echten Daten.
 
+> **v0.2.7.2 (Patch):** Client-Env-Erkennung repariert. `lib/env.ts` liest die
+> `NEXT_PUBLIC_*`-Variablen jetzt über **direkte statische** `process.env`-Referenzen
+> (nicht `process.env[name]`), damit Next sie ins Client-Bundle inlinen kann;
+> `/login` ermittelt `isConfigured` serverseitig und zeigt bei Erfolg „Staging env
+> erkannt". Build bleibt env-frei. Keine Credentials/echten Daten.
+
 > Klarsa Core (Multi-Tenant-SaaS): v0.2.0–v0.2.5 (Docs/Schema/RLS/Verifikation),
 > v0.2.6 (Auth-Fundament), **v0.2.7 (App-Shell ↔ Staging, RLS-Lesepfad)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
@@ -407,6 +413,12 @@ Tenant-Reads. Doku: `docs/app-shell-staging-connection.md`. Nur fiktive
 Dashboard anlegen (Auto-Confirm) + `004_bind_auth_user_to_fake_tenant.sql` (Bind
 an Fake-Tenant, idempotent, kein Passwort in SQL), klarere `/login`-Fehlermeldung,
 Doku `docs/staging-login-test-users.md`. Nur Docs + Staging-SQL, keine Credentials.
+
+**v0.2.7.2 (erledigt, Patch)** – **Client-Env-Erkennung repariert**: `lib/env.ts`
+nutzt statische `process.env.NEXT_PUBLIC_*`-Referenzen (statt `process.env[name]`,
+das Next nicht ins Client-Bundle inlinen kann); `/login` ermittelt `isConfigured`
+serverseitig und passt es an `LoginForm`, plus Diagnose „Staging env erkannt".
+Build bleibt env-frei.
 
 **v0.2.8 (nächster Schritt)** – **Clean24-Tenant-Setup-Fundament** (weiterhin
 Staging/fiktiv) **oder** **Rollen-/Onboarding-Härtung** (Onboarding-RPC für die

@@ -77,6 +77,21 @@ After the auth user exists, bind it to a demo tenant + role with the helper:
 - This is **fake staging data** for isolation/login testing — **no real customer
   data**. Real data stays gated by "No Security = No Customer Data".
 
+## Troubleshooting
+
+**`.env.local` exists, but `/login` still says "nicht konfiguriert":**
+
+- **Restart the dev server.** Next reads `.env.local` at startup — changes are
+  not hot-reloaded. Stop `next dev` and start it again.
+- **Confirm the variable names** are exactly `NEXT_PUBLIC_SUPABASE_URL` and
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY` (the `NEXT_PUBLIC_` prefix is required for
+  client exposure), and that the file is `.env.local` at the project root.
+- **Client env detection** must use **direct static** `process.env.NEXT_PUBLIC_*`
+  references, never dynamic `process.env[name]` (which Next cannot inline into the
+  client bundle). Fixed in **v0.2.7.2** — `lib/env.ts` uses static refs and
+  `app/login/page.tsx` computes `isConfigured` on the server. When it works,
+  `/login` shows **"Staging env erkannt."**
+
 ## Next
 
 Run the full login test flow in

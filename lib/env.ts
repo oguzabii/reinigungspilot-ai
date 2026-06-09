@@ -1,54 +1,65 @@
 /**
- * Environment validation for Klarsa Core (Supabase Auth).
+ * Environment access for Klarsa Core (Supabase Auth).
  *
- * IMPORTANT — build safety: nothing here runs or throws at import time, so
- * `next build` never needs real environment values. The validators throw only
- * when CALLED at runtime with a missing value. No real values live in the repo;
- * see `.env.local.example` (placeholders only) and `docs/auth-foundation.md`.
+ * BUILD SAFETY: nothing here runs or throws at import time, so `next build`
+ * never needs real environment values. Validators throw only when CALLED at
+ * runtime with a missing value.
  *
- * Client vs server:
- *   - `NEXT_PUBLIC_*` values are inlined into the client bundle (safe to expose).
+ * CLIENT INLINING (important): Next.js only inlines `NEXT_PUBLIC_*` variables
+ * into the CLIENT bundle when they are referenced as **static literals**
+ * (`process.env.NEXT_PUBLIC_X`). Dynamic access (`process.env[name]`) is NOT
+ * inlined and reads as `undefined` in the browser. So the public vars below are
+ * read via **direct static references** — this is what makes client-side
+ * detection (and the browser client) work.
+ *
+ * No real values live in the repo (see `.env.local.example`):
+ *   - `NEXT_PUBLIC_*` are client-safe.
  *   - `SUPABASE_SERVICE_ROLE_KEY` is SERVER-ONLY and must never reach the client.
  */
 
-function read(name: string): string | undefined {
-  const value = process.env[name];
+// Direct static references so Next inlines these into the client bundle.
+const PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+function nonEmpty(value: string | undefined): string | undefined {
   return value && value.length > 0 ? value : undefined;
 }
 
-function required(name: string): string {
-  const value = read(name);
+/** Public, client-safe Supabase project URL. Throws if missing. */
+export function getSupabaseUrl(): string {
+  const value = nonEmpty(PUBLIC_SUPABASE_URL);
   if (!value) {
     throw new Error(
-      `[Klarsa] Missing required environment variable ${name}. ` +
-        `Copy .env.local.example to .env.local and fill it in (staging only).`,
+      "[Klarsa] Missing NEXT_PUBLIC_SUPABASE_URL. Copy .env.local.example to .env.local and fill it in (staging only).",
     );
   }
   return value;
 }
 
-/** Public, client-safe Supabase project URL. */
-export function getSupabaseUrl(): string {
-  return required("NEXT_PUBLIC_SUPABASE_URL");
-}
-
 /** Public, client-safe anon key. RLS still applies to requests made with it. */
 export function getSupabaseAnonKey(): string {
-  return required("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  const value = nonEmpty(PUBLIC_SUPABASE_ANON_KEY);
+  if (!value) {
+    throw new Error(
+      "[Klarsa] Missing NEXT_PUBLIC_SUPABASE_ANON_KEY. Copy .env.local.example to .env.local and fill it in (staging only).",
+    );
+  }
+  return value;
 }
 
 /** Klarsa environment marker (e.g. "staging"). Defaults to "development". */
 export function getKlarsaEnv(): string {
-  return read("KLARSA_ENV") ?? "development";
+  return nonEmpty(process.env.KLARSA_ENV) ?? "development";
 }
 
 /**
- * Cheap, non-throwing check that the public Supabase env is present. Used to
- * make the app degrade gracefully (and the build pass) when env is absent.
+ * Non-throwing check that the public Supabase env is present. Works on both the
+ * server and the client (the static refs above are inlined into the client
+ * bundle). Used to degrade gracefully and to keep the build env-free.
  */
 export function isSupabaseConfigured(): boolean {
   return Boolean(
-    read("NEXT_PUBLIC_SUPABASE_URL") && read("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    nonEmpty(PUBLIC_SUPABASE_URL) && nonEmpty(PUBLIC_SUPABASE_ANON_KEY),
   );
 }
 
@@ -63,5 +74,9 @@ export function getServiceRoleKey(): string {
       "[Klarsa] SUPABASE_SERVICE_ROLE_KEY must never be read in the browser.",
     );
   }
-  return required("SUPABASE_SERVICE_ROLE_KEY");
+  const value = nonEmpty(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  if (!value) {
+    throw new Error("[Klarsa] Missing SUPABASE_SERVICE_ROLE_KEY (server-only).");
+  }
+  return value;
 }

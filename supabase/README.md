@@ -22,6 +22,7 @@ supabase/
     001_verify_schema.sql            # read-only: enums/tables/functions/RLS/policies + no-data
     002_fake_seed_for_rls_tests.sql  # FAKE staging data (two demo tenants, @example.test users)
     003_rls_test_queries.sql         # RLS test cases (every line should print PASS)
+    004_bind_auth_user_to_fake_tenant.sql # bind a Dashboard auth user -> fake tenant (login tests)
   README.md                          # this file
 ```
 
@@ -39,13 +40,18 @@ throwaway **staging** project and validated. Run order:
    functions/RLS/policies exist; no data yet).
 3. `verification/002_fake_seed_for_rls_tests.sql` — insert **fake** test data.
 4. `verification/003_rls_test_queries.sql` — RLS tests (expect all **PASS**).
+5. (login tests, optional) create a Dashboard auth user, then
+   `verification/004_bind_auth_user_to_fake_tenant.sql` — bind it to a fake
+   tenant so it can log in at `/app-shell`.
 
 Runbooks and references:
 
 | Doc | Purpose |
 | --- | --- |
 | [supabase-staging-setup.md](../docs/supabase-staging-setup.md) | Create the staging project, fill `.env.local`, apply the migration, verify |
-| [supabase-staging-verification.md](../docs/supabase-staging-verification.md) | **End-to-end runbook** for the four scripts above + clean/reset |
+| [supabase-staging-verification.md](../docs/supabase-staging-verification.md) | **End-to-end runbook** for scripts 1–4 + clean/reset |
+| [staging-login-test-users.md](../docs/staging-login-test-users.md) | Create login-ready Dashboard users + bind via `004` (login tests) |
+| [app-shell-staging-connection.md](../docs/app-shell-staging-connection.md) | `/app-shell` ↔ staging: env, exact login test flow, RLS read path |
 | [rls-test-plan.md](../docs/rls-test-plan.md) | 13 RLS tests + role matrix (tenant isolation, readonly write-block, role scoping, append-only audit, no anon access) |
 | [staging-seed-plan.md](../docs/staging-seed-plan.md) | Fake-only dataset (two demo tenants, fake users) to exercise RLS + workflows |
 

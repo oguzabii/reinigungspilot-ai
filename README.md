@@ -18,6 +18,12 @@ zeigt die Seite eine sichere „Setup erforderlich"-Ansicht (build-sicher). Weit
 **keine Credentials, keine `.env.local`, keine echten Kundendaten** – nur fiktive
 `@example.test`-Staging-Daten. Die verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert.
 
+> **v0.2.7.1 (Patch):** Staging-Login-Testanleitung. Die per `002` geseedeten
+> Nutzer sind in gehostetem Supabase nicht login-fähig; daher: Auth-User im
+> Dashboard anlegen (Auto-Confirm) und mit `supabase/verification/004_bind_auth_user_to_fake_tenant.sql`
+> an einen Fake-Tenant binden (kein Passwort in SQL). Plus klarere `/login`-Fehlermeldung.
+> Docs: `docs/staging-login-test-users.md`. Nur Docs + Staging-SQL, keine Credentials/echten Daten.
+
 > Klarsa Core (Multi-Tenant-SaaS): v0.2.0–v0.2.5 (Docs/Schema/RLS/Verifikation),
 > v0.2.6 (Auth-Fundament), **v0.2.7 (App-Shell ↔ Staging, RLS-Lesepfad)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
@@ -142,6 +148,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   supabase-staging-results.md    # Verifikationsergebnis klarsa-staging (v0.2.5, bestanden)
   auth-foundation.md             # Auth-Flow, Session/Clients, geschützte Routen, Service-Role-Regeln (v0.2.6)
   app-shell-staging-connection.md # /app-shell ↔ Staging: Env, Fake-Login, RLS-Lesepfad, kein Service-Role (v0.2.7)
+  staging-login-test-users.md    # Login-fähige Dashboard-Testnutzer anlegen + via 004 binden (v0.2.7.1)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
   migrations/001_klarsa_core_schema.sql  # Enums, 20 Tabellen, Indizes, RLS (rollenbasiert)
@@ -149,6 +156,7 @@ supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/
     001_verify_schema.sql            # read-only: Schema/RLS prüfen, keine Daten
     002_fake_seed_for_rls_tests.sql  # fiktive Staging-Daten (@example.test)
     003_rls_test_queries.sql         # RLS-Tests (jede Zeile = PASS)
+    004_bind_auth_user_to_fake_tenant.sql # Dashboard-Auth-User an Fake-Tenant binden (Login-Tests, v0.2.7.1)
   README.md          # Anwenden (Staging zuerst), keine Secrets, Security-Gate
 
 .env.local.example   # Env-Template (nur Platzhalter) — echtes .env.local ist ignoriert
@@ -328,6 +336,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [supabase-staging-results.md](docs/supabase-staging-results.md) | Verifikationsergebnis `klarsa-staging` (2026-06-09, bestanden; v0.2.5) |
 | [auth-foundation.md](docs/auth-foundation.md) | Auth-Flow, Session/Clients, Cookie-Strategie, Rollen-Lookup, geschützte Routen, Service-Role-Regeln (v0.2.6) |
 | [app-shell-staging-connection.md](docs/app-shell-staging-connection.md) | `/app-shell` ↔ Staging: `.env.local`, Fake-User-Login, RLS-Lesepfad, kein Service-Role für Tenant-Reads (v0.2.7) |
+| [staging-login-test-users.md](docs/staging-login-test-users.md) | Login-fähige Testnutzer: Dashboard-Auth-User anlegen (Auto-Confirm) + via `004` an Fake-Tenant binden (v0.2.7.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
@@ -393,6 +402,11 @@ Modul-Zähler über den Session-Client (`lib/auth/tenant-data.ts`), sichere
 Zustände „Setup erforderlich"/„Kein aktiver Mandant". Kein Service-Role für
 Tenant-Reads. Doku: `docs/app-shell-staging-connection.md`. Nur fiktive
 `@example.test`-Daten.
+
+**v0.2.7.1 (erledigt, Patch)** – **Staging-Login-Testanleitung**: Auth-User im
+Dashboard anlegen (Auto-Confirm) + `004_bind_auth_user_to_fake_tenant.sql` (Bind
+an Fake-Tenant, idempotent, kein Passwort in SQL), klarere `/login`-Fehlermeldung,
+Doku `docs/staging-login-test-users.md`. Nur Docs + Staging-SQL, keine Credentials.
 
 **v0.2.8 (nächster Schritt)** – **Clean24-Tenant-Setup-Fundament** (weiterhin
 Staging/fiktiv) **oder** **Rollen-/Onboarding-Härtung** (Onboarding-RPC für die

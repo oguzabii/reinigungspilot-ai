@@ -31,28 +31,38 @@ KLARSA_ENV=staging
 - The **service-role key** stays server-only and is **not** used by the app shell
   (see below). It exists only for future trusted system tasks.
 
-## Create / log in the fake Supabase users
+## Login test flow (exact steps)
 
-The app shell needs a signed-in user that has an active membership. Use the fake
-users from the seed (all `@example.test`):
+> The users seeded by `002` are **not login-ready** in hosted Supabase. For an
+> interactive login, **create the auth user in the Dashboard, then bind it** to a
+> fake tenant. Full guide: [`staging-login-test-users.md`](./staging-login-test-users.md).
 
-1. Apply migration + verification scripts per
-   [`supabase-staging-verification.md`](./supabase-staging-verification.md)
-   (`001` → verify → `002` fake seed). `002` creates the 8 fake auth users (or
-   create them via **Dashboard → Authentication** with the same emails).
-2. Set a known password for the user(s) you want to test with (Dashboard →
-   Authentication → user → "Send recovery"/"Update password"), since `002`'s
-   direct insert stores an unusable password hash.
-3. Go to `/login`, sign in with e.g. `owner-a@example.test`.
+1. **Prereqs:** apply `001` → `001_verify` → `002` (fake seed) per
+   [`supabase-staging-verification.md`](./supabase-staging-verification.md), and
+   set `.env.local` (above).
+2. **Create the auth user:** Dashboard → **Authentication → Users → Add user**,
+   email `owner-a-login@example.test`, set a test password, enable **"Auto Confirm
+   User"**. (Never a real email; never share the password.)
+3. **Bind it to a tenant:** run
+   [`004_bind_auth_user_to_fake_tenant.sql`](../supabase/verification/004_bind_auth_user_to_fake_tenant.sql)
+   with `target_email = 'owner-a-login@example.test'`, `target_company_name =
+   'Clean24 Demo Tenant'`, `target_role = 'owner'`, `target_is_active = true`.
+4. **Log in:** open `/login`, sign in with that email + password.
+5. **Open `/app-shell`:** you should see the **Clean24 Demo Tenant** shell with
+   role `owner`, the package tier, and RLS-scoped counts.
 
-Suggested test users (from [`staging-seed-plan.md`](./staging-seed-plan.md)):
+Repeat for more users to prove isolation:
 
-| User | Tenant | Role | Expectation in `/app-shell` |
-| --- | --- | --- | --- |
-| `owner-a@example.test` | Clean24 Demo Tenant | owner | sees Company A counts |
-| `owner-b@example.test` | Muster Service Demo Tenant | owner | sees Company B counts |
-| `readonly-a@example.test` | Clean24 Demo Tenant | readonly | sees Company A counts (read-only) |
-| `inactive-a@example.test` | Clean24 Demo Tenant | sales (inactive) | "Kein aktiver Mandant" |
+| Dashboard user | Tenant | Role | active | Expected in `/app-shell` |
+| --- | --- | --- | --- | --- |
+| `owner-a-login@example.test` | Clean24 Demo Tenant | owner | yes | Company A counts |
+| `owner-b-login@example.test` | Muster Service Demo Tenant | owner | yes | Company B counts (no A rows) |
+| `readonly-a-login@example.test` | Clean24 Demo Tenant | readonly | yes | Company A counts (read-only) |
+| `inactive-a-login@example.test` | Clean24 Demo Tenant | readonly | **no** | "Kein aktiver Mandant" |
+
+If login fails, `/login` now shows: *"Login fehlgeschlagen. Prüfen Sie E-Mail,
+Passwort und ob der Testbenutzer in Supabase bestätigt ist."* — usually the user
+isn't confirmed (re-create with Auto Confirm) or the password is wrong.
 
 ## How RLS is verified through the app
 

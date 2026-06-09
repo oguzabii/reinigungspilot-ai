@@ -8,15 +8,16 @@ import { isSupabaseConfigured } from "@/lib/env";
 type FormState =
   | { kind: "idle" }
   | { kind: "loading" }
-  | { kind: "error"; message: string };
+  | { kind: "error"; message: string; detail?: string };
 
 /**
- * Login form skeleton. Functional against a configured Supabase project, but
- * intentionally minimal: this is the v0.2.6 foundation. When Supabase env is
- * absent it shows a clear notice instead of failing.
+ * Login form for the Klarsa app shell. Functional against a configured Supabase
+ * project; when env is absent it shows a clear notice instead of failing.
  *
- * TODO(v0.2.7): wire success to a protected `/app-shell` with a real session
- * check + redirect, and add password reset / magic-link options.
+ * On success it navigates to `/app-shell`, which is server-protected (it
+ * re-checks the session and redirects back here if absent).
+ *
+ * TODO(v0.2.8): add password reset / magic-link options.
  */
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -43,10 +44,15 @@ export function LoginForm() {
         password,
       });
       if (error) {
-        setState({ kind: "error", message: error.message });
+        setState({
+          kind: "error",
+          message:
+            "Login fehlgeschlagen. Prüfen Sie E-Mail, Passwort und ob der Testbenutzer in Supabase bestätigt ist.",
+          detail: error.message,
+        });
         return;
       }
-      // TODO(v0.2.7): replace with a verified redirect to the protected shell.
+      // /app-shell is server-protected; it re-checks the session there.
       window.location.assign("/app-shell");
     } catch {
       setState({
@@ -99,12 +105,15 @@ export function LoginForm() {
       </div>
 
       {state.kind === "error" && (
-        <p
+        <div
           role="alert"
           className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 ring-1 ring-inset ring-amber-200"
         >
-          {state.message}
-        </p>
+          <p className="font-medium">{state.message}</p>
+          {state.detail && (
+            <p className="mt-1 text-xs text-amber-700/90">{state.detail}</p>
+          )}
+        </div>
       )}
 
       <button

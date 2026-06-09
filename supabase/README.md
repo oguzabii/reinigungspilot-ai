@@ -3,9 +3,10 @@
 Database foundation for **Klarsa Core**, the multi-tenant SaaS layer of Klarsa.
 This folder contains **schema migrations only** — structure, not data.
 
-> **Status (v0.2.1):** schema foundation. **No database is connected**, **no
-> credentials are committed**, and **no real customer data** exists. The
-> migration is a plan to be applied later, in a **staging** project first.
+> **Status (v0.2.2):** schema foundation + **staging setup plan**. Still **no
+> database is connected**, **no credentials are committed**, and **no real
+> customer data** exists. The migration is applied first to a throwaway
+> **staging** project, validated with the RLS test plan, before anything else.
 
 ## Contents
 
@@ -20,12 +21,29 @@ Design rationale and table groups: see
 [`../docs/supabase-schema-notes.md`](../docs/supabase-schema-notes.md). The
 TypeScript mirror of the schema is [`../lib/database-types.ts`](../lib/database-types.ts).
 
+## Staging setup & testing (v0.2.2)
+
+Before any production project or real data, the migration is applied to a
+throwaway **staging** project and validated. Three runbooks cover this:
+
+| Doc | Purpose |
+| --- | --- |
+| [supabase-staging-setup.md](../docs/supabase-staging-setup.md) | Create the staging project, fill `.env.local`, apply the migration, verify tables/enums/functions/RLS |
+| [rls-test-plan.md](../docs/rls-test-plan.md) | 10 RLS tests (tenant isolation, inactive member, append-only audit, no anon access, role-hardening gaps) |
+| [staging-seed-plan.md](../docs/staging-seed-plan.md) | Fake-only dataset (two demo tenants, fake users) to exercise RLS + workflows |
+
+Environment template: [`../.env.local.example`](../.env.local.example) (placeholders
+only). Copy to `.env.local` (git-ignored) for staging; never commit real values.
+
 ## No credentials are committed
 
 This repository contains **no** Supabase URL, anon key, service-role key,
 database password, JWT secret, or any other secret. The `.gitignore` excludes
-`.env*`. When a project is created later, configuration goes into untracked
-environment variables (documented in v0.2.2), never into the repo.
+`.env*` — only the placeholder template `.env.local.example` is tracked. Copy it
+to `.env.local` (git-ignored) and fill in real values there; configuration later
+also goes into Vercel environment variables, never into the repo. The
+**service-role key is server-only** (it bypasses RLS) and must never reach the
+client or any log.
 
 If you ever find a secret in this folder, treat it as an incident: rotate the
 key and remove it from history.
@@ -85,6 +103,7 @@ uploads before that — see [`../docs/security-architecture.md`](../docs/securit
 
 ## Next step
 
-**v0.2.2 — Supabase staging setup + env documentation:** create a staging
-project, document required environment variables (untracked), apply this
-migration to staging and run the RLS/cross-tenant tests.
+**v0.2.3 — create the staging project + verify the migration**, or begin the
+**auth/RLS implementation plan**. Use the runbooks above (setup → seed → RLS
+tests). Still no real customer data until auth, RLS and backup/restore are
+verified.

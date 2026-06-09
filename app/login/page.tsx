@@ -28,6 +28,11 @@ export default function LoginPage() {
             Zugang zum Klarsa-Arbeitsbereich (Multi-Tenant).
           </p>
 
+          <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 ring-1 ring-inset ring-slate-100">
+            Staging-Testzugang nur für interne Entwicklung. Keine echten
+            Kundendaten.
+          </p>
+
           <LoginForm />
         </div>
 

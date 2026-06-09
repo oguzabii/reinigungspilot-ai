@@ -19,9 +19,16 @@ Scraping, keine E-Mail-Anbindung, kein Lead Hunter). Lead-Inbox-Karte auf
 Credentials, keine echten Kundendaten** (nur Staging-Eingaben). Die Verkaufs-Demo
 (v0.1.7) bleibt unverändert.
 
+> **v0.3.0.1 (Patch):** Lead Inbox auf Staging **verifiziert** (vom Nutzer
+> manuell, 2026-06-09): Migration `003` angewendet, `/app-shell/leads` nach Login
+> erreichbar, manuelles Erfassen + Listen für den Clean24-Tenant funktioniert —
+> Session-Client-/RLS-Schreibpfad bestätigt, keine echten Kundendaten.
+> Festgehalten in `docs/clean24-lead-inbox-results.md`. Nur Docs.
+
 > Klarsa Core: v0.2.0–v0.2.6 (Docs/Schema/RLS/Verifikation/Auth), v0.2.7
 > (App-Shell ↔ Staging), v0.2.8 (Clean24-Tenant-Setup), v0.2.9 (Tenant
-> verifiziert), **v0.3.0 (Lead Inbox: manuelle Erfassung, RLS-Schreibpfad)**.
+> verifiziert), **v0.3.0 (Lead Inbox: manuelle Erfassung, RLS-Schreibpfad;
+> .1 auf Staging verifiziert)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -154,6 +161,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-tenant-setup.md        # Clean24 = erster realer Tenant: Config, Billing-Felder (002), Setup (005) (v0.2.8)
   clean24-staging-tenant-results.md # Ergebnis: Clean24-Staging-Tenant verifiziert (owner, Premium, Zähler 0; v0.2.9)
   clean24-lead-inbox-foundation.md # Lead Inbox: geschützte Route, manuelle Erfassung (Session/RLS), Migration 003 (v0.3.0)
+  clean24-lead-inbox-results.md  # Ergebnis: Lead Inbox auf Staging verifiziert (Create/List, RLS-Schreibpfad; v0.3.0.1)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
   migrations/
@@ -350,6 +358,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-tenant-setup.md](docs/clean24-tenant-setup.md) | Clean24 = erster realer Tenant: Config (Premium, internal_founder), Billing-Felder (Migration 002), Staging-Setup (005) (v0.2.8) |
 | [clean24-staging-tenant-results.md](docs/clean24-staging-tenant-results.md) | Ergebnis: Clean24-Staging-Tenant verifiziert (owner, Premium, alle Zähler 0; 2026-06-09, v0.2.9) |
 | [clean24-lead-inbox-foundation.md](docs/clean24-lead-inbox-foundation.md) | Lead Inbox `/app-shell/leads`: geschützte manuelle Erfassung via Session/RLS, Migration 003, kein Service-Role/keine externen Quellen (v0.3.0) |
+| [clean24-lead-inbox-results.md](docs/clean24-lead-inbox-results.md) | Ergebnis: Lead Inbox auf Staging verifiziert — Create/List für Clean24, RLS-Schreibpfad bestätigt (2026-06-09, v0.3.0.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
@@ -449,9 +458,15 @@ Server-Action und Session-Client (RLS; owner/admin/sales schreiben), additive
 Migration `003` (`leads.notes`), Lead-Inbox-Karte verlinkt. Keine externen
 Integrationen, kein Service-Role. Doku `docs/clean24-lead-inbox-foundation.md`.
 
-**v0.3.1 (nächster Schritt)** – **Lead-Status & Follow-ups**: Status eines Leads
-im Inbox ändern und `followup_tasks` anlegen (manuell, RLS-gescopt, keine externen
-Integrationen). Echte Daten erst nach dem Backup-/Trennungs-Gate.
+**v0.3.0.1 (erledigt, Patch)** – **Lead Inbox auf Staging verifiziert** (manuell,
+2026-06-09): Migration `003` angewendet, Create/List für den Clean24-Tenant
+funktioniert, Session-Client-/RLS-Schreibpfad bestätigt, keine echten Kundendaten.
+Festgehalten in `docs/clean24-lead-inbox-results.md`. Nur Docs.
+
+**v0.3.1 (nächster Schritt)** – **Lead-Status-Workflow & Follow-up-Fundament**:
+Status eines Leads im Inbox ändern und `followup_tasks` anlegen (manuell,
+RLS-gescopt, keine externen Integrationen). Echte Daten erst nach dem
+Backup-/Trennungs-Gate.
 
 ## Empfohlener nächster Schritt
 

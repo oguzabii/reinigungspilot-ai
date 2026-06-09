@@ -12,6 +12,14 @@ Related: [`app-shell-staging-connection.md`](./app-shell-staging-connection.md),
 [`security-architecture.md`](./security-architecture.md),
 [`rls-test-plan.md`](./rls-test-plan.md).
 
+## Latest verification status
+
+✅ **Verified on staging (2026-06-09).** Migration `003` applied; a logged-in
+Clean24 user created and listed leads at `/app-shell/leads` — the session-client
+/ RLS write + read path works end-to-end, with no real customer data (manual
+test, reported by the user). Full record:
+**[clean24-lead-inbox-results.md](./clean24-lead-inbox-results.md)**.
+
 ## Route
 
 `/app-shell/leads` — internal (noindex), **`force-dynamic`**, **protected**:

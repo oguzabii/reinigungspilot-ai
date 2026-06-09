@@ -7,10 +7,19 @@
 > credentials**, **no service-role for tenant reads**.
 
 Related: [`auth-foundation.md`](./auth-foundation.md),
+[`staging-login-test-users.md`](./staging-login-test-users.md),
 [`supabase-staging-verification.md`](./supabase-staging-verification.md),
 [`staging-seed-plan.md`](./staging-seed-plan.md),
 [`rls-test-plan.md`](./rls-test-plan.md),
 [`security-architecture.md`](./security-architecture.md).
+
+## Latest verification status
+
+✅ **Login verified (2026-06-09).** A logged-in user reached `/app-shell` and saw
+the **Clean24 Demo** tenant (role **owner**, package **Pro**) with RLS-filtered
+fake counts that match the seed — login → session → tenant context → RLS read,
+end-to-end (manual test, reported by the user). Full record:
+**[app-shell-staging-results.md](./app-shell-staging-results.md)**.
 
 ## Required `.env.local` values
 

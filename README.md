@@ -30,6 +30,12 @@ zeigt die Seite eine sichere „Setup erforderlich"-Ansicht (build-sicher). Weit
 > `/login` ermittelt `isConfigured` serverseitig und zeigt bei Erfolg „Staging env
 > erkannt". Build bleibt env-frei. Keine Credentials/echten Daten.
 
+> **v0.2.7.3 (Patch):** App-Shell-Staging-Login **verifiziert** (vom Nutzer
+> manuell, 2026-06-09): `/login` → `/app-shell` zeigt Tenant **Clean24 Demo**,
+> Rolle **owner**, Paket **Pro** und RLS-gefilterte fiktive Zähler (passend zum
+> Seed). Festgehalten in `docs/app-shell-staging-results.md`. Nur Docs, keine
+> Credentials/echten Daten.
+
 > Klarsa Core (Multi-Tenant-SaaS): v0.2.0–v0.2.5 (Docs/Schema/RLS/Verifikation),
 > v0.2.6 (Auth-Fundament), **v0.2.7 (App-Shell ↔ Staging, RLS-Lesepfad)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
@@ -155,6 +161,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   auth-foundation.md             # Auth-Flow, Session/Clients, geschützte Routen, Service-Role-Regeln (v0.2.6)
   app-shell-staging-connection.md # /app-shell ↔ Staging: Env, Fake-Login, RLS-Lesepfad, kein Service-Role (v0.2.7)
   staging-login-test-users.md    # Login-fähige Dashboard-Testnutzer anlegen + via 004 binden (v0.2.7.1)
+  app-shell-staging-results.md   # Ergebnis: App-Shell-Login bestanden (Clean24 Demo, owner, Pro; v0.2.7.3)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
   migrations/001_klarsa_core_schema.sql  # Enums, 20 Tabellen, Indizes, RLS (rollenbasiert)
@@ -343,6 +350,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [auth-foundation.md](docs/auth-foundation.md) | Auth-Flow, Session/Clients, Cookie-Strategie, Rollen-Lookup, geschützte Routen, Service-Role-Regeln (v0.2.6) |
 | [app-shell-staging-connection.md](docs/app-shell-staging-connection.md) | `/app-shell` ↔ Staging: `.env.local`, Fake-User-Login, RLS-Lesepfad, kein Service-Role für Tenant-Reads (v0.2.7) |
 | [staging-login-test-users.md](docs/staging-login-test-users.md) | Login-fähige Testnutzer: Dashboard-Auth-User anlegen (Auto-Confirm) + via `004` an Fake-Tenant binden (v0.2.7.1) |
+| [app-shell-staging-results.md](docs/app-shell-staging-results.md) | Ergebnis: App-Shell-Staging-Login bestanden (Clean24 Demo, owner, Pro, RLS-Zähler; 2026-06-09, v0.2.7.3) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
@@ -419,6 +427,11 @@ nutzt statische `process.env.NEXT_PUBLIC_*`-Referenzen (statt `process.env[name]
 das Next nicht ins Client-Bundle inlinen kann); `/login` ermittelt `isConfigured`
 serverseitig und passt es an `LoginForm`, plus Diagnose „Staging env erkannt".
 Build bleibt env-frei.
+
+**v0.2.7.3 (erledigt, Patch)** – **App-Shell-Staging-Login verifiziert** (manuell,
+2026-06-09): `/login` → `/app-shell` zeigt Tenant Clean24 Demo, Rolle owner, Paket
+Pro und RLS-gefilterte fiktive Zähler. Festgehalten in
+`docs/app-shell-staging-results.md`. Nur Docs.
 
 **v0.2.8 (nächster Schritt)** – **Clean24-Tenant-Setup-Fundament** (weiterhin
 Staging/fiktiv) **oder** **Rollen-/Onboarding-Härtung** (Onboarding-RPC für die

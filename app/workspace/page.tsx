@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   Gauge,
   Sparkles,
@@ -12,6 +13,8 @@ import {
   Star,
   MapPin,
   Lock,
+  KeyRound,
+  LogIn,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { CLEAN24_TENANT } from "@/lib/tenant-clean24";
@@ -234,17 +237,47 @@ export default function WorkspacePage() {
           </div>
         </section>
 
+        {/* Auth foundation */}
+        <section className="mt-10 rounded-2xl border border-blue-200 bg-blue-50/60 p-5">
+          <p className="flex items-center gap-2 text-sm font-semibold text-navy-900">
+            <KeyRound className="h-4 w-4 text-blue-600" strokeWidth={2} />
+            Auth & Session (Fundament, v0.2.6)
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-slate-600">
+            Login, Session-Handling und die Supabase-Clients
+            (Browser/Server/Admin) sind angelegt. Der Login wird erst mit
+            Staging-Zugang aktiv – <strong className="font-semibold">noch keine
+            echten Kundendaten</strong>. Details: <code>docs/auth-foundation.md</code>.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-navy-900 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-navy-800"
+            >
+              <LogIn className="h-3.5 w-3.5" strokeWidth={2.2} />
+              Login
+            </Link>
+            <Link
+              href="/app-shell"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
+            >
+              App-Shell-Vorschau
+            </Link>
+          </div>
+        </section>
+
         {/* Docs pointer */}
-        <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-semibold text-navy-900">
             Architektur-Dokumentation
           </p>
           <p className="mt-1 text-sm leading-relaxed text-slate-600">
             Der vollständige Plan liegt unter <code>docs/</code>:
             Phase-2-Architektur, Datenmodell, Security-Architektur,
-            Lead-Hunter-Engine und bexio-Architektur. Nächster Schritt:{" "}
+            Lead-Hunter-Engine, bexio-Architektur und das Auth-Fundament.
+            Nächster Schritt:{" "}
             <strong className="font-semibold text-navy-900">
-              v0.2.1 – Supabase-Schema-Fundament
+              v0.2.7 – App-Shell an Supabase-Staging anbinden (fiktive Daten)
             </strong>
             .
           </p>

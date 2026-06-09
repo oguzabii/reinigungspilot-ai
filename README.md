@@ -7,29 +7,28 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.2.5** — **Staging-Verifikation dokumentiert.** Die Schema- und
-RLS-Verifikation lief erfolgreich gegen das manuell erstellte Supabase-Projekt
-**`klarsa-staging`** (2026-06-09): Migration `001`, Schema-Prüfung, fiktiver Seed
-und die RLS-Tests sind alle **bestanden** (manuelle Ausführung im SQL-Editor,
-vom Nutzer berichtet). Festgehalten in `docs/supabase-staging-results.md`.
-Weiterhin **nur Docs**: keine Credentials, keine `.env.local`, keine
-App-Anbindung, keine echten Daten (nur `@example.test`-Testdaten). Die
-verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert.
+**v0.2.6** — **Auth-Fundament + Supabase-Client-Architektur.** Erste echte
+Code-Anbindung: lazy Env-Validierung (`lib/env.ts`), drei Supabase-Clients
+(`lib/supabase/{browser,server,admin}.ts` — Anon im Browser, Cookies/Session am
+Server, Service-Role **nur serverseitig**), Session-Helfer (`lib/auth/session.ts`),
+Login-Flow (`/login`, `/auth/callback`, `/logout`), eine geschützte
+App-Shell-Vorschau (`/app-shell`) und ein **gescopter, no-op-sicherer** Next-16-
+Proxy (`proxy.ts`, vormals Middleware) für Session-Refresh. **Build-sicher ohne echte Env**: nichts liest Env beim Import,
+Clients werden lazy erzeugt, Auth-Routen sind `force-dynamic`. Weiterhin **keine
+Credentials, keine `.env.local`, keine echten Kundendaten** (nur Staging-tauglich).
+Die verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert.
 
-> Klarsa Core (Multi-Tenant-SaaS): v0.2.0 (Docs/Typen, `/workspace`), v0.2.1
-> (Schema-Fundament, Migration `001`), v0.2.2 (Staging-Setup + RLS-Testplan),
-> v0.2.3 (RLS-Rollen-Härtung), v0.2.4 (Verifikationsskripte), v0.2.5
-> (Staging-Verifikation bestanden). **Clean24 Memis GmbH** = **erster Tenant /
-> Live-Proof**.
+> Klarsa Core (Multi-Tenant-SaaS): v0.2.0–v0.2.5 (Docs/Schema/RLS/Verifikation,
+> Staging bestanden), **v0.2.6 (Auth-Fundament)**. **Clean24 Memis GmbH** =
+> **erster Tenant / Live-Proof** – erst nach dem Auth-/RLS-/Backup-Gate.
 
 > Öffentliche Marke = **Klarsa**. Das interne Repo/Paket heisst weiterhin
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** v0.2.6 — **Auth-Fundament + Supabase-Client-Architektur**
-> (empfohlen, zuerst): Login, Session-Handling und RLS-Kontext, **bevor** echte
-> Tenant-Daten existieren. **Keine echten Daten** vor validiertem Auth, RLS,
-> Security und Backup.
+> **Nächster Schritt:** v0.2.7 — App-Shell an Supabase-Staging mit **fiktiven**
+> Tenant-Daten anbinden + Schutz für geschützte Routen prüfen. **Keine echten
+> Clean24-/Kundendaten** vor validiertem Auth, RLS, Security und Backup.
 
 ### Strategie
 
@@ -46,6 +45,7 @@ verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert.
 - **React 19** + **TypeScript** (strict)
 - **Tailwind CSS v4**
 - **lucide-react** (Icons)
+- **@supabase/supabase-js** + **@supabase/ssr** (Auth-Fundament ab v0.2.6; build-sicher, ohne echte Env)
 - Systemschrift-Stack (kein externer Font-Fetch)
 
 ## Lokal starten
@@ -71,7 +71,11 @@ npm run start    # Produktionsserver (nach build)
 | `/demo-script`  | **Intern** (noindex): Gesprächsleitfaden für die Live-Demo – 5-Minuten-Flow, Paket-Pitches, Einwände, Abschluss |
 | `/sales-kit`    | **Intern** (noindex): Positionierung, Pitches, Cold-E-Mails, Nachrichten, Telefonskript, Einwände, Abschlusssätze |
 | `/video-script` | **Intern** (noindex): 60-Sekunden-Storyboard mit deutschem Voiceover für das geplante Erklärvideo |
-| `/workspace`    | **Intern** (noindex): Klarsa App Foundation – Architektur-Plan, Clean24 als erster Tenant, geplante Module. Noch kein Login, keine echten Kundendaten |
+| `/workspace`    | **Intern** (noindex): Klarsa App Foundation – Architektur-Plan, Clean24 als erster Tenant, geplante Module, Auth-Fundament-Hinweis |
+| `/login`        | **Intern** (noindex): Login-Skelett (Supabase Auth). Inaktiv ohne Staging-Env, keine echten Daten |
+| `/app-shell`    | **Intern** (noindex): statische Vorschau des geschützten Arbeitsbereichs; Login-/Session-Fundament, keine echten Kundendaten |
+| `/auth/callback`| Route-Handler (dynamisch): OAuth/PKCE-Code-Tausch → Session-Cookie → Redirect |
+| `/logout`       | Route-Handler (dynamisch): Sign-out → Redirect auf `/login` |
 
 ## Architektur
 
@@ -96,10 +100,13 @@ lib/
   demo-data.ts       # Zentrale Seed-Daten (Muster Service GmbH) + bexio-Übergabe
   format.ts          # Deterministische CHF-/Zahlenformatierung (SSR-sicher)
   cn.ts              # className-Helper
-  # Klarsa Core (Phase 2, nur Typen/Config — kein Backend):
+  # Klarsa Core (Phase 2):
   klarsa-core-types.ts # Multi-Tenant-Domänentypen (Plan, vgl. docs/data-model.md)
   tenant-clean24.ts    # Erst-Tenant-Config: Clean24 Memis GmbH (ohne Secrets/echte Daten)
   database-types.ts    # TS-Spiegel des Supabase-Schemas (Enums + Row-Typen, v0.2.1)
+  env.ts               # Lazy Env-Validierung (build-sicher; Service-Role nur Server)
+  supabase/            # Clients: browser.ts (Anon), server.ts (Cookies), admin.ts (Service-Role, Server), middleware.ts
+  auth/session.ts      # Server-Session-Helfer: getCurrentUser/Profile/Memberships/CompanyContext
 
 components/          # Wiederverwendbare UI-Bausteine
   PackageToggle, PackageCard, LockedFeature, DashboardMetricCard,
@@ -107,6 +114,7 @@ components/          # Wiederverwendbare UI-Bausteine
   DemoShell, ModuleHeader, Panel, ComparisonTable, SuccessTimeline, Logo
   modules/           # Demo-Modulansichten (BossDashboard, LeadInbox, …)
   landing/           # Landingpage-Sektionen (Hero, ProblemSection, …)
+  auth/LoginForm.tsx # Client-Login-Formular (Supabase Auth, lazy)
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
@@ -114,8 +122,12 @@ app/
   page.tsx           # Landingpage
   demo/  pricing/  beratung/  faq/  brochure/   # öffentliche Seiten
   demo-script/  sales-kit/  video-script/       # interne Seiten (noindex)
-  workspace/         # interne Klarsa-App-Foundation (noindex, statisch)
+  workspace/  app-shell/                         # interne App-Foundation/Shell (noindex, statisch)
+  login/             # Login-Seite (noindex, Skelett)
+  auth/callback/  logout/                        # Auth-Route-Handler (force-dynamic)
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
+
+proxy.ts             # Next-16-Proxy (vormals middleware): Session-Refresh, gescopt auf /app-shell,/workspace,/login,/auth; no-op ohne Env
 
 docs/                # Klarsa Core Architektur-Plan (Phase 2)
   phase-2-architecture.md  data-model.md  security-architecture.md
@@ -126,6 +138,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   staging-seed-plan.md           # fiktive Testdaten (zwei Demo-Tenants)
   supabase-staging-verification.md # Runbook: Migration anwenden + Skripte 1–4 (v0.2.4)
   supabase-staging-results.md    # Verifikationsergebnis klarsa-staging (v0.2.5, bestanden)
+  auth-foundation.md             # Auth-Flow, Session/Clients, geschützte Routen, Service-Role-Regeln (v0.2.6)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
   migrations/001_klarsa_core_schema.sql  # Enums, 20 Tabellen, Indizes, RLS (rollenbasiert)
@@ -176,14 +189,18 @@ zentral in `lib/packages.ts` und `lib/package-gates.ts`.
 
 ## Bewusst NICHT enthalten
 
-- Kein Supabase, keine Datenbank
-- Keine Authentifizierung / kein Login
+Bezieht sich auf die öffentliche **Verkaufs-Demo**. Das **Klarsa-Core-Fundament**
+(Schema, RLS, Auth-Clients) ist angelegt, aber **ohne Credentials/`.env.local`
+inaktiv** und nicht mit echten Daten verbunden.
+
+- Keine **aktive** Supabase-/Datenbank-Anbindung (Schema-Migration + Auth-Fundament vorhanden, ohne Env inaktiv)
+- Kein **aktives** Login mit echten Daten (Auth-Fundament ab v0.2.6; ohne Staging-Env inaktiv, build-sicher)
 - Keine Zahlungen / kein Stripe
 - Kein E-Mail-Versand (Beratungs-CTA öffnet nur einen `mailto:`-Link an `info@klarsa.ch`)
 - Keine externen APIs, keine KI-API-Aufrufe, kein Scraping
 - Keine echte bexio-API – die bexio-Übergabe ist nur eine Demo
 - Kein fertiges Video (Erklärvideo nur als Konzept/Storyboard)
-- Kein Backend / keine echte Datenpersistenz
+- Keine echten Kundendaten (nur fiktive lokale Demo-/`@example.test`-Staging-Daten)
 - Keine öffentliche Clean24-Integration (interner Proof, getrennt)
 
 ## Data Safety / Backup-Strategie
@@ -306,6 +323,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [supabase-staging-setup.md](docs/supabase-staging-setup.md) | Runbook: Staging-Projekt anlegen, `.env.local`, Migration anwenden, prüfen (v0.2.2) |
 | [supabase-staging-verification.md](docs/supabase-staging-verification.md) | Runbook: Migration + Verifikationsskripte 1–4 ausführen, Clean/Reset (v0.2.4) |
 | [supabase-staging-results.md](docs/supabase-staging-results.md) | Verifikationsergebnis `klarsa-staging` (2026-06-09, bestanden; v0.2.5) |
+| [auth-foundation.md](docs/auth-foundation.md) | Auth-Flow, Session/Clients, Cookie-Strategie, Rollen-Lookup, geschützte Routen, Service-Role-Regeln (v0.2.6) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
@@ -359,24 +377,28 @@ Schema-Prüfung, fiktiver Seed und RLS-Tests sind auf `klarsa-staging` bestanden
 (2026-06-09, manuelle Ausführung vom Nutzer berichtet). Festgehalten in
 `docs/supabase-staging-results.md`. Nur Docs, ohne Credentials/echte Daten.
 
-**v0.2.6 (nächster Schritt, empfohlen)** – **Auth-Fundament +
-Supabase-Client-Architektur**: Login, Session-Handling und RLS-Kontext, **bevor**
-echte Tenant-Daten existieren. Alternativ: Clean24-Staging-Tenant-Dashboard-
-Fundament. Weiterhin keine echten Kundendaten.
+**v0.2.6 (erledigt)** – **Auth-Fundament + Supabase-Client-Architektur**: lazy
+Env-Validierung, Browser-/Server-/Admin-Clients, Session-Helfer, Login-Flow
+(`/login`, `/auth/callback`, `/logout`), App-Shell-Vorschau (`/app-shell`) und
+gescopte, no-op-sichere Middleware. Build-sicher ohne echte Env. Doku:
+`docs/auth-foundation.md`. Keine Credentials/echten Daten.
+
+**v0.2.7 (nächster Schritt)** – **App-Shell an Supabase-Staging anbinden**
+(fiktive `@example.test`-Tenant-Daten) und **Schutz geschützter Routen prüfen**
+(Redirect auf `/login` ohne Session). Weiterhin keine echten Kundendaten.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.2.4
-(Verifikationsskripte) und v0.2.5 (**Staging-Verifikation bestanden** auf
-`klarsa-staging`) sind erledigt. Parallel bleibt **A) Deploy / Visual Review**
-der Verkaufs-Demo möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`,
-PDF-Export, Erklärvideo).
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.2.5
+(Staging-Verifikation bestanden) und **v0.2.6 (Auth-Fundament)** sind erledigt.
+Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich
+(Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.2.6 — Auth-Fundament + Supabase-Client-
-Architektur** (Login, Session-Handling, RLS-Kontext) — und zwar **zuerst**, weil
-ohne Login/RLS/Session keine echten Tenant-Daten verarbeitet werden dürfen. Das
-Clean24-Staging-Tenant-Dashboard folgt danach. Erst nach Auth schrittweise echte
-Tenant-Daten von Clean24 — **nie vor** validiertem Auth, RLS, Security und Backup.
+**Empfehlung:** als Nächstes **v0.2.7 — App-Shell an Supabase-Staging mit
+fiktiven Tenant-Daten anbinden und den Schutz geschützter Routen verifizieren**
+(Session-Check + Redirect auf `/login`). Erst danach, nach Security-/Backup-
+Freigabe, schrittweise echte Tenant-Daten von Clean24 — **nie vor** validiertem
+Auth, RLS, Security und Backup.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

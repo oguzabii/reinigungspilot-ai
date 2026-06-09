@@ -22,16 +22,32 @@ Vorrang vor jedem Feature-Wunsch.
 
 ## 2. Rollen & Berechtigungen (RBAC)
 
-Rollen pro Tenant in `company_members.role`:
+Rollen pro Tenant im Enum `member_role` (`company_members.role`):
 
-| Rolle | Darf |
+| Rolle | Schreibgrenzen (Lesen = jedes aktive Mitglied) |
 | --- | --- |
-| `owner` | Alles inkl. Firma/Abo/Member/Tokens, Export, Restore |
-| `admin` | Tagesgeschäft + Member-Verwaltung, Restore, Export |
-| `team` | Leads/Offerten/Follow-ups/Jobs bearbeiten |
-| `viewer` | Nur lesen |
+| `owner` | Voll: Firma, Mitglieder, Einstellungen, bexio, Export/Restore – plus alle operativen Daten |
+| `admin` | Wie owner im Tagesgeschäft inkl. Mitglieder-/Einstellungsverwaltung |
+| `sales` | Leads, Prospects, Offerten, Offertpositionen, Follow-ups; Lead-Scores/-Aktivitäten (append) |
+| `ops` | Jobs, Job-Notizen, Follow-ups |
+| `readonly` | **Nur lesen** – keinerlei Schreibzugriff |
+| `superadmin` | Support: **firmenübergreifender Lesezugriff**, **kein** Schreibzugriff |
 
-- Rechte werden **server-seitig** geprüft (nie nur im UI ausblenden).
+### Rollenbasierte Schreibgrenzen (durchgesetzt per RLS, v0.2.3)
+
+- **Lesen** = jedes aktive Mitglied der Firma (oder Superadmin). **Schreiben**
+  hängt von der Rolle ab – durchgesetzt **server-seitig per RLS**, nicht nur im UI.
+- Durchsetzung über SECURITY-DEFINER-Helfer in der Migration: `member_role_for`,
+  `can_read_company`, `can_manage_company`, `can_write_sales`, `can_write_ops`,
+  `can_write_settings`, `can_superadmin`.
+- Pro Tabelle gibt es **getrennte Policies je Befehl** (SELECT/INSERT/UPDATE/
+  DELETE), damit auch DELETE über das **Schreib**prädikat läuft (nicht über das
+  Leseprädikat). `readonly` hat dadurch ausschliesslich SELECT.
+- **Schreibdomänen:** `sales` → Leads/Prospects/Offerten/Follow-ups; `ops` →
+  Jobs/Job-Notizen/Follow-ups; `owner`/`admin` → zusätzlich Einstellungen,
+  Services, Preise, Lead-Quellen, Mitglieder, Firma und bexio. `superadmin`
+  schreibt nie (Support = read-only). Vollständige Matrix und Tests:
+  [`rls-test-plan.md`](./rls-test-plan.md).
 - Sensible Aktionen (Export, Restore, bexio Connect, Token-Zugriff, Löschen)
   sind auf `owner`/`admin` beschränkt und werden auditiert.
 
@@ -50,20 +66,19 @@ Rollen pro Tenant in `company_members.role`:
 - Policy-Muster (konzeptuell):
 
   ```sql
-  -- Lesen nur im eigenen Tenant
-  create policy tenant_read on leads for select
-    using (company_id in (
-      select company_id from company_members
-      where user_id = auth.uid() and status = 'active'
-    ));
+  -- Lesen: jedes aktive Mitglied (oder Superadmin) der Firma
+  create policy leads_select on public.leads for select
+    using (public.can_read_company(company_id));
 
-  -- Schreiben zusätzlich rollenabhängig (team/admin/owner)
-  create policy tenant_write on leads for insert
-    with check (company_id in (
-      select company_id from company_members
-      where user_id = auth.uid() and status = 'active'
-        and role in ('team','admin','owner')
-    ));
+  -- Schreiben: nur Schreibrollen (owner/admin/sales) – readonly ausgeschlossen.
+  -- Getrennte Policies je Befehl, damit auch DELETE das Schreibprädikat nutzt.
+  create policy leads_insert on public.leads for insert
+    with check (public.can_write_sales(company_id));
+  create policy leads_update on public.leads for update
+    using (public.can_write_sales(company_id))
+    with check (public.can_write_sales(company_id));
+  create policy leads_delete on public.leads for delete
+    using (public.can_write_sales(company_id));
   ```
 
 - `audit_logs`: nur `insert` + `select` im eigenen Tenant, **kein** `update`/

@@ -532,32 +532,40 @@ $$;
 -- =============================================================================
 -- ROW LEVEL SECURITY
 -- =============================================================================
--- Principle: DEFAULT DENY. A user may access a row only for a company where
--- they are an ACTIVE member. Superadmins (member_role 'superadmin' on any
--- active membership) get support-level read access.
---
--- These are DRAFT policies. v0.2.2+ will refine write granularity per role
--- (e.g. readonly cannot write, owner-only deletes) and harden onboarding flows.
+-- Principle: DEFAULT DENY, ROLE-AWARE (hardened in v0.2.3). A user may access a
+-- row only for a company where they are an ACTIVE member. READ is open to any
+-- active member; WRITE depends on member_role:
+--   owner/admin -> broad tenant write (incl. settings, members, bexio)
+--   sales       -> leads, prospects, offers, offer_items, follow-ups,
+--                  lead_scores, lead_activities (append)
+--   ops         -> jobs, job_notes, follow-ups
+--   readonly    -> SELECT only (no writes)
+--   superadmin  -> support-level READ across companies, NO write
+-- Service-role connections bypass RLS for trusted system jobs (e.g. queued
+-- bexio handoffs); that is not modelled as a member role.
 -- =============================================================================
 
--- Membership helpers. SECURITY DEFINER so they bypass RLS on company_members
--- (prevents recursive policy evaluation).
-create or replace function public.is_member_of(target_company uuid)
-returns boolean
+-- Role-aware helpers. SECURITY DEFINER so they bypass RLS on company_members
+-- (prevents recursive policy evaluation); search_path is pinned for safety.
+
+-- The caller's role in a company, or NULL if not an active member.
+create or replace function public.member_role_for(target_company uuid)
+returns member_role
 language sql
 stable
 security definer
 set search_path = public
 as $$
-  select exists (
-    select 1 from public.company_members m
-    where m.company_id = target_company
-      and m.user_id = auth.uid()
-      and m.is_active = true
-  );
+  select m.role
+  from public.company_members m
+  where m.company_id = target_company
+    and m.user_id = auth.uid()
+    and m.is_active = true
+  limit 1;
 $$;
 
-create or replace function public.is_superadmin()
+-- True if the caller has an active 'superadmin' membership anywhere.
+create or replace function public.can_superadmin()
 returns boolean
 language sql
 stable
@@ -572,95 +580,220 @@ as $$
   );
 $$;
 
+-- READ: any active member of the company, or a superadmin (support read).
+create or replace function public.can_read_company(target_company uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.member_role_for(target_company) is not null
+      or public.can_superadmin();
+$$;
+
+-- MANAGE (company, members, settings, bexio): owner or admin. Intentionally NO
+-- superadmin — superadmin is support-read-only.
+create or replace function public.can_manage_company(target_company uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.member_role_for(target_company) in ('owner', 'admin');
+$$;
+
+-- SALES writes (leads, prospects, offers, follow-ups, …): owner/admin/sales.
+create or replace function public.can_write_sales(target_company uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.member_role_for(target_company) in ('owner', 'admin', 'sales');
+$$;
+
+-- OPS writes (jobs, job notes, follow-ups): owner/admin/ops.
+create or replace function public.can_write_ops(target_company uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.member_role_for(target_company) in ('owner', 'admin', 'ops');
+$$;
+
+-- SETTINGS/config writes (settings, services, pricing, sources): owner/admin.
+create or replace function public.can_write_settings(target_company uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.member_role_for(target_company) in ('owner', 'admin');
+$$;
+
 -- companies -------------------------------------------------------------------
+-- Read: members + superadmin. Manage (update/delete): owner/admin only. Create:
+-- any authenticated user (the first owner membership is then created by the
+-- privileged onboarding path — see company_members).
 alter table public.companies enable row level security;
 create policy companies_select on public.companies for select
-  using (public.is_member_of(id) or public.is_superadmin());
+  using (public.can_read_company(id));
 create policy companies_insert on public.companies for insert
   with check (auth.uid() is not null);
 create policy companies_update on public.companies for update
-  using (public.is_member_of(id) or public.is_superadmin())
-  with check (public.is_member_of(id) or public.is_superadmin());
+  using (public.can_manage_company(id))
+  with check (public.can_manage_company(id));
 create policy companies_delete on public.companies for delete
-  using (public.is_member_of(id) or public.is_superadmin());
+  using (public.can_manage_company(id));
 
 -- company_members -------------------------------------------------------------
+-- You can always see your own membership; otherwise members of your companies.
+-- Managing members requires owner/admin. The FIRST owner membership of a new
+-- company is created by a privileged onboarding path (service role / SECURITY
+-- DEFINER RPC, added with auth) — not by self-insert, to avoid privilege
+-- escalation.
 alter table public.company_members enable row level security;
 create policy company_members_select on public.company_members for select
-  using (
-    user_id = auth.uid()
-    or public.is_member_of(company_id)
-    or public.is_superadmin()
-  );
+  using (user_id = auth.uid() or public.can_read_company(company_id));
 create policy company_members_insert on public.company_members for insert
-  with check (
-    user_id = auth.uid()
-    or public.is_member_of(company_id)
-    or public.is_superadmin()
-  );
+  with check (public.can_manage_company(company_id));
 create policy company_members_update on public.company_members for update
-  using (public.is_member_of(company_id) or public.is_superadmin())
-  with check (public.is_member_of(company_id) or public.is_superadmin());
+  using (public.can_manage_company(company_id))
+  with check (public.can_manage_company(company_id));
 create policy company_members_delete on public.company_members for delete
-  using (public.is_member_of(company_id) or public.is_superadmin());
+  using (public.can_manage_company(company_id));
 
 -- user_profiles ---------------------------------------------------------------
 alter table public.user_profiles enable row level security;
 create policy user_profiles_select on public.user_profiles for select
-  using (id = auth.uid() or public.is_superadmin());
+  using (id = auth.uid() or public.can_superadmin());
 create policy user_profiles_insert on public.user_profiles for insert
   with check (id = auth.uid());
 create policy user_profiles_update on public.user_profiles for update
-  using (id = auth.uid() or public.is_superadmin())
-  with check (id = auth.uid() or public.is_superadmin());
+  using (id = auth.uid() or public.can_superadmin())
+  with check (id = auth.uid() or public.can_superadmin());
 
 -- industry_presets (global catalog: read for all authenticated, write superadmin)
 alter table public.industry_presets enable row level security;
 create policy industry_presets_read on public.industry_presets for select
   using (auth.uid() is not null);
 create policy industry_presets_write on public.industry_presets for all
-  using (public.is_superadmin())
-  with check (public.is_superadmin());
+  using (public.can_superadmin())
+  with check (public.can_superadmin());
 
--- Append-only tables: select + insert only (no update/delete policy = denied) -
+-- Append-only sales tables: SELECT (read) + INSERT (sales) only. No update/
+-- delete policy => those are denied, so the history stays immutable.
 alter table public.lead_scores enable row level security;
 create policy lead_scores_select on public.lead_scores for select
-  using (public.is_member_of(company_id) or public.is_superadmin());
+  using (public.can_read_company(company_id));
 create policy lead_scores_insert on public.lead_scores for insert
-  with check (public.is_member_of(company_id));
+  with check (public.can_write_sales(company_id));
 
 alter table public.lead_activities enable row level security;
 create policy lead_activities_select on public.lead_activities for select
-  using (public.is_member_of(company_id) or public.is_superadmin());
+  using (public.can_read_company(company_id));
 create policy lead_activities_insert on public.lead_activities for insert
-  with check (public.is_member_of(company_id));
+  with check (public.can_write_sales(company_id));
 
 -- audit_logs: append-only, immutable; company_id may be null (system events) --
 alter table public.audit_logs enable row level security;
 create policy audit_logs_select on public.audit_logs for select
   using (
-    (company_id is not null and public.is_member_of(company_id))
-    or public.is_superadmin()
+    (company_id is not null and public.can_read_company(company_id))
+    or public.can_superadmin()
   );
 create policy audit_logs_insert on public.audit_logs for insert
-  with check (company_id is null or public.is_member_of(company_id));
+  with check (company_id is null or public.can_read_company(company_id));
 
--- Standard tenant tables: full access for members of the row's company --------
+-- Role-aware tenant policies ---------------------------------------------------
+-- Per table: SELECT = any active member (can_read_company); INSERT/UPDATE/DELETE
+-- = the group's write predicate. readonly therefore has SELECT only. Separate
+-- per-command policies (not "for all") are REQUIRED so DELETE is gated by the
+-- WRITE predicate, not the read predicate.
+
+-- Sales domain (owner/admin/sales).
 do $$
-declare
-  t text;
-  tbls text[] := array[
-    'company_settings', 'company_services', 'pricing_models', 'lead_sources',
-    'prospects', 'leads', 'offers', 'offer_items', 'followup_tasks',
-    'jobs', 'job_notes', 'bexio_connections', 'bexio_handoffs'
-  ];
+declare t text;
+  tbls text[] := array['leads', 'prospects', 'offers', 'offer_items'];
+  wr text := 'public.can_write_sales(company_id)';
 begin
   foreach t in array tbls loop
     execute format('alter table public.%1$I enable row level security;', t);
-    execute format(
-      'create policy %1$s_tenant_all on public.%1$I for all '
-      'using (public.is_member_of(company_id) or public.is_superadmin()) '
-      'with check (public.is_member_of(company_id));', t);
+    execute format('create policy %1$s_select on public.%1$I for select using (public.can_read_company(company_id));', t);
+    execute format('create policy %1$s_insert on public.%1$I for insert with check (%2$s);', t, wr);
+    execute format('create policy %1$s_update on public.%1$I for update using (%2$s) with check (%2$s);', t, wr);
+    execute format('create policy %1$s_delete on public.%1$I for delete using (%2$s);', t, wr);
+  end loop;
+end;
+$$;
+
+-- Ops domain (owner/admin/ops).
+do $$
+declare t text;
+  tbls text[] := array['jobs', 'job_notes'];
+  wr text := 'public.can_write_ops(company_id)';
+begin
+  foreach t in array tbls loop
+    execute format('alter table public.%1$I enable row level security;', t);
+    execute format('create policy %1$s_select on public.%1$I for select using (public.can_read_company(company_id));', t);
+    execute format('create policy %1$s_insert on public.%1$I for insert with check (%2$s);', t, wr);
+    execute format('create policy %1$s_update on public.%1$I for update using (%2$s) with check (%2$s);', t, wr);
+    execute format('create policy %1$s_delete on public.%1$I for delete using (%2$s);', t, wr);
+  end loop;
+end;
+$$;
+
+-- Follow-ups: sales OR ops (owner/admin/sales/ops).
+do $$
+declare t text;
+  tbls text[] := array['followup_tasks'];
+  wr text := '(public.can_write_sales(company_id) or public.can_write_ops(company_id))';
+begin
+  foreach t in array tbls loop
+    execute format('alter table public.%1$I enable row level security;', t);
+    execute format('create policy %1$s_select on public.%1$I for select using (public.can_read_company(company_id));', t);
+    execute format('create policy %1$s_insert on public.%1$I for insert with check (%2$s);', t, wr);
+    execute format('create policy %1$s_update on public.%1$I for update using (%2$s) with check (%2$s);', t, wr);
+    execute format('create policy %1$s_delete on public.%1$I for delete using (%2$s);', t, wr);
+  end loop;
+end;
+$$;
+
+-- Settings / config: owner/admin only.
+do $$
+declare t text;
+  tbls text[] := array['company_settings', 'company_services', 'pricing_models', 'lead_sources'];
+  wr text := 'public.can_write_settings(company_id)';
+begin
+  foreach t in array tbls loop
+    execute format('alter table public.%1$I enable row level security;', t);
+    execute format('create policy %1$s_select on public.%1$I for select using (public.can_read_company(company_id));', t);
+    execute format('create policy %1$s_insert on public.%1$I for insert with check (%2$s);', t, wr);
+    execute format('create policy %1$s_update on public.%1$I for update using (%2$s) with check (%2$s);', t, wr);
+    execute format('create policy %1$s_delete on public.%1$I for delete using (%2$s);', t, wr);
+  end loop;
+end;
+$$;
+
+-- bexio: owner/admin. System/service writes (e.g. queued handoffs) use the
+-- service role, which bypasses RLS — not modelled as a member role here.
+do $$
+declare t text;
+  tbls text[] := array['bexio_connections', 'bexio_handoffs'];
+  wr text := 'public.can_manage_company(company_id)';
+begin
+  foreach t in array tbls loop
+    execute format('alter table public.%1$I enable row level security;', t);
+    execute format('create policy %1$s_select on public.%1$I for select using (public.can_read_company(company_id));', t);
+    execute format('create policy %1$s_insert on public.%1$I for insert with check (%2$s);', t, wr);
+    execute format('create policy %1$s_update on public.%1$I for update using (%2$s) with check (%2$s);', t, wr);
+    execute format('create policy %1$s_delete on public.%1$I for delete using (%2$s);', t, wr);
   end loop;
 end;
 $$;

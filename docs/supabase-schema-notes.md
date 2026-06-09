@@ -1,4 +1,4 @@
-# Klarsa Core — Supabase Schema Notes (v0.2.1)
+# Klarsa Core — Supabase Schema Notes (v0.2.1, RLS hardened v0.2.3)
 
 > **Status: FOUNDATION / DRAFT.** Design notes for
 > [`supabase/migrations/001_klarsa_core_schema.sql`](../supabase/migrations/001_klarsa_core_schema.sql).
@@ -39,27 +39,44 @@ Enums (10): `package_tier`, `member_role`, `approval_status`, `source_type`,
 
 ## RLS strategy
 
+> **v0.2.3 hardened RLS from membership-only to role-aware.** Previously a single
+> `for all` policy let *any* active member write. Now reads are open to any
+> active member, but **writes depend on `member_role`** — so `readonly` users can
+> no longer modify tenant data.
+
 - **RLS is enabled on every table.** The model is **default deny**: with RLS on
   and no matching policy, access is refused.
-- Two `SECURITY DEFINER` helpers drive the policies:
-  - `public.is_member_of(company_id)` — true if the current `auth.uid()` has an
-    **active** membership in that company.
-  - `public.is_superadmin()` — true if the user has an active `superadmin`
-    membership (support-level read access).
-  - They are `SECURITY DEFINER` so they bypass RLS on `company_members`,
-    avoiding recursive policy evaluation.
-- **Standard tenant tables** get one `for all` policy: `using (is_member_of(...)
-  or is_superadmin())` and `with check (is_member_of(...))`.
+- **Seven `SECURITY DEFINER` helpers** drive the policies (they bypass RLS on
+  `company_members`, avoiding recursive policy evaluation):
+  - `member_role_for(company_id)` — the caller's role, or NULL if not an active member.
+  - `can_read_company(company_id)` — any active member, or a superadmin (support read).
+  - `can_manage_company(company_id)` — `owner`/`admin` (company, members, settings, bexio).
+  - `can_write_sales(company_id)` — `owner`/`admin`/`sales`.
+  - `can_write_ops(company_id)` — `owner`/`admin`/`ops`.
+  - `can_write_settings(company_id)` — `owner`/`admin`.
+  - `can_superadmin()` — active `superadmin` membership (support read; **no write**).
+- **Per-command policies, not `for all`.** Each tenant table has separate
+  SELECT/INSERT/UPDATE/DELETE policies: SELECT uses `can_read_company`; INSERT/
+  UPDATE/DELETE use the table's write predicate. This is **required** so that
+  `DELETE` is gated by the **write** predicate (a single `for all` would gate
+  DELETE by the read predicate, letting `readonly` delete).
+- **Write domains:** `leads`/`prospects`/`offers`/`offer_items` →
+  `can_write_sales`; `jobs`/`job_notes` → `can_write_ops`; `followup_tasks` →
+  sales **or** ops; `company_settings`/`company_services`/`pricing_models`/
+  `lead_sources` → `can_write_settings`; `bexio_connections`/`bexio_handoffs` →
+  `can_manage_company` (system/service writes bypass RLS via the service role).
 - **Append-only tables** (`lead_scores`, `lead_activities`, `audit_logs`) get
-  `select` + `insert` policies only — no `update`/`delete` policy means those
-  operations are denied, so history is immutable.
-- **Special tables**: `companies` (members + create-by-authenticated),
-  `company_members` (you can always see/insert your own membership),
-  `user_profiles` (self-service), `industry_presets` (read for all
-  authenticated, write for superadmin).
-- These are **draft** policies. v0.2.2+ hardens write granularity per
-  `member_role` (e.g. `readonly` cannot write, owner-only deletes) and tightens
-  onboarding (company creation → first membership).
+  `select` + `insert` only — no `update`/`delete` policy means those operations
+  are denied, so history is immutable. Sales-append inserts use `can_write_sales`.
+- **Special tables**: `companies` (read = members/superadmin, create = any
+  authenticated, manage = owner/admin), `company_members` (see your own + your
+  companies; manage = owner/admin; the first owner membership is created by a
+  privileged onboarding path, not self-insert), `user_profiles` (self-service),
+  `industry_presets` (read for all authenticated, write for superadmin).
+- **Result:** `readonly` = SELECT only; `superadmin` = cross-company read, never
+  write. Full role × table matrix and tests: [`rls-test-plan.md`](./rls-test-plan.md).
+- **Remaining (optional):** owner-only destructive ops, an onboarding RPC for the
+  first membership, and optional soft-delete hiding at the DB layer.
 
 ## Soft-delete strategy
 

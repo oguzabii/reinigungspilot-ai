@@ -39,13 +39,16 @@ generated UUID, then insert matching `user_profiles` and `company_members`
 | --- | --- | --- | --- | --- |
 | `USER_A_OWNER` | `owner-a@example.test` | Company A | `owner` | true |
 | `USER_A_ADMIN` | `admin-a@example.test` | Company A | `admin` | true |
+| `USER_A_SALES` | `sales-a@example.test` | Company A | `sales` | true |
+| `USER_A_OPS` | `ops-a@example.test` | Company A | `ops` | true |
 | `USER_A_READONLY` | `readonly-a@example.test` | Company A | `readonly` | true |
 | `USER_A_INACTIVE` | `inactive-a@example.test` | Company A | `sales` | **false** |
 | `USER_B_OWNER` | `owner-b@example.test` | Company B | `owner` | true |
 | `USER_SUPERADMIN` | `superadmin@example.test` | Company A | `superadmin` | true |
 
-These cover every RLS case: tenant isolation, inactive member, readonly write
-block (target), owner/admin manage, and superadmin support read.
+These cover every RLS case: tenant isolation, inactive member, **readonly write
+block (enforced in v0.2.3)**, **role scoping** (sales vs. ops vs. settings),
+owner/admin manage, and superadmin support read.
 
 ## Fake business data (per tenant)
 

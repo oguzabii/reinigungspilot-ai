@@ -89,9 +89,12 @@ select count(*) from pg_type t
 join pg_namespace n on n.oid = t.typnamespace
 where t.typtype = 'e' and n.nspname = 'public';                 -- expect 10
 
--- helper functions exist
+-- helper functions exist (role-aware RLS, v0.2.3)
 select proname from pg_proc
-where proname in ('is_member_of','is_superadmin','set_updated_at');  -- expect 3
+where proname in (
+  'set_updated_at', 'member_role_for', 'can_read_company', 'can_manage_company',
+  'can_write_sales', 'can_write_ops', 'can_write_settings', 'can_superadmin'
+);                                                              -- expect 8
 
 -- RLS enabled on every public table (expect 0 rows = none missing)
 select c.relname

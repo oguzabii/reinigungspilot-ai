@@ -1,13 +1,14 @@
-# Klarsa Core — RLS Test Plan (v0.2.2)
+# Klarsa Core — RLS Test Plan (v0.2.3)
 
 > **Status: PLAN.** Test cases for the Row Level Security of
 > [`../supabase/migrations/001_klarsa_core_schema.sql`](../supabase/migrations/001_klarsa_core_schema.sql).
 > Run against a **staging** project with the **fake** dataset from
 > [`staging-seed-plan.md`](./staging-seed-plan.md). No real data.
 
-Each case marks whether it is **enforced by the current v0.2.1 draft policies**
-or is a **TARGET** that needs the role-based hardening planned for v0.2.3+. Being
-explicit about this gap is the point of the test plan.
+**v0.2.3 update:** RLS is now **role-aware** (was membership-only). Reads are open
+to any active member; **writes depend on `member_role`**, so **readonly users can
+no longer modify tenant data** (closes the main v0.2.2 gap). Each case below is
+marked **enforced** or **TARGET** (future refinement).
 
 ## How to simulate users (SQL editor)
 
@@ -44,110 +45,149 @@ rollback;
 ## Fixtures (from the seed plan)
 
 - **Company A** = "Clean24 Demo Tenant"; **Company B** = "Muster Service Demo Tenant".
-- Users (fake): `USER_A_OWNER`, `USER_A_READONLY`, `USER_A_INACTIVE` (member of A,
-  `is_active = false`), `USER_B_OWNER`, `USER_SUPERADMIN` (superadmin membership).
+- Fake users (all active unless noted), see [`staging-seed-plan.md`](./staging-seed-plan.md):
+  `USER_A_OWNER`, `USER_A_ADMIN`, `USER_A_SALES`, `USER_A_OPS`, `USER_A_READONLY`,
+  `USER_A_INACTIVE` (member of A, `is_active = false`), `USER_B_OWNER`,
+  `USER_SUPERADMIN` (superadmin membership in A).
 - Each company has its own fake `leads`, `prospects`, `offers`, `jobs`, etc.
+
+## Role × write-scope matrix (v0.2.3)
+
+Read = any active member (`can_read_company`). Writes per the migration's helper
+functions. `W` = insert/update/delete, `I` = insert-only (append-only), `R` =
+read-only, `—` = no access.
+
+| Table group | owner | admin | sales | ops | readonly | superadmin |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: |
+| **Read** (every table) | R | R | R | R | R | R¹ |
+| `leads`, `prospects`, `offers`, `offer_items` | W | W | W | — | — | — |
+| `lead_scores`, `lead_activities` (append) | I | I | I | — | — | — |
+| `followup_tasks` | W | W | W | W | — | — |
+| `jobs`, `job_notes` | W | W | — | W | — | — |
+| `company_settings`, `company_services`, `pricing_models`, `lead_sources` | W | W | — | — | — | — |
+| `company_members`, `companies` (update/delete) | W | W | — | — | — | — |
+| `bexio_connections`, `bexio_handoffs` | W² | W² | — | — | — | — |
+| `audit_logs` | I | I | I | I | I³ | — |
+
+¹ Superadmin read is **cross-tenant** (support) but **no write anywhere**.
+² Plus system/service-role writes (bypass RLS) for queued handoffs.
+³ `audit_logs` insert is permitted for any active member but is normally written
+by the server; it is **append-only** (no update/delete for anyone).
 
 ## Test cases
 
-### T1 — User A sees only Company A  ·  *enforced now*
-- **As:** `USER_A_OWNER`.
-- **Do:** `select count(*) from leads;` (and offers/jobs/prospects).
+### T1 — User A sees only Company A  ·  *enforced*
+- **As:** `USER_A_OWNER`. **Do:** `select count(*) from leads;` (and offers/jobs).
 - **Expect:** only Company A rows; **zero** Company B rows.
 
-### T2 — User B sees only Company B  ·  *enforced now*
-- **As:** `USER_B_OWNER`.
-- **Do:** `select count(*) from leads;`.
+### T2 — User B sees only Company B  ·  *enforced*
+- **As:** `USER_B_OWNER`. **Do:** `select count(*) from leads;`.
 - **Expect:** only Company B rows; zero Company A rows.
 
-### T3 — User A cannot read/update/delete Company B rows  ·  *enforced now*
+### T3 — User A cannot read/update/delete Company B rows  ·  *enforced*
 - **As:** `USER_A_OWNER`.
-- **Read:** `select * from leads where company_id = '<COMPANY_B>';` → **0 rows**.
-- **Update:** `update leads set status='won' where company_id='<COMPANY_B>';` →
-  **0 rows affected** (rows invisible; `using` fails).
-- **Delete:** `delete from leads where company_id='<COMPANY_B>';` → **0 rows**.
+- **Read:** `select * from leads where company_id='<COMPANY_B>';` → **0 rows**.
+- **Update/Delete** targeting Company B → **0 rows affected** (rows invisible).
 - **Insert into B:** `insert into leads (company_id, company_name, source_type)
-  values ('<COMPANY_B>', 'x', 'manual');` → **rejected** by `with check`.
+  values ('<COMPANY_B>','x','manual');` → **rejected** by `with check`.
 
-### T4 — Inactive member cannot access company rows  ·  *enforced now*
-- **As:** `USER_A_INACTIVE` (membership row has `is_active = false`).
-- **Do:** `select count(*) from leads;`.
-- **Expect:** **0 rows** — `is_member_of()` requires `is_active = true`.
+### T4 — Inactive member cannot access company rows  ·  *enforced*
+- **As:** `USER_A_INACTIVE` (`is_active = false`). **Do:** `select count(*) from leads;`.
+- **Expect:** **0 rows** — `member_role_for()` only returns a role for active
+  members, so `can_read_company()` is false.
 
-### T5 — Readonly cannot modify  ·  **TARGET (v0.2.3)**
+### T5 — Readonly cannot modify  ·  **enforced (NEW in v0.2.3)**
 - **As:** `USER_A_READONLY` (role `readonly` in Company A).
-- **Do:** `update leads set status='won' where company_id='<COMPANY_A>';`.
-- **Target expect:** **rejected** (no write for `readonly`).
-- **Current behavior:** **allowed** — the v0.2.1 draft policy checks *membership
-  only*, not role. Close this with per-role `with check` (write requires role in
-  `owner|admin|sales|ops`). Until then, this case is expected to FAIL.
+- **Select:** `select count(*) from leads;` → **succeeds** (reads Company A).
+- **Update:** `update leads set status='won' where company_id='<COMPANY_A>';` →
+  **rejected / 0 rows** (`with check` = `can_write_sales` is false for readonly).
+- **Insert:** `insert into leads (company_id, company_name, source_type) values
+  ('<COMPANY_A>','x','manual');` → **rejected**.
+- **Delete:** `delete from leads where company_id='<COMPANY_A>';` → **rejected**.
+- Repeat on `offers`, `jobs`, `company_settings` → all writes **rejected**; reads OK.
 
-### T6 — Owner/Admin can manage tenant data  ·  *enforced now (read/write)*
-- **As:** `USER_A_OWNER` (repeat with an `admin`).
-- **Do:** insert + update + soft-delete a Company A lead/offer/job.
-- **Expect:** all succeed for Company A. (Note: under the draft policy any active
-  member can write; role granularity arrives with T5's hardening.)
+### T6 — Owner/Admin can manage tenant data  ·  *enforced*
+- **As:** `USER_A_OWNER`, then `USER_A_ADMIN`.
+- **Do:** insert + update + soft-delete a Company A lead/offer/job; update
+  `company_settings`; add a `company_members` row.
+- **Expect:** all succeed for Company A (owner/admin have broad write).
 
-### T7 — Superadmin support read  ·  *enforced now*
+### T7 — Superadmin support read, no write  ·  *enforced*
 - **As:** `USER_SUPERADMIN`.
-- **Read:** `select count(*) from leads;` → sees **both** A and B (support read).
-- **Write into a non-member company:** `insert into leads (company_id, …) values
-  ('<COMPANY_A>', …);` → **rejected** (the `with check` is membership-only; read
-  is allowed via `is_superadmin()`, write is not). Confirms *read-only* support.
+- **Read:** `select count(*) from leads;` → sees **both** A and B (support read,
+  via `can_superadmin()` in `can_read_company`).
+- **Write (any company, incl. A):** `update leads set status='won' …;` →
+  **rejected**. All write predicates (`can_write_*`, `can_manage_company`)
+  **exclude** superadmin. Confirms support is strictly **read-only**.
 
-### T8 — `audit_logs` is append-only  ·  *enforced now*
+### T8 — `audit_logs` is append-only  ·  *enforced*
 - **As:** `USER_A_OWNER`.
-- **Insert:** allowed for own company.
-- **Update:** `update audit_logs set action='login' where company_id='<COMPANY_A>';`
-  → **rejected** (no update policy).
-- **Delete:** `delete from audit_logs where company_id='<COMPANY_A>';` →
-  **rejected** (no delete policy). Same applies to `lead_scores`, `lead_activities`.
+- **Insert:** allowed for own company. **Update/Delete:** **rejected** (no
+  update/delete policy). Same for `lead_scores`, `lead_activities`.
 
 ### T9 — Soft-deleted rows excluded from normal queries  ·  *query-layer (convention)*
-- **Setup:** soft-delete a Company A lead: `update leads set deleted_at = now()
-  where id = '<LEAD>';`.
-- **Do:** the standard app query `select * from leads where company_id='<COMPANY_A>'
-  and deleted_at is null;`.
-- **Expect:** the soft-deleted row is **excluded**; `... and deleted_at is not
-  null` still finds it (restorable).
+- **Setup:** `update leads set deleted_at = now() where id='<LEAD>';` (as owner).
+- **Do:** standard app query `… where company_id='<COMPANY_A>' and deleted_at is null;`.
+- **Expect:** the soft-deleted row is **excluded**; `… deleted_at is not null`
+  still finds it (restorable).
 - **Note:** base RLS does **not** auto-hide soft-deleted rows — exclusion is a
-  query convention (or a future view/policy). This test verifies the convention,
-  not RLS itself.
+  query convention (or a future view/policy). See "Remaining refinements".
 
-### T10 — No anonymous access to tenant tables  ·  *enforced now*
-- **As:** `anon` (no session).
-- **Do:** `select count(*) from leads;` (and any tenant table).
-- **Expect:** **0 rows / denied**. `auth.uid()` is null → `is_member_of()` false →
-  default deny. `industry_presets` also requires `auth.uid() is not null`, so anon
-  cannot read the catalog either.
+### T10 — No anonymous access to tenant tables  ·  *enforced*
+- **As:** `anon` (no session). **Do:** `select count(*) from leads;` (any tenant table).
+- **Expect:** **0 rows / denied**. `auth.uid()` is null → `member_role_for()` is
+  null → `can_read_company()` false → default deny. `industry_presets` also
+  requires `auth.uid() is not null`, so anon cannot read the catalog either.
+
+### T11 — Sales role scope  ·  *enforced (NEW)*
+- **As:** `USER_A_SALES`.
+- **Allowed:** insert/update `leads`, `prospects`, `offers`, `offer_items`,
+  `followup_tasks`; insert `lead_scores`, `lead_activities`.
+- **Rejected:** writes to `jobs`, `job_notes`, `company_settings`,
+  `company_services`, `pricing_models`, `lead_sources`, `bexio_connections`,
+  `company_members`. Reads of all of these still succeed.
+
+### T12 — Ops role scope  ·  *enforced (NEW)*
+- **As:** `USER_A_OPS`.
+- **Allowed:** insert/update `jobs`, `job_notes`, `followup_tasks`.
+- **Rejected:** writes to `leads`, `prospects`, `offers`, `company_settings`,
+  `bexio_connections`. Reads still succeed.
+
+### T13 — Settings & bexio are owner/admin only  ·  *enforced (NEW)*
+- **As:** `USER_A_SALES`, then `USER_A_OPS`, then `USER_A_READONLY`.
+- **Do:** write `company_settings`, `company_services`, `pricing_models`,
+  `lead_sources`, `bexio_connections`, `company_members`.
+- **Expect:** all **rejected**. Then as `USER_A_OWNER`/`USER_A_ADMIN` → **allowed**.
 
 ## Coverage summary
 
-| # | Test | Status vs. current schema |
+| # | Test | Status |
 | --- | --- | --- |
 | T1 | A sees only A | ✅ enforced |
 | T2 | B sees only B | ✅ enforced |
 | T3 | A cannot R/U/D B | ✅ enforced |
 | T4 | inactive member denied | ✅ enforced |
-| T5 | readonly cannot modify | ⏳ target (v0.2.3 role hardening) |
-| T6 | owner/admin manage | ✅ enforced (role granularity pending) |
-| T7 | superadmin support read | ✅ enforced (read-only) |
+| T5 | **readonly cannot modify** | ✅ **enforced (v0.2.3)** |
+| T6 | owner/admin manage | ✅ enforced |
+| T7 | superadmin read-only | ✅ enforced |
 | T8 | audit_logs append-only | ✅ enforced |
 | T9 | soft-deleted excluded | ✅ at query layer (not base RLS) |
 | T10 | no anonymous access | ✅ enforced |
+| T11 | sales role scope | ✅ enforced |
+| T12 | ops role scope | ✅ enforced |
+| T13 | settings/bexio owner/admin only | ✅ enforced |
 
-## Gaps to close (v0.2.3 hardening)
+## Remaining refinements (future, optional)
 
-- **Per-role writes (T5):** replace the single `for all` membership policy with
-  role-aware `with check` (e.g. `readonly` → no write; `owner`/`admin` → manage
-  members/settings/deletes; `sales`/`ops` → operational writes).
-- **Owner-only destructive ops:** restrict hard delete / restore to `owner`/`admin`.
-- **Optional soft-delete RLS:** consider a policy/view so `deleted_at is not null`
-  rows are hidden by default at the DB layer, not only by query convention.
-- Re-run this full plan after hardening; all rows should read ✅.
+- **Owner-only destructive ops:** currently `owner` *and* `admin` can delete /
+  manage. If desired, restrict hard delete / restore to `owner` only.
+- **Onboarding RPC:** first owner membership of a new company is created by a
+  privileged path (service role / SECURITY DEFINER RPC), added with the auth work.
+- **Soft-delete at DB layer:** optionally hide `deleted_at is not null` rows via a
+  view/policy instead of only by query convention (T9).
 
 ## Hard rule
 
 This runs on **fake** staging data only. **No real customer data** until auth,
-RLS (incl. the T5 hardening) and backup/restore are verified —
+RLS and backup/restore are verified —
 [`security-architecture.md`](./security-architecture.md).

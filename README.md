@@ -7,27 +7,30 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.2.2** — **Supabase-Staging-Setup + RLS-Testplan** (Vorbereitung, noch keine
-Umsetzung). Neu: Env-Template `.env.local.example` (nur Platzhalter) und drei
-Runbooks unter `docs/`: `supabase-staging-setup.md` (Staging-Projekt anlegen,
-Migration anwenden, prüfen), `rls-test-plan.md` (10 RLS-Tests inkl.
-Mandantentrennung, inaktives Mitglied, Append-only-Audit, kein anonymer Zugriff)
-und `staging-seed-plan.md` (rein **fiktive** Testdaten: zwei Demo-Tenants). Es
-wird **kein** echtes Projekt erstellt: **keine** Credentials, **keine** Datenbank,
-**keine** echten Daten, kein Auth, keine bexio-API. Nur Doku/Env-Template/Testplan.
-Die verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert.
+**v0.2.3** — **RLS-Rollen-Härtung.** Die RLS in
+`supabase/migrations/001_klarsa_core_schema.sql` ist nun **rollenbasiert** statt
+nur mitgliedschaftsbasiert: Lesen = jedes aktive Mitglied, **Schreiben hängt von
+der Rolle ab**. Damit können **`readonly`-Nutzer keine Tenant-Daten mehr ändern**
+(schliesst die Hauptlücke aus v0.2.2). Neu: sieben SECURITY-DEFINER-Helfer
+(`member_role_for`, `can_read_company`, `can_manage_company`, `can_write_sales`,
+`can_write_ops`, `can_write_settings`, `can_superadmin`) und getrennte Policies
+je Befehl (SELECT/INSERT/UPDATE/DELETE). Docs aktualisiert (RLS-Testplan inkl.
+Rollenmatrix, Security-Architektur, Schema-Notizen). Weiterhin **nur
+SQL/Docs/Typen**: keine Credentials, keine Datenbank, keine echten Daten, kein
+Auth, keine bexio-API. Die verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert.
 
-> Klarsa Core (Multi-Tenant-SaaS) startete v0.2.0 (Docs/Typen, `/workspace`),
-> v0.2.1 brachte das Supabase-Schema-Fundament (Migration `001`). **Clean24 Memis
-> GmbH** ist der **erste Tenant / Live-Proof** in Klarsa.
+> Klarsa Core (Multi-Tenant-SaaS): v0.2.0 (Docs/Typen, `/workspace`), v0.2.1
+> (Schema-Fundament, Migration `001`), v0.2.2 (Staging-Setup + RLS-Testplan),
+> v0.2.3 (RLS-Rollen-Härtung). **Clean24 Memis GmbH** = **erster Tenant /
+> Live-Proof**.
 
 > Öffentliche Marke = **Klarsa**. Das interne Repo/Paket heisst weiterhin
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** v0.2.3 — Staging-Projekt tatsächlich erstellen und
-> Migration verifizieren, **oder** Auth-/RLS-Umsetzungsplan. **Keine echten
-> Daten** vor validiertem Auth, RLS, Security und Backup.
+> **Nächster Schritt:** v0.2.4 — Staging-Supabase-Projekt erstellen, Migration
+> anwenden und die RLS-Tests ausführen. **Keine echten Daten** vor validiertem
+> Auth, RLS, Security und Backup.
 
 ### Strategie
 
@@ -296,7 +299,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [data-model.md](docs/data-model.md) | 20 geplante Tabellen, `company_id`-Strategie, Soft-Delete/Audit |
 | [supabase-schema-notes.md](docs/supabase-schema-notes.md) | Schema-Design zur Migration: Tabellengruppen, RLS-/Soft-Delete-/Audit-Strategie |
 | [supabase-staging-setup.md](docs/supabase-staging-setup.md) | Runbook: Staging-Projekt anlegen, `.env.local`, Migration anwenden, prüfen (v0.2.2) |
-| [rls-test-plan.md](docs/rls-test-plan.md) | 10 RLS-Testfälle: Mandantentrennung, inaktives Mitglied, Append-only-Audit, kein Anon-Zugriff |
+| [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
 | [lead-hunter-engine.md](docs/lead-hunter-engine.md) | Kontrollierte Discovery-Pipeline mit Human-Approval |
@@ -332,22 +335,30 @@ Umsetzung): Env-Template `.env.local.example`, Runbooks `supabase-staging-setup.
 `rls-test-plan.md` und `staging-seed-plan.md` (fiktive Daten). Ohne Credentials,
 ohne Projekt, ohne echte Daten.
 
-**v0.2.3 (nächster Schritt)** – **Staging-Projekt erstellen + Migration
-verifizieren** (nach den Runbooks) **oder** Auth-/RLS-Umsetzungsplan. Weiterhin
-keine echten Kundendaten.
+**v0.2.3 (erledigt)** – **RLS-Rollen-Härtung**: rollenbasierte Policies (Lesen =
+jedes aktive Mitglied, Schreiben je nach Rolle), sieben SECURITY-DEFINER-Helfer,
+getrennte Policies je Befehl. `readonly` kann nicht mehr schreiben; `superadmin`
+liest firmenübergreifend, schreibt nie. Docs (RLS-Testplan inkl. Rollenmatrix,
+Security, Schema-Notizen) aktualisiert. Nur SQL/Docs/Typen, ohne echte Daten.
+
+**v0.2.4 (nächster Schritt)** – **Staging-Supabase-Projekt erstellen + Migration
+anwenden + RLS-Tests ausführen** (nach den Runbooks) **oder** Auth-Umsetzung.
+Weiterhin keine echten Kundendaten.
 
 ## Empfohlener nächster Schritt
 
 Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen), v0.2.1
-(Supabase-Schema-Fundament) und v0.2.2 (Staging-Setup + RLS-Testplan) sind
-erledigt. Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich
-(Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
+(Supabase-Schema-Fundament), v0.2.2 (Staging-Setup + RLS-Testplan) und v0.2.3
+(RLS-Rollen-Härtung) sind erledigt. Parallel bleibt **A) Deploy / Visual Review**
+der Verkaufs-Demo möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`,
+PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.2.3 — Staging-Projekt erstellen und Migration
-verifizieren** (nach den Runbooks `docs/supabase-staging-setup.md`,
-`docs/rls-test-plan.md`, `docs/staging-seed-plan.md`), danach der
-Auth-/RLS-Umsetzungsplan. Erst danach schrittweise echte Tenant-Daten von Clean24
-— **nie vor** validiertem Auth, RLS, Security und Backup.
+**Empfehlung:** als Nächstes **v0.2.4 — Staging-Supabase-Projekt erstellen,
+Migration anwenden und RLS-Tests ausführen** (nach den Runbooks
+`docs/supabase-staging-setup.md`, `docs/rls-test-plan.md`,
+`docs/staging-seed-plan.md`), danach die Auth-Umsetzung. Erst danach schrittweise
+echte Tenant-Daten von Clean24 — **nie vor** validiertem Auth, RLS, Security und
+Backup.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

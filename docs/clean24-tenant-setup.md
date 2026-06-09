@@ -11,6 +11,14 @@ Related: [`phase-2-architecture.md`](./phase-2-architecture.md),
 [`security-architecture.md`](./security-architecture.md),
 [`../lib/tenant-clean24.ts`](../lib/tenant-clean24.ts).
 
+## Latest verification status
+
+✅ **Verified on staging (2026-06-09).** Migration `002` + script `005` applied,
+an owner user bound via `004`, and login → `/app-shell` showed **Clean24 / owner /
+Premium** with **all counts 0** (config only — no customer data), exactly as
+expected (manual test, reported by the user). Full record:
+**[clean24-staging-tenant-results.md](./clean24-staging-tenant-results.md)**.
+
 ## What Clean24 is (and is not)
 
 - **Clean24 = the first tenant inside Klarsa Core** — the founder's own cleaning

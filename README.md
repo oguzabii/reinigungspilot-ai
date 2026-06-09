@@ -17,19 +17,26 @@ aktualisierte Typen (`lib/database-types.ts`, `lib/tenant-clean24.ts`) und
 `docs/clean24-tenant-setup.md`. **Migration 001 bleibt unverändert.** Weiterhin
 **keine Credentials, keine echten Kundendaten**. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 
+> **v0.2.9 (Patch):** Clean24-Staging-Tenant **verifiziert** (vom Nutzer manuell,
+> 2026-06-09): Migration `002` + Skript `005` angewendet, Owner-User via `004`
+> gebunden, Login → `/app-shell` zeigt **Clean24 / owner / Premium** mit **allen
+> Zählern 0** (Config-only, keine Kundendaten — wie erwartet). Festgehalten in
+> `docs/clean24-staging-tenant-results.md`. Nur Docs.
+
 > Klarsa Core: v0.2.0–v0.2.5 (Docs/Schema/RLS/Verifikation), v0.2.6
 > (Auth-Fundament), v0.2.7 (App-Shell ↔ Staging, RLS-Lesepfad; .1 Login-Anleitung,
-> .2 Client-Env-Fix, .3 Login verifiziert), **v0.2.8 (Clean24-Tenant-Setup)**.
-> **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
-> RLS-/Backup-Gate.
+> .2 Client-Env-Fix, .3 Login verifiziert), v0.2.8 (Clean24-Tenant-Setup),
+> **v0.2.9 (Clean24-Tenant verifiziert)**. **Clean24 Memis GmbH** = **erster
+> Tenant / Live-Proof** – erst nach dem Auth-/RLS-/Backup-Gate.
 
 > Öffentliche Marke = **Klarsa**. Das interne Repo/Paket heisst weiterhin
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** v0.2.9 — Clean24-Staging-Tenant-Verifikation / App-Shell-
-> Umschaltung **oder** Auth-/Onboarding-Härtung. **Keine echten Daten** vor
-> validiertem Auth, RLS, Security und Backup.
+> **Nächster Schritt:** v0.3.0 — **Clean24 Lead Inbox-Fundament** (manuelle
+> Lead-Erfassung, noch **keine** externen Integrationen). Echte Daten erst nach
+> Backup/Restore und sauberer **Staging-/Produktions-Trennung** sowie validiertem
+> Auth, RLS und Security.
 
 ### Strategie
 
@@ -146,6 +153,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   staging-login-test-users.md    # Login-fähige Dashboard-Testnutzer anlegen + via 004 binden (v0.2.7.1)
   app-shell-staging-results.md   # Ergebnis: App-Shell-Login bestanden (Clean24 Demo, owner, Pro; v0.2.7.3)
   clean24-tenant-setup.md        # Clean24 = erster realer Tenant: Config, Billing-Felder (002), Setup (005) (v0.2.8)
+  clean24-staging-tenant-results.md # Ergebnis: Clean24-Staging-Tenant verifiziert (owner, Premium, Zähler 0; v0.2.9)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
   migrations/
@@ -339,6 +347,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [staging-login-test-users.md](docs/staging-login-test-users.md) | Login-fähige Testnutzer: Dashboard-Auth-User anlegen (Auto-Confirm) + via `004` an Fake-Tenant binden (v0.2.7.1) |
 | [app-shell-staging-results.md](docs/app-shell-staging-results.md) | Ergebnis: App-Shell-Staging-Login bestanden (Clean24 Demo, owner, Pro, RLS-Zähler; 2026-06-09, v0.2.7.3) |
 | [clean24-tenant-setup.md](docs/clean24-tenant-setup.md) | Clean24 = erster realer Tenant: Config (Premium, internal_founder), Billing-Felder (Migration 002), Staging-Setup (005) (v0.2.8) |
+| [clean24-staging-tenant-results.md](docs/clean24-staging-tenant-results.md) | Ergebnis: Clean24-Staging-Tenant verifiziert (owner, Premium, alle Zähler 0; 2026-06-09, v0.2.9) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
@@ -427,24 +436,28 @@ Pro und RLS-gefilterte fiktive Zähler. Festgehalten in
 Lead-Quellen – ohne Kundendaten/Auth), Typen + `docs/clean24-tenant-setup.md`.
 Migration 001 unverändert.
 
-**v0.2.9 (nächster Schritt)** – **Clean24-Staging-Tenant-Verifikation /
-App-Shell-Umschaltung** (002+005 auf Staging anwenden, Login als Clean24 prüfen)
-**oder** **Auth-/Onboarding-Härtung** (Onboarding-RPC für die erste
-Owner-Mitgliedschaft, Rollenchecks auf geschützten Routen). Weiterhin keine echten
-Kundendaten.
+**v0.2.9 (erledigt)** – **Clean24-Staging-Tenant verifiziert** (manuell,
+2026-06-09): Migration `002` + Skript `005` angewendet, Owner-User via `004`
+gebunden, Login → `/app-shell` zeigt Clean24 / owner / Premium mit allen Zählern 0
+(Config-only). Festgehalten in `docs/clean24-staging-tenant-results.md`. Nur Docs.
+
+**v0.3.0 (nächster Schritt)** – **Clean24 Lead Inbox-Fundament**: manuelle
+Lead-Erfassung im geschützten App-Shell, **noch keine** externen Integrationen
+(kein Scraping, keine E-Mail-Anbindung, kein Lead Hunter). Echte Daten erst nach
+Backup/Restore + Staging-/Produktions-Trennung sowie validiertem Auth/RLS/Security.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.2.7 (App-Shell ↔
-Staging) und **v0.2.8 (Clean24-Tenant-Setup)** sind erledigt. Parallel bleibt
-**A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment, echtes
-Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.2.8
+(Clean24-Tenant-Setup) und **v0.2.9 (Clean24-Tenant verifiziert)** sind erledigt.
+Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich
+(Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.2.9 — Clean24-Staging-Tenant-Verifikation**
-(Migration `002` + Skript `005` auf Staging anwenden, als Clean24 einloggen und
-die App-Shell prüfen) bzw. Auth-/Onboarding-Härtung. Erst danach, nach Security-/
-Backup-Freigabe, schrittweise echte Tenant-Daten von Clean24 — **nie vor**
-validiertem Auth, RLS, Security und Backup.
+**Empfehlung:** als Nächstes **v0.3.0 — Clean24 Lead Inbox-Fundament** (manuelle
+Lead-Erfassung, keine externen Integrationen). **Voraussetzung vor echten Daten:**
+Backup/Restore eingerichtet und getestet, **Staging und Produktion strikt
+getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —
+**nie vor** diesem Gate.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { CLEAN24_TENANT } from "@/lib/tenant-clean24";
+import { getPackageName } from "@/lib/packages";
 
 export const metadata: Metadata = {
   title: "Klarsa App Foundation (intern) – Klarsa",
@@ -141,7 +142,10 @@ export default function WorkspacePage() {
                 Branche: Reinigung
               </span>
               <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                Plan-Paket: Pro
+                Plan-Paket: {getPackageName(t.plannedTier)}
+              </span>
+              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                Billing: {t.billingStatus}
               </span>
             </div>
 
@@ -174,7 +178,7 @@ export default function WorkspacePage() {
                 <ul className="mt-2 flex flex-wrap gap-1.5">
                   {t.sources.map((src) => (
                     <li
-                      key={src.type}
+                      key={src.label}
                       className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
                     >
                       {src.label}

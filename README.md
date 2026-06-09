@@ -7,37 +7,19 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.2.7** — **App-Shell an Supabase-Staging angebunden (fiktive Daten).**
-`/app-shell` ist nun **serverseitig geschützt** und `force-dynamic`: kein User →
-Redirect auf `/login`; User ohne aktiven Mandanten → sichere „Kein aktiver
-Mandant"-Ansicht; sonst Tenant-Kontext (User, Firma, Rolle, Paket) plus
-**RLS-gefilterte** Zähler (Prospects/Leads/Offerten/Jobs/Follow-ups/bexio-Handoffs)
-über `lib/auth/tenant-data.ts`. Gelesen wird **ausschliesslich über den
-Anon-/Session-Client** (RLS gilt) – **nie** über den Service-Role-Client. Ohne Env
-zeigt die Seite eine sichere „Setup erforderlich"-Ansicht (build-sicher). Weiterhin
-**keine Credentials, keine `.env.local`, keine echten Kundendaten** – nur fiktive
-`@example.test`-Staging-Daten. Die verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert.
+**v0.2.8** — **Clean24-Tenant-Setup-Fundament.** Clean24 Memis GmbH wird als
+**erster realer Klarsa-Tenant** vorbereitet (Staging/Setup): additive Migration
+`002` (Billing-/Access-Enums + -Felder auf `companies`: `billing_status`,
+`access_status`, `billing_provider` – **kein echtes Billing**), Staging-SQL `005`
+(idempotentes Anlegen des Tenants: Firma **Premium**, Billing `internal_founder`,
+8 Leistungen, 8 Lead-Quellen – **ohne** Leads/Offerten/Jobs/Auth/Passwörter),
+aktualisierte Typen (`lib/database-types.ts`, `lib/tenant-clean24.ts`) und
+`docs/clean24-tenant-setup.md`. **Migration 001 bleibt unverändert.** Weiterhin
+**keine Credentials, keine echten Kundendaten**. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 
-> **v0.2.7.1 (Patch):** Staging-Login-Testanleitung. Die per `002` geseedeten
-> Nutzer sind in gehostetem Supabase nicht login-fähig; daher: Auth-User im
-> Dashboard anlegen (Auto-Confirm) und mit `supabase/verification/004_bind_auth_user_to_fake_tenant.sql`
-> an einen Fake-Tenant binden (kein Passwort in SQL). Plus klarere `/login`-Fehlermeldung.
-> Docs: `docs/staging-login-test-users.md`. Nur Docs + Staging-SQL, keine Credentials/echten Daten.
-
-> **v0.2.7.2 (Patch):** Client-Env-Erkennung repariert. `lib/env.ts` liest die
-> `NEXT_PUBLIC_*`-Variablen jetzt über **direkte statische** `process.env`-Referenzen
-> (nicht `process.env[name]`), damit Next sie ins Client-Bundle inlinen kann;
-> `/login` ermittelt `isConfigured` serverseitig und zeigt bei Erfolg „Staging env
-> erkannt". Build bleibt env-frei. Keine Credentials/echten Daten.
-
-> **v0.2.7.3 (Patch):** App-Shell-Staging-Login **verifiziert** (vom Nutzer
-> manuell, 2026-06-09): `/login` → `/app-shell` zeigt Tenant **Clean24 Demo**,
-> Rolle **owner**, Paket **Pro** und RLS-gefilterte fiktive Zähler (passend zum
-> Seed). Festgehalten in `docs/app-shell-staging-results.md`. Nur Docs, keine
-> Credentials/echten Daten.
-
-> Klarsa Core (Multi-Tenant-SaaS): v0.2.0–v0.2.5 (Docs/Schema/RLS/Verifikation),
-> v0.2.6 (Auth-Fundament), **v0.2.7 (App-Shell ↔ Staging, RLS-Lesepfad)**.
+> Klarsa Core: v0.2.0–v0.2.5 (Docs/Schema/RLS/Verifikation), v0.2.6
+> (Auth-Fundament), v0.2.7 (App-Shell ↔ Staging, RLS-Lesepfad; .1 Login-Anleitung,
+> .2 Client-Env-Fix, .3 Login verifiziert), **v0.2.8 (Clean24-Tenant-Setup)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -45,9 +27,9 @@ zeigt die Seite eine sichere „Setup erforderlich"-Ansicht (build-sicher). Weit
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** v0.2.8 — Clean24-Tenant-Setup-Fundament **oder** Rollen-/
-> Onboarding-Härtung. **Keine echten Clean24-/Kundendaten** vor validiertem Auth,
-> RLS, Security und Backup.
+> **Nächster Schritt:** v0.2.9 — Clean24-Staging-Tenant-Verifikation / App-Shell-
+> Umschaltung **oder** Auth-/Onboarding-Härtung. **Keine echten Daten** vor
+> validiertem Auth, RLS, Security und Backup.
 
 ### Strategie
 
@@ -142,7 +124,8 @@ app/
   page.tsx           # Landingpage
   demo/  pricing/  beratung/  faq/  brochure/   # öffentliche Seiten
   demo-script/  sales-kit/  video-script/       # interne Seiten (noindex)
-  workspace/  app-shell/                         # interne App-Foundation/Shell (noindex, statisch)
+  workspace/         # interne App-Foundation (noindex, statisch)
+  app-shell/         # geschützter Tenant-Arbeitsbereich (noindex, force-dynamic, Session+RLS)
   login/             # Login-Seite (noindex, Skelett)
   auth/callback/  logout/                        # Auth-Route-Handler (force-dynamic)
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
@@ -162,14 +145,18 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   app-shell-staging-connection.md # /app-shell ↔ Staging: Env, Fake-Login, RLS-Lesepfad, kein Service-Role (v0.2.7)
   staging-login-test-users.md    # Login-fähige Dashboard-Testnutzer anlegen + via 004 binden (v0.2.7.1)
   app-shell-staging-results.md   # Ergebnis: App-Shell-Login bestanden (Clean24 Demo, owner, Pro; v0.2.7.3)
+  clean24-tenant-setup.md        # Clean24 = erster realer Tenant: Config, Billing-Felder (002), Setup (005) (v0.2.8)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
-  migrations/001_klarsa_core_schema.sql  # Enums, 20 Tabellen, Indizes, RLS (rollenbasiert)
-  verification/      # Verifikationsskripte (v0.2.4):
+  migrations/
+    001_klarsa_core_schema.sql           # Enums, 20 Tabellen, Indizes, RLS (rollenbasiert)
+    002_clean24_tenant_billing_foundation.sql # additiv: Billing-/Access-Enums + -Felder (v0.2.8)
+  verification/      # Verifikations-/Setup-Skripte:
     001_verify_schema.sql            # read-only: Schema/RLS prüfen, keine Daten
     002_fake_seed_for_rls_tests.sql  # fiktive Staging-Daten (@example.test)
     003_rls_test_queries.sql         # RLS-Tests (jede Zeile = PASS)
     004_bind_auth_user_to_fake_tenant.sql # Dashboard-Auth-User an Fake-Tenant binden (Login-Tests, v0.2.7.1)
+    005_create_clean24_staging_tenant.sql # Clean24-Founder-Tenant-Setup, keine Kundendaten (v0.2.8)
   README.md          # Anwenden (Staging zuerst), keine Secrets, Security-Gate
 
 .env.local.example   # Env-Template (nur Platzhalter) — echtes .env.local ist ignoriert
@@ -351,6 +338,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [app-shell-staging-connection.md](docs/app-shell-staging-connection.md) | `/app-shell` ↔ Staging: `.env.local`, Fake-User-Login, RLS-Lesepfad, kein Service-Role für Tenant-Reads (v0.2.7) |
 | [staging-login-test-users.md](docs/staging-login-test-users.md) | Login-fähige Testnutzer: Dashboard-Auth-User anlegen (Auto-Confirm) + via `004` an Fake-Tenant binden (v0.2.7.1) |
 | [app-shell-staging-results.md](docs/app-shell-staging-results.md) | Ergebnis: App-Shell-Staging-Login bestanden (Clean24 Demo, owner, Pro, RLS-Zähler; 2026-06-09, v0.2.7.3) |
+| [clean24-tenant-setup.md](docs/clean24-tenant-setup.md) | Clean24 = erster realer Tenant: Config (Premium, internal_founder), Billing-Felder (Migration 002), Staging-Setup (005) (v0.2.8) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
@@ -433,22 +421,30 @@ Build bleibt env-frei.
 Pro und RLS-gefilterte fiktive Zähler. Festgehalten in
 `docs/app-shell-staging-results.md`. Nur Docs.
 
-**v0.2.8 (nächster Schritt)** – **Clean24-Tenant-Setup-Fundament** (weiterhin
-Staging/fiktiv) **oder** **Rollen-/Onboarding-Härtung** (Onboarding-RPC für die
-erste Owner-Mitgliedschaft, Rollenchecks auf geschützten Routen). Weiterhin keine
-echten Kundendaten.
+**v0.2.8 (erledigt)** – **Clean24-Tenant-Setup-Fundament**: additive Migration
+`002` (Billing-/Access-Enums + -Felder auf `companies`), Staging-SQL `005`
+(Clean24 als erster realer Tenant: Premium, `internal_founder`, 8 Leistungen, 8
+Lead-Quellen – ohne Kundendaten/Auth), Typen + `docs/clean24-tenant-setup.md`.
+Migration 001 unverändert.
+
+**v0.2.9 (nächster Schritt)** – **Clean24-Staging-Tenant-Verifikation /
+App-Shell-Umschaltung** (002+005 auf Staging anwenden, Login als Clean24 prüfen)
+**oder** **Auth-/Onboarding-Härtung** (Onboarding-RPC für die erste
+Owner-Mitgliedschaft, Rollenchecks auf geschützten Routen). Weiterhin keine echten
+Kundendaten.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.2.6
-(Auth-Fundament) und **v0.2.7 (App-Shell ↔ Staging, RLS-Lesepfad)** sind erledigt.
-Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich
-(Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.2.7 (App-Shell ↔
+Staging) und **v0.2.8 (Clean24-Tenant-Setup)** sind erledigt. Parallel bleibt
+**A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment, echtes
+Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.2.8 — Clean24-Tenant-Setup-Fundament bzw.
-Rollen-/Onboarding-Härtung** (alles weiter auf Staging/fiktiv). Erst danach, nach
-Security-/Backup-Freigabe, schrittweise echte Tenant-Daten von Clean24 — **nie
-vor** validiertem Auth, RLS, Security und Backup.
+**Empfehlung:** als Nächstes **v0.2.9 — Clean24-Staging-Tenant-Verifikation**
+(Migration `002` + Skript `005` auf Staging anwenden, als Clean24 einloggen und
+die App-Shell prüfen) bzw. Auth-/Onboarding-Härtung. Erst danach, nach Security-/
+Backup-Freigabe, schrittweise echte Tenant-Daten von Clean24 — **nie vor**
+validiertem Auth, RLS, Security und Backup.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

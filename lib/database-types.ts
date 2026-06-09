@@ -117,6 +117,20 @@ export type AuditActionType =
   | "handoff"
   | "system";
 
+/* Billing / access enums — added in migration 002 (v0.2.8). No real billing yet. */
+export type BillingStatus =
+  | "internal_founder"
+  | "trial"
+  | "active"
+  | "overdue"
+  | "limited"
+  | "paused"
+  | "cancelled";
+
+export type AccessStatus = "full" | "limited" | "suspended";
+
+export type BillingProvider = "internal" | "manual" | "bexio" | "stripe";
+
 /* Helper unions backed by CHECK constraints (not their own SQL enums). */
 export type CompanyStatus = "trial" | "active" | "suspended";
 export type BexioConnectionStatus =
@@ -181,6 +195,10 @@ export interface CompanyRow extends BaseColumns {
   regions_served: string[];
   status: CompanyStatus;
   is_first_tenant: boolean;
+  // Billing/access — added in migration 002 (v0.2.8).
+  billing_status: BillingStatus;
+  access_status: AccessStatus;
+  billing_provider: BillingProvider;
   created_by: string | null;
   deleted_at: string | null;
 }

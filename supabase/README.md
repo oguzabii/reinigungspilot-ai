@@ -18,11 +18,13 @@ structure and tests, not data.
 supabase/
   migrations/
     001_klarsa_core_schema.sql       # enums, 20 tables, indexes, RLS (role-aware)
+    002_clean24_tenant_billing_foundation.sql # additive: billing/access enums + columns (v0.2.8)
   verification/
     001_verify_schema.sql            # read-only: enums/tables/functions/RLS/policies + no-data
     002_fake_seed_for_rls_tests.sql  # FAKE staging data (two demo tenants, @example.test users)
     003_rls_test_queries.sql         # RLS test cases (every line should print PASS)
     004_bind_auth_user_to_fake_tenant.sql # bind a Dashboard auth user -> fake tenant (login tests)
+    005_create_clean24_staging_tenant.sql # Clean24 founder-tenant setup (no customer data) (v0.2.8)
   README.md                          # this file
 ```
 
@@ -36,13 +38,17 @@ Before any production project or real data, the migration is applied to a
 throwaway **staging** project and validated. Run order:
 
 1. `migrations/001_klarsa_core_schema.sql` — apply the schema.
-2. `verification/001_verify_schema.sql` — read-only checks (enums/tables/
+2. `migrations/002_clean24_tenant_billing_foundation.sql` — additive billing/access fields.
+3. `verification/001_verify_schema.sql` — read-only checks (enums/tables/
    functions/RLS/policies exist; no data yet).
-3. `verification/002_fake_seed_for_rls_tests.sql` — insert **fake** test data.
-4. `verification/003_rls_test_queries.sql` — RLS tests (expect all **PASS**).
-5. (login tests, optional) create a Dashboard auth user, then
+4. `verification/002_fake_seed_for_rls_tests.sql` — insert **fake** test data.
+5. `verification/003_rls_test_queries.sql` — RLS tests (expect all **PASS**).
+6. (login tests, optional) create a Dashboard auth user, then
    `verification/004_bind_auth_user_to_fake_tenant.sql` — bind it to a fake
    tenant so it can log in at `/app-shell`.
+7. (Clean24 founder tenant) `verification/005_create_clean24_staging_tenant.sql`
+   — create/update the Clean24 tenant setup (no customer data); then bind a
+   login user via `004` with `target_company_name = 'Clean24 Memis GmbH'`.
 
 Runbooks and references:
 
@@ -51,6 +57,7 @@ Runbooks and references:
 | [supabase-staging-setup.md](../docs/supabase-staging-setup.md) | Create the staging project, fill `.env.local`, apply the migration, verify |
 | [supabase-staging-verification.md](../docs/supabase-staging-verification.md) | **End-to-end runbook** for scripts 1–4 + clean/reset |
 | [staging-login-test-users.md](../docs/staging-login-test-users.md) | Create login-ready Dashboard users + bind via `004` (login tests) |
+| [clean24-tenant-setup.md](../docs/clean24-tenant-setup.md) | Clean24 founder tenant: config, billing fields (002), staging setup (005) |
 | [app-shell-staging-connection.md](../docs/app-shell-staging-connection.md) | `/app-shell` ↔ staging: env, exact login test flow, RLS read path |
 | [rls-test-plan.md](../docs/rls-test-plan.md) | 13 RLS tests + role matrix (tenant isolation, readonly write-block, role scoping, append-only audit, no anon access) |
 | [staging-seed-plan.md](../docs/staging-seed-plan.md) | Fake-only dataset (two demo tenants, fake users) to exercise RLS + workflows |

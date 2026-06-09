@@ -7,21 +7,27 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.2.0** — Start von **Klarsa Core** als Multi-Tenant-SaaS (Architektur-Phase).
-Dieser Schritt liefert **nur Dokumentation, Typen und ein statisches Skelett** —
-**kein** Backend: kein Supabase, kein Auth, keine bexio-API, kein E-Mail-Versand,
-kein Scraping, keine echten Kundendaten. Neu: Architektur-Docs unter `docs/`,
-Core-Typen (`lib/klarsa-core-types.ts`), Erst-Tenant-Config
-(`lib/tenant-clean24.ts`) und die interne Foundation-Seite `/workspace`.
-**Clean24 Memis GmbH** ist der **erste Tenant / Live-Proof** in Klarsa. Die
-verkaufsfähige Frontend-Demo (v0.1.7) bleibt unverändert bestehen.
+**v0.2.1** — **Supabase-Schema-Fundament** für Klarsa Core. Neu: die erste
+Migration `supabase/migrations/001_klarsa_core_schema.sql` (10 Enums, 20
+Tabellen, Indizes, RLS + Draft-Policies), `supabase/README.md`, die
+Schema-Notizen `docs/supabase-schema-notes.md` und der TypeScript-Spiegel
+`lib/database-types.ts`. Weiterhin **kein** Backend angebunden: **keine**
+Credentials, **keine** echte Datenbank, **keine** Seed-/Kundendaten, kein Auth,
+keine bexio-API. Nur Schema/Migrationen/Typen/Doku. Die verkaufsfähige
+Frontend-Demo (v0.1.7) bleibt unverändert.
+
+> Start von **Klarsa Core** als Multi-Tenant-SaaS war v0.2.0 (Architektur-Docs
+> unter `docs/`, Core-Typen, Erst-Tenant-Config, Foundation-Seite `/workspace`).
+> **Clean24 Memis GmbH** ist der **erste Tenant / Live-Proof** in Klarsa.
 
 > Öffentliche Marke = **Klarsa**. Das interne Repo/Paket heisst weiterhin
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** v0.2.1 — Supabase-Schema-Fundament (Tabellen + RLS +
-> Soft-Delete + Audit). **Keine echten Daten** vor Auth, RLS, Security und Backup.
+> **Nächster Schritt:** v0.2.2 — Supabase-Staging-Setup + Env-Dokumentation
+> (Staging-Projekt, untrackte Umgebungsvariablen, Migration auf Staging anwenden,
+> RLS-/Cross-Tenant-Tests). **Keine echten Daten** vor validiertem Auth, RLS,
+> Security und Backup.
 
 ### Strategie
 
@@ -91,6 +97,7 @@ lib/
   # Klarsa Core (Phase 2, nur Typen/Config — kein Backend):
   klarsa-core-types.ts # Multi-Tenant-Domänentypen (Plan, vgl. docs/data-model.md)
   tenant-clean24.ts    # Erst-Tenant-Config: Clean24 Memis GmbH (ohne Secrets/echte Daten)
+  database-types.ts    # TS-Spiegel des Supabase-Schemas (Enums + Row-Typen, v0.2.1)
 
 components/          # Wiederverwendbare UI-Bausteine
   PackageToggle, PackageCard, LockedFeature, DashboardMetricCard,
@@ -111,6 +118,11 @@ app/
 docs/                # Klarsa Core Architektur-Plan (Phase 2)
   phase-2-architecture.md  data-model.md  security-architecture.md
   lead-hunter-engine.md    bexio-architecture.md
+  supabase-schema-notes.md # Schema-Design zu supabase/migrations (v0.2.1)
+
+supabase/            # DB-Fundament (nur Migrationen, keine Credentials/Daten)
+  migrations/001_klarsa_core_schema.sql  # Enums, 20 Tabellen, Indizes, RLS
+  README.md          # Anwenden (Staging zuerst), keine Secrets, Security-Gate
 ```
 
 Das Original-Logo liegt unter `public/brand/klarsa-logo.png`. Eingebunden wird
@@ -263,6 +275,11 @@ aber strikt über `company_id` getrennt (Supabase RLS).
   **getrenntes** System — keine Migration, kein Import, keine Kopplung.
 - **Core-Typen:** [`lib/klarsa-core-types.ts`](lib/klarsa-core-types.ts) (Plan,
   vgl. Datenmodell).
+- **DB-Schema-Fundament (v0.2.1):**
+  [`supabase/migrations/001_klarsa_core_schema.sql`](supabase/migrations/001_klarsa_core_schema.sql)
+  (10 Enums, 20 Tabellen, Indizes, RLS + Draft-Policies) und der TS-Spiegel
+  [`lib/database-types.ts`](lib/database-types.ts). Nur Migration/Typen — **keine
+  Credentials, keine Datenbank, keine Daten**.
 - **Foundation-Seite:** `/workspace` (intern, statisch) — zeigt Plan + Tenant +
   Module, mit Warnung „Noch kein Login, keine echten Kundendaten."
 
@@ -272,6 +289,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | --- | --- |
 | [phase-2-architecture.md](docs/phase-2-architecture.md) | Multi-Tenant-Überblick, Clean24 als Tenant, Module, Implementierungsphasen |
 | [data-model.md](docs/data-model.md) | 20 geplante Tabellen, `company_id`-Strategie, Soft-Delete/Audit |
+| [supabase-schema-notes.md](docs/supabase-schema-notes.md) | Schema-Design zur Migration: Tabellengruppen, RLS-/Soft-Delete-/Audit-Strategie |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
 | [lead-hunter-engine.md](docs/lead-hunter-engine.md) | Kontrollierte Discovery-Pipeline mit Human-Approval |
 | [bexio-architecture.md](docs/bexio-architecture.md) | Connect/Connect Plus, verschlüsselte Tokens, Handoff-Queue |
@@ -295,19 +313,28 @@ Kontakt `info@klarsa.ch`, Positionierung „KI-Verkaufsbüro") und Mobile-Politu
 Core-Typen, Erst-Tenant-Config (Clean24), `/workspace`-Foundation. Nur Doku/Typen/
 Skelett — kein Backend.
 
-**v0.2.1 (nächster Schritt)** – **Supabase-Schema-Fundament**: Tabellen + RLS +
-Soft-Delete + `audit_logs` gemäss `docs/data-model.md` und
-`docs/security-architecture.md`. Migrationen ohne echte Daten.
+**v0.2.1 (erledigt)** – **Supabase-Schema-Fundament**: erste Migration
+(`supabase/migrations/001_klarsa_core_schema.sql`) mit 10 Enums, 20 Tabellen,
+Indizes, RLS + Draft-Policies; `supabase/README.md`,
+`docs/supabase-schema-notes.md` und TS-Spiegel `lib/database-types.ts`. Ohne
+Credentials, ohne Datenbank, ohne echte Daten.
+
+**v0.2.2 (nächster Schritt)** – **Supabase-Staging-Setup + Env-Dokumentation**:
+Staging-Projekt anlegen, benötigte (untrackte) Umgebungsvariablen dokumentieren,
+Migration auf Staging anwenden und RLS-/Cross-Tenant-Tests durchführen. Weiterhin
+keine echten Kundendaten.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** ist mit v0.2.0 gestartet (siehe `docs/`). Parallel
-bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment,
-echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) und v0.2.1
+(Supabase-Schema-Fundament) sind erledigt. Parallel bleibt **A) Deploy / Visual
+Review** der Verkaufs-Demo möglich (Live-Deployment, echtes Postfach
+`info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.2.1 — Supabase-Schema-Fundament** (Tabellen +
-RLS + Soft-Delete + Audit), strikt nach dem Datenmodell. Erst danach Auth und
-schrittweise echte Tenant-Daten von Clean24 — nie vor der Security-/Backup-Basis.
+**Empfehlung:** als Nächstes **v0.2.2 — Supabase-Staging-Setup + Env-Dokumentation**
+(Staging-Projekt, untrackte Env-Variablen, Migration auf Staging anwenden,
+RLS-/Cross-Tenant-Tests). Erst danach Auth und schrittweise echte Tenant-Daten von
+Clean24 — **nie vor** validiertem Auth, RLS, Security und Backup.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

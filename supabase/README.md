@@ -1,35 +1,50 @@
 # Klarsa Core — Supabase
 
 Database foundation for **Klarsa Core**, the multi-tenant SaaS layer of Klarsa.
-This folder contains **schema migrations only** — structure, not data.
+This folder contains **schema migrations and verification scripts only** —
+structure and tests, not data.
 
-> **Status (v0.2.2):** schema foundation + **staging setup plan**. Still **no
-> database is connected**, **no credentials are committed**, and **no real
-> customer data** exists. The migration is applied first to a throwaway
-> **staging** project, validated with the RLS test plan, before anything else.
+> **Status (v0.2.4):** schema foundation + staging setup plan + **verification
+> scripts**. Still **no database is connected**, **no credentials are
+> committed**, and **no real customer data** exists. The migration is applied
+> first to a throwaway **staging** project and validated (verify → fake seed →
+> RLS tests) before anything else.
 
 ## Contents
 
 ```
 supabase/
   migrations/
-    001_klarsa_core_schema.sql   # enums, 20 tables, indexes, RLS + draft policies
-  README.md                      # this file
+    001_klarsa_core_schema.sql       # enums, 20 tables, indexes, RLS (role-aware)
+  verification/
+    001_verify_schema.sql            # read-only: enums/tables/functions/RLS/policies + no-data
+    002_fake_seed_for_rls_tests.sql  # FAKE staging data (two demo tenants, @example.test users)
+    003_rls_test_queries.sql         # RLS test cases (every line should print PASS)
+  README.md                          # this file
 ```
 
 Design rationale and table groups: see
 [`../docs/supabase-schema-notes.md`](../docs/supabase-schema-notes.md). The
 TypeScript mirror of the schema is [`../lib/database-types.ts`](../lib/database-types.ts).
 
-## Staging setup & testing (v0.2.2)
+## Staging setup, verification & testing
 
 Before any production project or real data, the migration is applied to a
-throwaway **staging** project and validated. Three runbooks cover this:
+throwaway **staging** project and validated. Run order:
+
+1. `migrations/001_klarsa_core_schema.sql` — apply the schema.
+2. `verification/001_verify_schema.sql` — read-only checks (enums/tables/
+   functions/RLS/policies exist; no data yet).
+3. `verification/002_fake_seed_for_rls_tests.sql` — insert **fake** test data.
+4. `verification/003_rls_test_queries.sql` — RLS tests (expect all **PASS**).
+
+Runbooks and references:
 
 | Doc | Purpose |
 | --- | --- |
-| [supabase-staging-setup.md](../docs/supabase-staging-setup.md) | Create the staging project, fill `.env.local`, apply the migration, verify tables/enums/functions/RLS |
-| [rls-test-plan.md](../docs/rls-test-plan.md) | 10 RLS tests (tenant isolation, inactive member, append-only audit, no anon access, role-hardening gaps) |
+| [supabase-staging-setup.md](../docs/supabase-staging-setup.md) | Create the staging project, fill `.env.local`, apply the migration, verify |
+| [supabase-staging-verification.md](../docs/supabase-staging-verification.md) | **End-to-end runbook** for the four scripts above + clean/reset |
+| [rls-test-plan.md](../docs/rls-test-plan.md) | 13 RLS tests + role matrix (tenant isolation, readonly write-block, role scoping, append-only audit, no anon access) |
 | [staging-seed-plan.md](../docs/staging-seed-plan.md) | Fake-only dataset (two demo tenants, fake users) to exercise RLS + workflows |
 
 Environment template: [`../.env.local.example`](../.env.local.example) (placeholders
@@ -98,12 +113,13 @@ uploads before that — see [`../docs/security-architecture.md`](../docs/securit
 
 - No connected database, no environment, no deployment.
 - No auth wiring, no API routes, no Supabase client in the app.
-- No seed data, no real customer data, no bexio API, no file storage.
+- No real/committed data, no bexio API, no file storage. The only seed is a
+  **fake, staging-only** script (`verification/002`, `@example.test` data).
 - Not linked to the old standalone **Clean24 Lead Autopilot** (separate system).
 
 ## Next step
 
-**v0.2.3 — create the staging project + verify the migration**, or begin the
-**auth/RLS implementation plan**. Use the runbooks above (setup → seed → RLS
-tests). Still no real customer data until auth, RLS and backup/restore are
+**v0.2.5 — apply the migration to a staging project and record the verification
+results** (run scripts 1→4 from the verification runbook), or begin the **auth
+foundation**. Still no real customer data until auth, RLS and backup/restore are
 verified.

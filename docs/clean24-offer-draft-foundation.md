@@ -1,11 +1,15 @@
 # Klarsa Core — Offer Draft Foundation (v0.3.2)
 
-> **Status: FOUNDATION (staging).** Adds a protected **Offer Engine**
+> **Status: VERIFIED on staging (2026-06-10).** Adds a protected **Offer Engine**
 > (`/app-shell/offers`): create **manual offer drafts** (optionally from a lead),
 > add line items, see live totals, and move an offer through its status — all
 > through the **session client (RLS)**, never the service-role client.
 > **No PDF, no email/sending, no bexio, no external integration, no real
 > customer data.** One additive migration (`004`) for deferred integrity.
+>
+> Staging verification (migration 004 applied, offer create/list + item add +
+> status update, RLS write path, Clean24 tenant, no real data — user-reported
+> manual test): [`clean24-offer-draft-results.md`](./clean24-offer-draft-results.md).
 
 Related: [`clean24-lead-status-followups.md`](./clean24-lead-status-followups.md),
 [`clean24-lead-inbox-foundation.md`](./clean24-lead-inbox-foundation.md),

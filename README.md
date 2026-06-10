@@ -20,7 +20,11 @@ auf den aktiven Mandanten plus serverseitige Lead-/Offerten-Zugehörigkeitsprüf
 Integrationen.** Additive **Migration `004`** (idempotent) schliesst das
 aufgeschobene F6-Hardening: `unique (id, company_id)` auf `leads` + Composite FK
 `followup_tasks(lead_id, company_id) → leads(id, company_id)`. 001/002/003
-unverändert. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
+unverändert. **v0.3.2.1 (Patch):** auf Staging **verifiziert** (2026-06-10,
+manuell): Migration `004` angewendet, Offerten-Create/List + Positions-Add +
+Status-Update für den Clean24-Tenant funktionieren, Session-Client/RLS-Schreibpfad
+bestätigt, keine echten Daten — `docs/clean24-offer-draft-results.md`. Die
+Verkaufs-Demo (v0.1.7) bleibt unverändert.
 
 > **v0.3.1/.1.1:** Lead-Status-Workflow & Follow-up-Fundament — `/app-shell/leads`
 > mit Status-Select je Lead (9 Werte, kanonische Reihenfolge, Korrekturen
@@ -37,7 +41,7 @@ unverändert. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 > (App-Shell ↔ Staging), v0.2.8 (Clean24-Tenant-Setup), v0.2.9 (Tenant
 > verifiziert), v0.3.0/.0.1 (Lead Inbox, auf Staging verifiziert),
 > v0.3.1/.1.1 (Lead-Status & Follow-ups, auf Staging verifiziert),
-> **v0.3.2 (Offer Draft-Fundament + Migration 004)**.
+> **v0.3.2/.2.1 (Offer Draft-Fundament + Migration 004, auf Staging verifiziert)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -184,6 +188,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-lead-status-followups.md # Lead-Status-Workflow + Follow-ups: Flow, Felder, Security, Checkliste (v0.3.1)
   clean24-lead-status-followups-results.md # Ergebnis: Status-Update + Follow-ups auf Staging verifiziert (v0.3.1.1)
   clean24-offer-draft-foundation.md  # Offer Engine: manuelle Offerten-Entwürfe, Positionen, Status, Migration 004, Security (v0.3.2)
+  clean24-offer-draft-results.md     # Ergebnis: Offer Engine auf Staging verifiziert (Migration 004, Create/List/Item/Status) (v0.3.2.1)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
   migrations/
@@ -385,6 +390,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-lead-status-followups.md](docs/clean24-lead-status-followups.md) | Lead-Status-Workflow (kanonischer Flow, nicht starr) + manuelle Follow-ups: Datenfluss, Defense-in-Depth, Verifikations-Checkliste (v0.3.1) |
 | [clean24-lead-status-followups-results.md](docs/clean24-lead-status-followups-results.md) | Ergebnis: Status-Update + Follow-up Create/List auf Staging verifiziert — Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.1.1) |
 | [clean24-offer-draft-foundation.md](docs/clean24-offer-draft-foundation.md) | Offer Engine: manuelle Offerten-Entwürfe (optional aus Lead), Positionen + serverseitige Summen, Status-Flow, Datenfluss, Migration 004 (F6-Hardening), Security, Checkliste (v0.3.2) |
+| [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
@@ -518,6 +524,12 @@ F6-Hardening (`unique leads(id,company_id)` + Composite FK
 `followup_tasks(lead_id,company_id) → leads(id,company_id)`). Doku
 `docs/clean24-offer-draft-foundation.md`.
 
+**v0.3.2.1 (erledigt, Patch)** – **Offer Engine auf Staging verifiziert**
+(manuell, 2026-06-10): Migration `004` angewendet, Offerten-Create/List +
+Positions-Add + Status-Update für den Clean24-Tenant funktionieren,
+Session-Client-/RLS-Schreibpfad bestätigt, keine echten Kundendaten.
+Festgehalten in `docs/clean24-offer-draft-results.md`. Nur Docs.
+
 **v0.3.3 (nächster Schritt)** – **Offer PDF / Offer-Versand-Fundament**:
 Offerte als PDF rendern + Versandpfad vorbereiten (manuell ausgelöst, keine
 echten Kundendaten). Echte Daten erst nach dem Backup-/Trennungs-Gate.
@@ -525,8 +537,8 @@ echten Kundendaten). Echte Daten erst nach dem Backup-/Trennungs-Gate.
 ## Empfohlener nächster Schritt
 
 Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.1/.1.1
-(Lead-Status & Follow-ups) und **v0.3.2 (Offer Draft-Fundament + Migration 004)**
-sind erledigt. Parallel bleibt
+(Lead-Status & Follow-ups) und **v0.3.2/.2.1 (Offer Draft-Fundament + Migration
+004, auf Staging verifiziert)** sind erledigt. Parallel bleibt
 **A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment,
 echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 

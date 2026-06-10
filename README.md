@@ -19,7 +19,11 @@ auf den **aktiven** Mandanten gescopt, und der verknüpfte Lead wird serverseiti
 dem aktiven Mandanten zugeordnet geprüft. **Kein Versand, keine Automatik, keine
 externen Integrationen. Null neue Migrationen** (001/002/003 unverändert — das
 Schema hatte bereits alles). Eng-Review (/plan-eng-review) vor dem Coding
-durchlaufen. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
+durchlaufen. **v0.3.1.1 (Patch):** auf Staging **verifiziert** (2026-06-10,
+manuell): Status-Update + Follow-up Create/List für den Clean24-Tenant
+funktionieren, Session-Client/RLS-Schreibpfad bestätigt, keine echten Daten —
+`docs/clean24-lead-status-followups-results.md`. Die Verkaufs-Demo (v0.1.7)
+bleibt unverändert.
 
 > **v0.3.0:** Lead Inbox-Fundament — geschützte Route `/app-shell/leads`,
 > manuelles Erfassen + Listen via Server-Action und Session-Client (RLS),
@@ -30,7 +34,7 @@ durchlaufen. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 > Klarsa Core: v0.2.0–v0.2.6 (Docs/Schema/RLS/Verifikation/Auth), v0.2.7
 > (App-Shell ↔ Staging), v0.2.8 (Clean24-Tenant-Setup), v0.2.9 (Tenant
 > verifiziert), v0.3.0/.1-Patch (Lead Inbox, auf Staging verifiziert),
-> **v0.3.1 (Lead-Status & Follow-ups)**.
+> **v0.3.1/.1.1 (Lead-Status & Follow-ups, auf Staging verifiziert)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -169,6 +173,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-lead-inbox-foundation.md # Lead Inbox: geschützte Route, manuelle Erfassung (Session/RLS), Migration 003 (v0.3.0)
   clean24-lead-inbox-results.md  # Ergebnis: Lead Inbox auf Staging verifiziert (Create/List, RLS-Schreibpfad; v0.3.0.1)
   clean24-lead-status-followups.md # Lead-Status-Workflow + Follow-ups: Flow, Felder, Security, Checkliste (v0.3.1)
+  clean24-lead-status-followups-results.md # Ergebnis: Status-Update + Follow-ups auf Staging verifiziert (v0.3.1.1)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
   migrations/
@@ -367,6 +372,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-lead-inbox-foundation.md](docs/clean24-lead-inbox-foundation.md) | Lead Inbox `/app-shell/leads`: geschützte manuelle Erfassung via Session/RLS, Migration 003, kein Service-Role/keine externen Quellen (v0.3.0) |
 | [clean24-lead-inbox-results.md](docs/clean24-lead-inbox-results.md) | Ergebnis: Lead Inbox auf Staging verifiziert — Create/List für Clean24, RLS-Schreibpfad bestätigt (2026-06-09, v0.3.0.1) |
 | [clean24-lead-status-followups.md](docs/clean24-lead-status-followups.md) | Lead-Status-Workflow (kanonischer Flow, nicht starr) + manuelle Follow-ups: Datenfluss, Defense-in-Depth, Verifikations-Checkliste (v0.3.1) |
+| [clean24-lead-status-followups-results.md](docs/clean24-lead-status-followups-results.md) | Ergebnis: Status-Update + Follow-up Create/List auf Staging verifiziert — Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.1.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
@@ -479,6 +485,16 @@ Kanal, Titel/Notiz) mit Liste/Leerzustand. Server-Actions + Session-Client
 Validierung. Null neue Migrationen. Eng-Review vor dem Coding. Doku
 `docs/clean24-lead-status-followups.md`.
 
+**v0.3.1.1 (erledigt, Patch)** – **Status & Follow-ups auf Staging verifiziert**
+(manuell, 2026-06-10): Status-Update + Follow-up Create/List für den
+Clean24-Tenant funktionieren, Session-Client-/RLS-Schreibpfad bestätigt, keine
+echten Kundendaten. Festgehalten in
+`docs/clean24-lead-status-followups-results.md`. Nur Docs.
+*Aufgeschobenes DB-Hardening (nächste sichere Migration):* Composite FK
+`followup_tasks(lead_id, company_id) → leads(id, company_id)` (+ `unique
+(id, company_id)` auf `leads`), damit der Mandant eines Follow-ups auf
+DB-Ebene immer dem Mandanten seines Leads entspricht.
+
 **v0.3.2 (nächster Schritt)** – **Offer Draft-Fundament**: Offerten-Entwürfe zu
 Leads (manuell, RLS-gescopt, keine externen Integrationen, kein PDF-Versand).
 Echte Daten erst nach dem Backup-/Trennungs-Gate.
@@ -486,7 +502,8 @@ Echte Daten erst nach dem Backup-/Trennungs-Gate.
 ## Empfohlener nächster Schritt
 
 Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.0 (Lead Inbox)
-und **v0.3.1 (Lead-Status & Follow-ups)** sind erledigt. Parallel bleibt
+und **v0.3.1/.1.1 (Lead-Status & Follow-ups, auf Staging verifiziert)** sind
+erledigt. Parallel bleibt
 **A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment,
 echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 

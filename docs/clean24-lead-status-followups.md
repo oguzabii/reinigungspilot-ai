@@ -1,11 +1,15 @@
 # Klarsa Core — Lead Status & Follow-ups (v0.3.1)
 
-> **Status: FOUNDATION (staging).** Extends the Lead Inbox (`/app-shell/leads`)
-> with a **status workflow** per lead and **manually planned follow-up tasks** —
-> all through the **session client (RLS)**, never the service-role client.
-> **No automatic sending**, no external integrations, no real customer data.
-> **Zero new migrations** (001/002/003 untouched — the existing schema already
-> had everything).
+> **Status: VERIFIED on staging (2026-06-10).** Extends the Lead Inbox
+> (`/app-shell/leads`) with a **status workflow** per lead and **manually
+> planned follow-up tasks** — all through the **session client (RLS)**, never
+> the service-role client. **No automatic sending**, no external integrations,
+> no real customer data. **Zero new migrations** (001/002/003 untouched — the
+> existing schema already had everything).
+>
+> Staging verification (status update + follow-up create/list, RLS write path,
+> Clean24 tenant, no real data — user-reported manual test):
+> [`clean24-lead-status-followups-results.md`](./clean24-lead-status-followups-results.md).
 
 Related: [`clean24-lead-inbox-foundation.md`](./clean24-lead-inbox-foundation.md),
 [`clean24-lead-inbox-results.md`](./clean24-lead-inbox-results.md),

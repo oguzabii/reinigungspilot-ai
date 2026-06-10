@@ -20,6 +20,7 @@ supabase/
     001_klarsa_core_schema.sql       # enums, 20 tables, indexes, RLS (role-aware)
     002_clean24_tenant_billing_foundation.sql # additive: billing/access enums + columns (v0.2.8)
     003_leads_notes.sql              # additive: leads.notes column (Lead Inbox) (v0.3.0)
+    004_followup_lead_tenant_integrity.sql # additive/idempotent: unique leads(id,company_id) + composite FK followup_tasks->leads (F6, v0.3.2)
   verification/
     001_verify_schema.sql            # read-only: enums/tables/functions/RLS/policies + no-data
     002_fake_seed_for_rls_tests.sql  # FAKE staging data (two demo tenants, @example.test users)
@@ -41,14 +42,18 @@ throwaway **staging** project and validated. Run order:
 1. `migrations/001_klarsa_core_schema.sql` — apply the schema.
 2. `migrations/002_clean24_tenant_billing_foundation.sql` — additive billing/access fields.
 3. `migrations/003_leads_notes.sql` — additive `leads.notes` column (Lead Inbox).
-4. `verification/001_verify_schema.sql` — read-only checks (enums/tables/
+4. `migrations/004_followup_lead_tenant_integrity.sql` — additive/idempotent:
+   `unique leads(id, company_id)` + composite FK
+   `followup_tasks(lead_id, company_id) → leads(id, company_id)` (F6 hardening).
+   Precondition check is in the file header (expect zero mismatched rows).
+5. `verification/001_verify_schema.sql` — read-only checks (enums/tables/
    functions/RLS/policies exist; no data yet).
-5. `verification/002_fake_seed_for_rls_tests.sql` — insert **fake** test data.
-6. `verification/003_rls_test_queries.sql` — RLS tests (expect all **PASS**).
-7. (login tests, optional) create a Dashboard auth user, then
+6. `verification/002_fake_seed_for_rls_tests.sql` — insert **fake** test data.
+7. `verification/003_rls_test_queries.sql` — RLS tests (expect all **PASS**).
+8. (login tests, optional) create a Dashboard auth user, then
    `verification/004_bind_auth_user_to_fake_tenant.sql` — bind it to a fake
    tenant so it can log in at `/app-shell`.
-8. (Clean24 founder tenant) `verification/005_create_clean24_staging_tenant.sql`
+9. (Clean24 founder tenant) `verification/005_create_clean24_staging_tenant.sql`
    — create/update the Clean24 tenant setup (no customer data); then bind a
    login user via `004` with `target_company_name = 'Clean24 Memis GmbH'`.
 

@@ -7,34 +7,37 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.3.1** — **Lead-Status-Workflow & Follow-up-Fundament.** `/app-shell/leads`
-kann jetzt pro Lead den **Status ändern** (alle neun `lead_status`-Werte in
-kanonischer Reihenfolge: new → qualified → offer_ready → offer_sent →
-waiting_reply → followup_due → won/lost/archived; Übergänge bewusst nicht starr
-erzwungen, Korrekturen bleiben möglich) und **manuelle Follow-ups planen**
-(Lead-Verknüpfung, Stufe 24h/48h/5 Tage, Fälligkeit, Kanal, Titel/Notiz) — Liste
-sortiert nach Fälligkeit, mit Leerzustand. Beides läuft über **Server-Actions +
-Session-Client (RLS)**; zusätzlich Defense-in-Depth: jede Schreiboperation ist
-auf den **aktiven** Mandanten gescopt, und der verknüpfte Lead wird serverseitig
-dem aktiven Mandanten zugeordnet geprüft. **Kein Versand, keine Automatik, keine
-externen Integrationen. Null neue Migrationen** (001/002/003 unverändert — das
-Schema hatte bereits alles). Eng-Review (/plan-eng-review) vor dem Coding
-durchlaufen. **v0.3.1.1 (Patch):** auf Staging **verifiziert** (2026-06-10,
-manuell): Status-Update + Follow-up Create/List für den Clean24-Tenant
-funktionieren, Session-Client/RLS-Schreibpfad bestätigt, keine echten Daten —
-`docs/clean24-lead-status-followups-results.md`. Die Verkaufs-Demo (v0.1.7)
-bleibt unverändert.
+**v0.3.2** — **Offer Draft-Fundament.** Neue geschützte Route
+**`/app-shell/offers`** (Offer Engine): **manuelle Offerten-Entwürfe erstellen**
+(optional aus einem Lead; Referenz automatisch `OF-…` wenn leer; Gültig-bis;
+MwSt-Satz Standard 8.10%), **Positionen** (`offer_items`) hinzufügen mit
+serverseitig berechneten **Netto/MwSt/Brutto**-Summen, **Status pflegen**
+(draft → ready → sent → accepted/declined/expired → archived; nicht starr) und
+Offerten auflisten — mit Leerzustand. Alles über **Server-Actions +
+Session-Client (RLS)** (offers/offer_items = `can_write_sales`), Defense-in-Depth
+auf den aktiven Mandanten plus serverseitige Lead-/Offerten-Zugehörigkeitsprüfung.
+**Kein PDF, kein E-Mail-Versand, keine bexio-Übergabe, keine externen
+Integrationen.** Additive **Migration `004`** (idempotent) schliesst das
+aufgeschobene F6-Hardening: `unique (id, company_id)` auf `leads` + Composite FK
+`followup_tasks(lead_id, company_id) → leads(id, company_id)`. 001/002/003
+unverändert. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 
-> **v0.3.0:** Lead Inbox-Fundament — geschützte Route `/app-shell/leads`,
+> **v0.3.1/.1.1:** Lead-Status-Workflow & Follow-up-Fundament — `/app-shell/leads`
+> mit Status-Select je Lead (9 Werte, kanonische Reihenfolge, Korrekturen
+> möglich) + manuelle Follow-ups (Stufe, Fälligkeit, Kanal, Titel), Server-Actions
+> + Session-Client (RLS), Defense-in-Depth, null neue Migrationen. Auf Staging
+> **verifiziert** (2026-06-10) — `docs/clean24-lead-status-followups-results.md`.
+
+> **v0.3.0/.0.1:** Lead Inbox-Fundament — geschützte Route `/app-shell/leads`,
 > manuelles Erfassen + Listen via Server-Action und Session-Client (RLS),
-> additive Migration `003` (`leads.notes`). **v0.3.0.1 (Patch):** auf Staging
-> **verifiziert** (2026-06-09, manuell): Create/List für den Clean24-Tenant
-> funktioniert, RLS-Schreibpfad bestätigt — `docs/clean24-lead-inbox-results.md`.
+> additive Migration `003` (`leads.notes`). Auf Staging **verifiziert**
+> (2026-06-09) — `docs/clean24-lead-inbox-results.md`.
 
 > Klarsa Core: v0.2.0–v0.2.6 (Docs/Schema/RLS/Verifikation/Auth), v0.2.7
 > (App-Shell ↔ Staging), v0.2.8 (Clean24-Tenant-Setup), v0.2.9 (Tenant
-> verifiziert), v0.3.0/.1-Patch (Lead Inbox, auf Staging verifiziert),
-> **v0.3.1/.1.1 (Lead-Status & Follow-ups, auf Staging verifiziert)**.
+> verifiziert), v0.3.0/.0.1 (Lead Inbox, auf Staging verifiziert),
+> v0.3.1/.1.1 (Lead-Status & Follow-ups, auf Staging verifiziert),
+> **v0.3.2 (Offer Draft-Fundament + Migration 004)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -92,6 +95,7 @@ npm run start    # Produktionsserver (nach build)
 | `/login`        | **Intern** (noindex): Login-Skelett (Supabase Auth). Inaktiv ohne Staging-Env, keine echten Daten |
 | `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): authentifizierter Tenant-Arbeitsbereich – Redirect ohne Session, RLS-gefilterte Staging-Zähler, kein Service-Role-Lesen. Ohne Env: „Setup erforderlich" |
 | `/app-shell/leads` | **Intern** (noindex, **dynamisch/geschützt**): Lead Inbox – Tenant-Leads anzeigen, manuell erfassen, **Status pflegen** und **Follow-ups planen** (Server-Actions, Session-Client/RLS). Kein Versand, keine externen Integrationen |
+| `/app-shell/offers` | **Intern** (noindex, **dynamisch/geschützt**): Offer Engine – Offerten-Entwürfe manuell erstellen (optional aus Lead), Positionen + Netto/MwSt/Brutto, **Status pflegen** (Server-Actions, Session-Client/RLS). Kein PDF/E-Mail/bexio |
 | `/auth/callback`| Route-Handler (dynamisch): OAuth/PKCE-Code-Tausch → Session-Cookie → Redirect |
 | `/logout`       | Route-Handler (dynamisch): Sign-out → Redirect auf `/login` |
 
@@ -139,6 +143,10 @@ components/          # Wiederverwendbare UI-Bausteine
   leads/NewFollowupForm.tsx # „Follow-up erstellen" (Lead, Stufe, Fälligkeit, Kanal, Titel) (v0.3.1)
   leads/lead-status.ts    # geteilte Status-/Stufen-Metadaten (Labels, Flow-Reihenfolge, Badges)
   leads/form-styles.ts    # geteilte Formular-Tailwind-Klassen (DRY)
+  offers/NewOfferForm.tsx # „Neue Offerte erstellen" (Lead, Referenz, Gültig-bis, MwSt, erste Position) (v0.3.2)
+  offers/OfferStatusForm.tsx # Status-Select je Offerte (kanonische Reihenfolge, Server-Action) (v0.3.2)
+  offers/AddOfferItemForm.tsx # Position zu Offerte hinzufügen (Server-Action, Summen-Neuberechnung) (v0.3.2)
+  offers/offer-status.ts  # geteilte Offerten-Status-Metadaten + CHF-Formatter (v0.3.2)
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
@@ -149,6 +157,7 @@ app/
   workspace/         # interne App-Foundation (noindex, statisch)
   app-shell/         # geschützter Tenant-Arbeitsbereich (noindex, force-dynamic, Session+RLS)
     leads/           # Lead Inbox: page.tsx (Liste, Status, Follow-ups) + actions.ts (createLead, updateLeadStatus, createFollowup)
+    offers/          # Offer Engine: page.tsx (Liste, Positionen, Summen, Status) + actions.ts (createOffer, updateOfferStatus, addOfferItem)
   login/             # Login-Seite (noindex, Skelett)
   auth/callback/  logout/                        # Auth-Route-Handler (force-dynamic)
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
@@ -174,12 +183,14 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-lead-inbox-results.md  # Ergebnis: Lead Inbox auf Staging verifiziert (Create/List, RLS-Schreibpfad; v0.3.0.1)
   clean24-lead-status-followups.md # Lead-Status-Workflow + Follow-ups: Flow, Felder, Security, Checkliste (v0.3.1)
   clean24-lead-status-followups-results.md # Ergebnis: Status-Update + Follow-ups auf Staging verifiziert (v0.3.1.1)
+  clean24-offer-draft-foundation.md  # Offer Engine: manuelle Offerten-Entwürfe, Positionen, Status, Migration 004, Security (v0.3.2)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
   migrations/
     001_klarsa_core_schema.sql           # Enums, 20 Tabellen, Indizes, RLS (rollenbasiert)
     002_clean24_tenant_billing_foundation.sql # additiv: Billing-/Access-Enums + -Felder (v0.2.8)
     003_leads_notes.sql                  # additiv: leads.notes (Lead Inbox) (v0.3.0)
+    004_followup_lead_tenant_integrity.sql # additiv/idempotent: unique leads(id,company_id) + Composite FK followup_tasks→leads (F6, v0.3.2)
   verification/      # Verifikations-/Setup-Skripte:
     001_verify_schema.sql            # read-only: Schema/RLS prüfen, keine Daten
     002_fake_seed_for_rls_tests.sql  # fiktive Staging-Daten (@example.test)
@@ -373,6 +384,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-lead-inbox-results.md](docs/clean24-lead-inbox-results.md) | Ergebnis: Lead Inbox auf Staging verifiziert — Create/List für Clean24, RLS-Schreibpfad bestätigt (2026-06-09, v0.3.0.1) |
 | [clean24-lead-status-followups.md](docs/clean24-lead-status-followups.md) | Lead-Status-Workflow (kanonischer Flow, nicht starr) + manuelle Follow-ups: Datenfluss, Defense-in-Depth, Verifikations-Checkliste (v0.3.1) |
 | [clean24-lead-status-followups-results.md](docs/clean24-lead-status-followups-results.md) | Ergebnis: Status-Update + Follow-up Create/List auf Staging verifiziert — Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.1.1) |
+| [clean24-offer-draft-foundation.md](docs/clean24-offer-draft-foundation.md) | Offer Engine: manuelle Offerten-Entwürfe (optional aus Lead), Positionen + serverseitige Summen, Status-Flow, Datenfluss, Migration 004 (F6-Hardening), Security, Checkliste (v0.3.2) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
 | [security-architecture.md](docs/security-architecture.md) | Auth, RBAC, RLS, Audit, Backup/PITR, „No Security = No Customer Data" |
@@ -495,21 +507,33 @@ echten Kundendaten. Festgehalten in
 (id, company_id)` auf `leads`), damit der Mandant eines Follow-ups auf
 DB-Ebene immer dem Mandanten seines Leads entspricht.
 
-**v0.3.2 (nächster Schritt)** – **Offer Draft-Fundament**: Offerten-Entwürfe zu
-Leads (manuell, RLS-gescopt, keine externen Integrationen, kein PDF-Versand).
-Echte Daten erst nach dem Backup-/Trennungs-Gate.
+**v0.3.2 (erledigt)** – **Offer Draft-Fundament**: neue geschützte Route
+`/app-shell/offers` (Offer Engine) — manuelle Offerten-Entwürfe (optional aus
+Lead, Auto-Referenz, Gültig-bis, MwSt), `offer_items` mit serverseitig
+berechneten Netto/MwSt/Brutto-Summen, Status-Flow (draft→…→archived, nicht
+starr), Liste/Leerzustand. Server-Actions + Session-Client (RLS,
+`can_write_sales`), Defense-in-Depth + Lead-/Offerten-Zugehörigkeitsprüfung.
+Kein PDF/E-Mail/bexio. Additive **Migration `004`** (idempotent) schliesst das
+F6-Hardening (`unique leads(id,company_id)` + Composite FK
+`followup_tasks(lead_id,company_id) → leads(id,company_id)`). Doku
+`docs/clean24-offer-draft-foundation.md`.
+
+**v0.3.3 (nächster Schritt)** – **Offer PDF / Offer-Versand-Fundament**:
+Offerte als PDF rendern + Versandpfad vorbereiten (manuell ausgelöst, keine
+echten Kundendaten). Echte Daten erst nach dem Backup-/Trennungs-Gate.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.0 (Lead Inbox)
-und **v0.3.1/.1.1 (Lead-Status & Follow-ups, auf Staging verifiziert)** sind
-erledigt. Parallel bleibt
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.1/.1.1
+(Lead-Status & Follow-ups) und **v0.3.2 (Offer Draft-Fundament + Migration 004)**
+sind erledigt. Parallel bleibt
 **A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment,
 echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.2 — Offer Draft-Fundament** (Offerten-Entwürfe
-zu Leads; manuell, RLS-gescopt). **Voraussetzung vor echten Kundendaten:**
-Backup/Restore eingerichtet und getestet, **Staging und Produktion strikt
+**Empfehlung:** als Nächstes **v0.3.3 — Offer PDF / Versand-Fundament**
+(PDF-Rendering + Versandpfad; manuell, RLS-gescopt). **Voraussetzung vor echten
+Kundendaten:** Backup/Restore eingerichtet und getestet, **Staging und Produktion
+strikt
 getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —
 **nie vor** diesem Gate.
 

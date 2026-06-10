@@ -165,7 +165,7 @@ const MODULES: Array<{
 }> = [
   { name: "Lead Inbox", icon: Inbox, countKey: "leads", tier: "Alle Pakete", href: "/app-shell/leads" },
   { name: "Lead Hunter", icon: Sparkles, countKey: "prospects", tier: "Ab Pro" },
-  { name: "Offer Engine", icon: FileText, countKey: "offers", tier: "Alle Pakete" },
+  { name: "Offer Engine", icon: FileText, countKey: "offers", tier: "Alle Pakete", href: "/app-shell/offers" },
   { name: "Follow-ups", icon: BellRing, countKey: "followupTasks", tier: "Alle Pakete" },
   { name: "Jobs", icon: Briefcase, countKey: "jobs", tier: "Ab Pro" },
   { name: "bexio Übergabe", icon: PlugZap, countKey: "bexioHandoffs", tier: "Ab Pro" },
@@ -281,10 +281,12 @@ function TenantShell({
 
       <p className="mt-8 text-sm text-slate-500">
         Öffnen Sie die <strong className="font-semibold text-navy-900">Lead
-        Inbox</strong>, um Leads anzuzeigen und manuell zu erfassen. Architektur:{" "}
-        <code>docs/clean24-lead-inbox-foundation.md</code>. Nächster Schritt:{" "}
+        Inbox</strong> (Leads, Status &amp; Follow-ups) oder die{" "}
+        <strong className="font-semibold text-navy-900">Offer Engine</strong>{" "}
+        (Offerten-Entwürfe). Architektur:{" "}
+        <code>docs/clean24-offer-draft-foundation.md</code>. Nächster Schritt:{" "}
         <strong className="font-semibold text-navy-900">
-          v0.3.1 – Lead-Status &amp; Follow-ups
+          v0.3.3 – Offer PDF / Versand
         </strong>
         .
       </p>

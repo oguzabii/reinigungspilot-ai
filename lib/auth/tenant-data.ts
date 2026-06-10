@@ -41,11 +41,13 @@ export async function getCompanySummary(
   companyId: string,
 ): Promise<CompanySummary | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("companies")
     .select("legal_name, brand_name, tier")
     .eq("id", companyId)
     .maybeSingle();
+  // Log read failures: an RLS/infra regression must not be silent (finding F4).
+  if (error) console.error("[tenant-data] getCompanySummary failed:", error.message);
 
   const row = data as
     | { legal_name: string; brand_name: string; tier: PackageTier }
@@ -117,7 +119,10 @@ export async function getLeads(companyId: string): Promise<LeadListItem[]> {
     .order("created_at", { ascending: false })
     .limit(200);
 
-  if (error) return [];
+  if (error) {
+    console.error("[tenant-data] getLeads failed:", error.message);
+    return [];
+  }
 
   const rows = (data ?? []) as Array<{
     id: string;
@@ -146,6 +151,76 @@ export async function getLeads(companyId: string): Promise<LeadListItem[]> {
   }));
 }
 
+/* -------------------------------------------------------------------------- */
+/* Follow-ups                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export interface FollowupListItem {
+  id: string;
+  stage: string;
+  dueAt: string;
+  channel: string | null;
+  status: string;
+  note: string | null;
+  createdAt: string;
+  /** Linked lead's display name (embedded via the lead_id FK), or null. */
+  leadName: string | null;
+}
+
+/**
+ * The active company's follow-up tasks, soonest due first. One embedded
+ * PostgREST query (no N+1): `leads(company_name)` joins via the lead_id FK.
+ * RLS-scoped via the session client (never service-role). Capped for safety.
+ */
+export async function getFollowups(
+  companyId: string,
+): Promise<FollowupListItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("followup_tasks")
+    .select(
+      "id, stage, due_at, channel, status, note, created_at, leads ( company_name )",
+    )
+    .eq("company_id", companyId)
+    .order("due_at", { ascending: true })
+    .limit(100);
+
+  if (error) {
+    console.error("[tenant-data] getFollowups failed:", error.message);
+    return [];
+  }
+
+  // The untyped client infers the embed as an array; PostgREST returns an
+  // object for a to-one FK. Cast via unknown and handle both shapes.
+  const rows = (data ?? []) as unknown as Array<{
+    id: string;
+    stage: string;
+    due_at: string;
+    channel: string | null;
+    status: string;
+    note: string | null;
+    created_at: string;
+    leads:
+      | { company_name: string }
+      | Array<{ company_name: string }>
+      | null;
+  }>;
+
+  return rows.map((row) => {
+    const lead = Array.isArray(row.leads) ? row.leads[0] : row.leads;
+    return {
+      id: row.id,
+      stage: row.stage,
+      dueAt: row.due_at,
+      channel: row.channel,
+      status: row.status,
+      note: row.note,
+      createdAt: row.created_at,
+      leadName: lead?.company_name ?? null,
+    };
+  });
+}
+
 /** Active company's service labels (for the new-lead form datalist). RLS-scoped. */
 export async function getServiceLabels(companyId: string): Promise<string[]> {
   const supabase = await createClient();
@@ -156,7 +231,10 @@ export async function getServiceLabels(companyId: string): Promise<string[]> {
     .is("deleted_at", null)
     .order("sort_order", { ascending: true });
 
-  if (error) return [];
+  if (error) {
+    console.error("[tenant-data] getServiceLabels failed:", error.message);
+    return [];
+  }
   const rows = (data ?? []) as Array<{ label: string }>;
   return rows.map((r) => r.label);
 }

@@ -85,11 +85,15 @@ export async function getCurrentMemberships(): Promise<SessionMembership[]> {
   if (!user) return [];
 
   const supabase = await createClient();
+  // Deterministic order: `activeCompanyId` is memberships[0], and Postgres row
+  // order without ORDER BY is unspecified — without this, a multi-membership
+  // user's "active" tenant could flip between requests (review finding F1).
   const { data } = await supabase
     .from("company_members")
-    .select("company_id, role, is_active")
+    .select("company_id, role, is_active, created_at")
     .eq("user_id", user.id)
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .order("created_at", { ascending: true });
 
   const rows = (data ?? []) as Array<{
     company_id: string;

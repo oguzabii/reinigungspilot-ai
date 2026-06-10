@@ -2,7 +2,18 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
-import { createLead, type CreateLeadState } from "@/app/app-shell/leads/actions";
+import { createLead, type ActionState } from "@/app/app-shell/leads/actions";
+import {
+  LEAD_STATUS_FLOW,
+  LEAD_STATUS_META,
+} from "@/components/leads/lead-status";
+import {
+  inputClass,
+  labelClass,
+  submitClass,
+  errorBoxClass,
+  successBoxClass,
+} from "@/components/leads/form-styles";
 
 const SOURCE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "manual", label: "Manuell" },
@@ -14,19 +25,7 @@ const SOURCE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "other", label: "Andere" },
 ];
 
-const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: "new", label: "Neu" },
-  { value: "qualified", label: "Qualifiziert" },
-  { value: "offer_ready", label: "Offerte bereit" },
-  { value: "won", label: "Gewonnen" },
-  { value: "lost", label: "Verloren" },
-];
-
-const initialState: CreateLeadState = { status: "idle" };
-
-const inputClass =
-  "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-navy-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200";
-const labelClass = "block text-xs font-medium text-slate-600";
+const initialState: ActionState = { status: "idle" };
 
 /**
  * Manual "Neuen Lead erfassen" form. Submits to the `createLead` server action,
@@ -116,9 +115,9 @@ export function NewLeadForm({
             Status
           </label>
           <select id="status" name="status" defaultValue="new" className={inputClass}>
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+            {LEAD_STATUS_FLOW.map((s) => (
+              <option key={s} value={s}>
+                {LEAD_STATUS_META[s].label}
               </option>
             ))}
           </select>
@@ -135,21 +134,13 @@ export function NewLeadForm({
       {state.status !== "idle" && state.message && (
         <p
           role={state.status === "error" ? "alert" : "status"}
-          className={
-            state.status === "success"
-              ? "rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200"
-              : "rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 ring-1 ring-inset ring-amber-200"
-          }
+          className={state.status === "success" ? successBoxClass : errorBoxClass}
         >
           {state.message}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-800 disabled:opacity-60"
-      >
+      <button type="submit" disabled={pending} className={submitClass}>
         <Plus className="h-4 w-4" strokeWidth={2.4} />
         {pending ? "Speichern…" : "Lead erfassen"}
       </button>

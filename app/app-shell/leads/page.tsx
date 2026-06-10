@@ -9,18 +9,32 @@ import {
   UserRound,
   Tag,
   Lock,
+  BellRing,
+  CalendarClock,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { NewLeadForm } from "@/components/leads/NewLeadForm";
+import { NewFollowupForm } from "@/components/leads/NewFollowupForm";
+import { LeadStatusForm } from "@/components/leads/LeadStatusForm";
+import {
+  LEAD_STATUS_META,
+  FOLLOWUP_STATUS_META,
+  FOLLOWUP_STAGE_LABELS,
+} from "@/components/leads/lead-status";
+import type {
+  FollowupStage as StageKey,
+  FollowupTaskStatus as FuStatusKey,
+} from "@/lib/database-types";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
   getCompanySummary,
   getLeads,
   getServiceLabels,
+  getFollowups,
   type LeadListItem,
+  type FollowupListItem,
 } from "@/lib/auth/tenant-data";
-import type { LeadStatus } from "@/lib/database-types";
 
 // Reads the session/cookies -> always rendered on demand, never prerendered.
 export const dynamic = "force-dynamic";
@@ -28,21 +42,14 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Lead Inbox (intern) – Klarsa",
   description:
-    "Geschützte Lead Inbox: Tenant-Leads anzeigen und manuell erfassen. RLS-gefiltert, keine externen Integrationen.",
+    "Geschützte Lead Inbox: Tenant-Leads anzeigen, Status pflegen, Follow-ups planen. RLS-gefiltert, keine externen Integrationen.",
   robots: { index: false, follow: false },
 };
 
-const STATUS_LABELS: Record<LeadStatus, { label: string; className: string }> = {
-  new: { label: "Neu", className: "bg-blue-50 text-blue-700 ring-blue-100" },
-  qualified: { label: "Qualifiziert", className: "bg-violet-50 text-violet-700 ring-violet-100" },
-  offer_ready: { label: "Offerte bereit", className: "bg-amber-50 text-amber-700 ring-amber-100" },
-  offer_sent: { label: "Offerte gesendet", className: "bg-amber-50 text-amber-700 ring-amber-100" },
-  waiting_reply: { label: "Wartet", className: "bg-amber-50 text-amber-700 ring-amber-100" },
-  followup_due: { label: "Follow-up fällig", className: "bg-amber-50 text-amber-700 ring-amber-100" },
-  won: { label: "Gewonnen", className: "bg-emerald-50 text-emerald-700 ring-emerald-100" },
-  lost: { label: "Verloren", className: "bg-rose-50 text-rose-700 ring-rose-100" },
-  archived: { label: "Archiviert", className: "bg-slate-100 text-slate-500 ring-slate-200" },
-};
+/** Deterministic, SSR-safe "YYYY-MM-DD HH:mm" from an ISO string (UTC). */
+function formatDateTime(iso: string): string {
+  return `${iso.slice(0, 10)} ${iso.slice(11, 16)}`;
+}
 
 export default async function AppShellLeadsPage() {
   // Delegate setup / no-tenant states to /app-shell (which renders them).
@@ -53,10 +60,11 @@ export default async function AppShellLeadsPage() {
   const companyId = context.activeCompanyId;
   if (!companyId) redirect("/app-shell");
 
-  const [summary, leads, serviceLabels] = await Promise.all([
+  const [summary, leads, serviceLabels, followups] = await Promise.all([
     getCompanySummary(companyId),
     getLeads(companyId),
     getServiceLabels(companyId),
+    getFollowups(companyId),
   ]);
 
   return (
@@ -79,8 +87,12 @@ export default async function AppShellLeadsPage() {
               Lead Inbox
             </h1>
             <p className="text-sm text-slate-500">
-              {summary?.name ?? "Mandant"} · {leads.length} Lead
-              {leads.length === 1 ? "" : "s"}
+              {/* "+" = list is capped; real total may be higher (finding F8). */}
+              {summary?.name ?? "Mandant"} · {leads.length}
+              {leads.length >= 200 ? "+" : ""} Lead
+              {leads.length === 1 ? "" : "s"} · {followups.length}
+              {followups.length >= 100 ? "+" : ""} Follow-up
+              {followups.length === 1 ? "" : "s"}
             </p>
           </div>
         </div>
@@ -90,13 +102,14 @@ export default async function AppShellLeadsPage() {
           <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <p className="text-sm leading-relaxed text-amber-800">
             Manuelle Erfassung – <strong className="font-semibold">keine
-            externen Integrationen</strong> (kein Scraping, keine E-Mail-Anbindung).
-            Alle Leads werden über die <strong className="font-semibold">RLS</strong>{" "}
-            gefiltert und nur über den Session-Client geschrieben.
+            externen Integrationen</strong> (kein Scraping, keine E-Mail-Anbindung,
+            kein Versand). Alle Daten werden über die{" "}
+            <strong className="font-semibold">RLS</strong> gefiltert und nur über
+            den Session-Client geschrieben.
           </p>
         </div>
 
-        {/* Create form */}
+        {/* Create lead */}
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold tracking-tight text-navy-900">
             Neuen Lead erfassen
@@ -109,7 +122,7 @@ export default async function AppShellLeadsPage() {
           </div>
         </section>
 
-        {/* List / empty state */}
+        {/* Lead list / empty state */}
         <section className="mt-8">
           <h2 className="text-lg font-semibold tracking-tight text-navy-900">
             Leads
@@ -132,13 +145,56 @@ export default async function AppShellLeadsPage() {
             </ul>
           )}
         </section>
+
+        {/* Follow-ups */}
+        <section className="mt-10">
+          <div className="flex items-center gap-2">
+            <BellRing className="h-5 w-5 text-blue-600" strokeWidth={2} />
+            <h2 className="text-lg font-semibold tracking-tight text-navy-900">
+              Follow-ups
+            </h2>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Manuell geplante Aufgaben – kein automatischer Versand. Sortiert nach
+            Fälligkeit.
+          </p>
+
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <h3 className="text-sm font-semibold text-navy-900">
+              Follow-up erstellen
+            </h3>
+            <div className="mt-3">
+              <NewFollowupForm
+                leads={leads.map((l) => ({ id: l.id, name: l.companyName }))}
+              />
+            </div>
+          </div>
+
+          {followups.length === 0 ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+              <BellRing className="mx-auto h-8 w-8 text-slate-300" strokeWidth={1.8} />
+              <p className="mt-2 text-sm font-medium text-navy-900">
+                Noch keine Follow-ups.
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                Planen Sie oben das erste Follow-up zu einem Lead.
+              </p>
+            </div>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {followups.map((fu) => (
+                <FollowupRow key={fu.id} fu={fu} />
+              ))}
+            </ul>
+          )}
+        </section>
       </main>
     </div>
   );
 }
 
 function LeadRow({ lead }: { lead: LeadListItem }) {
-  const status = STATUS_LABELS[lead.status] ?? STATUS_LABELS.new;
+  const status = LEAD_STATUS_META[lead.status] ?? LEAD_STATUS_META.new;
   return (
     <li className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -183,9 +239,53 @@ function LeadRow({ lead }: { lead: LeadListItem }) {
         </p>
       )}
 
+      {/* Keyed on status so the uncontrolled select resyncs after refresh (F11). */}
+      <LeadStatusForm
+        key={`${lead.id}:${lead.status}`}
+        leadId={lead.id}
+        currentStatus={lead.status}
+      />
+
       <p className="mt-2 text-xs text-slate-400">
         Quelle: {lead.sourceType} · erfasst {lead.createdAt.slice(0, 10)}
       </p>
+    </li>
+  );
+}
+
+function FollowupRow({ fu }: { fu: FollowupListItem }) {
+  const status =
+    FOLLOWUP_STATUS_META[fu.status as FuStatusKey] ?? FOLLOWUP_STATUS_META.planned;
+  const stageLabel = FOLLOWUP_STAGE_LABELS[fu.stage as StageKey] ?? fu.stage;
+  return (
+    <li className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p className="font-semibold text-navy-900">{fu.note ?? "Follow-up"}</p>
+        <span
+          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${status.className}`}
+        >
+          {status.label}
+        </span>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+        <span className="inline-flex items-center gap-1.5">
+          <CalendarClock className="h-3.5 w-3.5 text-slate-400" />
+          fällig {formatDateTime(fu.dueAt)} (UTC)
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Inbox className="h-3.5 w-3.5 text-slate-400" />
+          {fu.leadName ?? "—"}
+        </span>
+        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+          Stufe: {stageLabel}
+        </span>
+        {fu.channel && (
+          <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+            {fu.channel}
+          </span>
+        )}
+      </div>
     </li>
   );
 }

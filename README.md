@@ -19,8 +19,13 @@ API, kein Netzwerk, kein Scraping, keine externe Quelle** — die Analyse läuft
 im Browser; der Mensch behält die Kontrolle (nichts wird versteckt/automatisch
 gesendet). Die Liste zeigt dieselben Service-Match-Badges (deterministisch aus den
 gespeicherten Feldern). Schreiben weiterhin **Session-Client (RLS,
-`can_write_sales`)**. **Keine neue Migration** (001–005 unverändert). Die
-Verkaufs-Demo (v0.1.7) bleibt unverändert.
+`can_write_sales`)**. **Keine neue Migration** (001–005 unverändert).
+**v0.3.7.1 (Patch):** auf Staging **verifiziert** (2026-06-11, manuell): Live-
+Scoring/Service-Matching funktioniert, „Vorschläge übernehmen" füllt
+Score/Grund/Nächste-Aktion, Service-Match-Badges erscheinen, Opportunity
+Speichern/Liste funktioniert, Session-Client/RLS-Schreibpfad bestätigt, keine
+KI/API/Scraping, keine echten Daten — `docs/clean24-lead-hunter-scoring-results.md`.
+Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 
 > **v0.3.6/.6.1:** Lead Hunter- / Opportunity-Radar-Fundament — `/app-shell/lead-hunter`,
 > Opportunities **manuell erfassen** (Felder auf `prospects` gemappt) + Radar-
@@ -74,7 +79,7 @@ Verkaufs-Demo (v0.1.7) bleibt unverändert.
 > v0.3.4/.4.1 (Auftrag-aus-Offerte-Fundament + Migration 005, auf Staging verifiziert),
 > v0.3.5/.5.1 (Job-Workflow- & Kalender-Fundament, .ics-Download, auf Staging verifiziert),
 > v0.3.6/.6.1 (Lead Hunter- / Opportunity-Radar-Fundament, manuell, auf Staging verifiziert),
-> **v0.3.7 (Lead-Hunter-Scoring & Service-Matching, deterministisch/offline)**.
+> **v0.3.7/.7.1 (Lead-Hunter-Scoring & Service-Matching, deterministisch/offline, auf Staging verifiziert)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -246,6 +251,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-job-workflow-calendar-results.md # Ergebnis: Job-Workflow + Kalender auf Staging verifiziert (Status, Termin, .ics) (v0.3.5.1)
   clean24-lead-hunter-foundation.md  # Lead Hunter / Opportunity Radar (manuell): Feld-Mapping auf prospects, Vokabulare, Security, kein Scraping (v0.3.6)
   clean24-lead-hunter-scoring.md     # Deterministisches Scoring + Service-Matching (offline, keine KI/API), Score-Tabelle, Boundaries (v0.3.7)
+  clean24-lead-hunter-scoring-results.md # Ergebnis: Scoring/Service-Matching auf Staging verifiziert (live, übernehmen, Badges, Save/List) (v0.3.7.1)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
@@ -461,6 +467,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-lead-hunter-foundation.md](docs/clean24-lead-hunter-foundation.md) | Lead Hunter / Opportunity Radar (manuell): `/app-shell/lead-hunter`, Feld-Mapping auf `prospects` (Sales-Domäne `can_write_sales`), Typen/Service-Vokabulare, Radar-Übersicht, Security, **kein Scraping/externe Quelle**, Checkliste (v0.3.6) |
 | [clean24-lead-hunter-results.md](docs/clean24-lead-hunter-results.md) | Ergebnis: Opportunity Radar auf Staging verifiziert — manuelle Erfassung + Liste, Radar-Karten aktualisiert, RLS-Schreibpfad (Sales-Domäne) bestätigt, kein Scraping (2026-06-11, v0.3.6.1) |
 | [clean24-lead-hunter-scoring.md](docs/clean24-lead-hunter-scoring.md) | Deterministisches Scoring & Service-Matching (offline, keine KI/API): `scoring.ts`, Service-Vokabular, Score-Faktoren-Tabelle, Auto-Fill (client-seitig), Boundaries, Checkliste (v0.3.7) |
+| [clean24-lead-hunter-scoring-results.md](docs/clean24-lead-hunter-scoring-results.md) | Ergebnis: Scoring & Service-Matching auf Staging verifiziert — Live-Analyse, „Vorschläge übernehmen", Badges, Save/List, RLS-Schreibpfad bestätigt, keine KI/API/Scraping (2026-06-11, v0.3.7.1) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -669,23 +676,29 @@ Score) und schlägt eine nächste Aktion vor — live beim Tippen, mit Badges un
 Browser. Liste zeigt Service-Match-Badges. Keine neue Migration. Doku
 `docs/clean24-lead-hunter-scoring.md`.
 
-**v0.3.8 (nächster Schritt)** – **Source-Registry-Fundament** (`lead_sources` als
-Katalog freigegebener, menschlich geprüfter Quellen) **oder Opportunity →
-Lead-Inbox-Konversion** (qualifizierte Opportunity via `promoted_lead_id` in
-einen `leads`-Eintrag überführen). Manuell, RLS-gescopt. *Offer-PDF-Politur ist
-aufgeschoben, bis der Nutzer sie anfordert.* Echte Daten erst nach dem
-Backup-/Trennungs-Gate.
+**v0.3.7.1 (erledigt, Patch)** – **Lead-Hunter-Scoring auf Staging verifiziert**
+(manuell, 2026-06-11): Live-Scoring/Service-Matching, „Vorschläge übernehmen"
+(Score/Grund/Nächste-Aktion), Service-Match-Badges und Opportunity Speichern/
+Liste funktionieren, Session-Client-/RLS-Schreibpfad bestätigt, keine KI/API/
+Scraping, keine echten Kundendaten. Festgehalten in
+`docs/clean24-lead-hunter-scoring-results.md`. Nur Docs.
+
+**v0.3.8 (nächster Schritt)** – **Opportunity → Lead-Inbox-Konversion**
+(qualifizierte Opportunity via `promoted_lead_id` in einen `leads`-Eintrag
+überführen). Eine **Source-Registry** (`lead_sources`) kann später folgen.
+Manuell, RLS-gescopt. *Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie
+anfordert.* Echte Daten erst nach dem Backup-/Trennungs-Gate.
 
 ## Empfohlener nächster Schritt
 
 Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.6/.6.1 (Lead
-Hunter- / Opportunity-Radar-Fundament) und **v0.3.7 (Lead-Hunter-Scoring &
-Service-Matching, deterministisch/offline)** sind erledigt. Parallel bleibt
-**A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment, echtes
-Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
+Hunter- / Opportunity-Radar-Fundament) und **v0.3.7/.7.1 (Lead-Hunter-Scoring &
+Service-Matching, deterministisch/offline, auf Staging verifiziert)** sind
+erledigt. Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich
+(Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.8 — Source-Registry oder Opportunity →
-Lead-Inbox-Konversion** (manuell, RLS-gescopt). **Offer-PDF-Politur ist
+**Empfehlung:** als Nächstes **v0.3.8 — Opportunity → Lead-Inbox-Konversion**
+(Source-Registry später; manuell, RLS-gescopt). **Offer-PDF-Politur ist
 aufgeschoben, bis angefordert.** **Voraussetzung vor echten Kundendaten:**
 Backup/Restore eingerichtet und getestet, **Staging und Produktion strikt
 getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —

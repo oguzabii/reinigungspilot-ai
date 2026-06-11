@@ -1,11 +1,16 @@
 # Klarsa Core — Lead Hunter Scoring & Service Matching (v0.3.7)
 
-> **Status: FOUNDATION (staging).** Makes the manual Opportunity Radar smarter
-> **without any auto-search**: a **deterministic, client-side** helper matches
-> Clean24 services, explains the score, and recommends a next action as the user
-> types. **No AI, no API, no network, no scraping, no external source.** The
-> human keeps control — suggestions are only applied on an explicit "übernehmen".
-> Writes still go through the **session client (RLS)**; **no new migration**.
+> **Status: VERIFIED on staging (2026-06-11).** Makes the manual Opportunity
+> Radar smarter **without any auto-search**: a **deterministic, client-side**
+> helper matches Clean24 services, explains the score, and recommends a next
+> action as the user types. **No AI, no API, no network, no scraping, no
+> external source.** The human keeps control — suggestions are only applied on
+> an explicit "übernehmen". Writes still go through the **session client (RLS)**;
+> **no new migration**.
+>
+> Staging verification (live scoring/matching, "Vorschläge übernehmen", badges,
+> save + list, RLS write path, no AI/API/scraping, no real data — user-reported
+> manual test): [`clean24-lead-hunter-scoring-results.md`](./clean24-lead-hunter-scoring-results.md).
 
 Related: [`clean24-lead-hunter-foundation.md`](./clean24-lead-hunter-foundation.md),
 [`clean24-lead-hunter-results.md`](./clean24-lead-hunter-results.md),

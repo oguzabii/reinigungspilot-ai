@@ -1,5 +1,11 @@
 # Klarsa Core — Lead Hunter Source Registry Foundation (v0.3.9)
 
+> **Status: VERIFIED on staging (2026-06-11).** A logged-in Clean24 owner/admin
+> registered a controlled source at `/app-shell/lead-hunter/sources` and saw it
+> in the list with the right active/phase badges — through the **session client
+> (RLS, settings domain)**. No scraping, no API, no real data. Staging result:
+> [`clean24-lead-hunter-source-registry-results.md`](./clean24-lead-hunter-source-registry-results.md).
+
 > Adds a **controlled Source Registry** to the Lead Hunter: a protected
 > **`/app-shell/lead-hunter/sources`** route to register and list the lead
 > sources a tenant has **human-approved**. **No scraping, no auto-search, no

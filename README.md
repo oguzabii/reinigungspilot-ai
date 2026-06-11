@@ -7,7 +7,8 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.3.9** — **Lead-Hunter-Quellen-Registry-Fundament.** Eine geschützte Route
+**v0.3.9.1** — **Lead-Hunter-Quellen-Registry-Fundament (auf Staging
+verifiziert).** Eine geschützte Route
 `/app-shell/lead-hunter/sources` verwaltet die **kontrollierten, von Menschen
 freigegebenen** Lead-Quellen eines Mandanten: owner/admin **registrieren** eine
 Quelle (Felder auf das bestehende `lead_sources`-Schema gemappt: Bezeichnung→`label`,
@@ -21,8 +22,12 @@ zusätzlicher App-Rollenprüfung (Defense-in-Depth); andere Rollen sehen eine
 Read-only-Ansicht. Verlinkt von `/app-shell/lead-hunter`. **Kein Scraping, keine
 Auto-Suche, keine Google-/Maps-/ZEFIX-/SIMAP-/Handelsregister-Abfrage, keine
 externe API, keine E-Mail, keine echten Daten. Keine neue Migration** (bestehendes
-`lead_sources`-Schema). 001–005 unverändert. Die Verkaufs-Demo (v0.1.7) bleibt
-unverändert.
+`lead_sources`-Schema). 001–005 unverändert. Auf Staging **verifiziert**
+(2026-06-11, manueller Nutzertest): Login → `/app-shell/lead-hunter/sources`,
+Quelle registrieren + Liste/Übersicht/Badges/Vorlagen, Session-Client-/RLS-
+Schreibpfad (Settings-Domäne `can_write_settings`) bestätigt, kein Scraping/keine
+API, keine echten Daten — `docs/clean24-lead-hunter-source-registry-results.md`.
+Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 
 > **v0.3.8:** Opportunity → Lead-Inbox-Konversion — auf `/app-shell/lead-hunter`
 > per „In Lead Inbox übernehmen" eine qualifizierte Opportunity manuell in den
@@ -91,7 +96,7 @@ unverändert.
 > v0.3.6/.6.1 (Lead Hunter- / Opportunity-Radar-Fundament, manuell, auf Staging verifiziert),
 > v0.3.7/.7.1 (Lead-Hunter-Scoring & Service-Matching, deterministisch/offline, auf Staging verifiziert),
 > v0.3.8 (Opportunity → Lead-Inbox-Konversion, manuell),
-> **v0.3.9 (Lead-Hunter-Quellen-Registry-Fundament, manuell)**.
+> **v0.3.9/.9.1 (Lead-Hunter-Quellen-Registry-Fundament, manuell, auf Staging verifiziert)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -271,6 +276,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-lead-hunter-scoring-results.md # Ergebnis: Scoring/Service-Matching auf Staging verifiziert (live, übernehmen, Badges, Save/List) (v0.3.7.1)
   clean24-opportunity-to-lead-foundation.md # Opportunity → Lead Inbox: Promotion, Feld-Mapping, Duplikat-Guard (atomarer Claim), Security (v0.3.8)
   clean24-lead-hunter-source-registry.md # Lead Hunter Quellen-Registry: lead_sources, manuell, Badges (Phase/Aktiv), Settings-Domäne, kein Scraping/Google/ZEFIX/SIMAP (v0.3.9)
+  clean24-lead-hunter-source-registry-results.md # Ergebnis: Quellen-Registry auf Staging verifiziert (Register/List, Badges/Vorlagen, RLS Settings-Domäne) (v0.3.9.1)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
@@ -489,6 +495,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-lead-hunter-scoring-results.md](docs/clean24-lead-hunter-scoring-results.md) | Ergebnis: Scoring & Service-Matching auf Staging verifiziert — Live-Analyse, „Vorschläge übernehmen", Badges, Save/List, RLS-Schreibpfad bestätigt, keine KI/API/Scraping (2026-06-11, v0.3.7.1) |
 | [clean24-opportunity-to-lead-foundation.md](docs/clean24-opportunity-to-lead-foundation.md) | Opportunity → Lead Inbox-Konversion: „In Lead Inbox übernehmen", Feld-Mapping (prospects→leads), bidirektionaler Link, Duplikat-Guard (atomarer Claim + Orphan-Rollback), Sales-Domäne, Security, Checkliste (v0.3.8) |
 | [clean24-lead-hunter-source-registry.md](docs/clean24-lead-hunter-source-registry.md) | Lead Hunter Quellen-Registry: kontrollierte, von Menschen freigegebene `lead_sources` manuell registrieren (`/app-shell/lead-hunter/sources`), Feld-Mapping (label/type/enabled/notes), Phasen-Badges (Manuell/Künftige API/Künftiges Register), Settings-Domäne (`can_write_settings` = owner/admin), kein Scraping/Google/ZEFIX/SIMAP, Security, Checkliste (v0.3.9) |
+| [clean24-lead-hunter-source-registry-results.md](docs/clean24-lead-hunter-source-registry-results.md) | Ergebnis: Quellen-Registry auf Staging verifiziert — Quelle registrieren + Liste/Übersicht, Badges/Vorlagen, Session-Client-/RLS-Schreibpfad (Settings-Domäne) bestätigt, kein Scraping/keine API, keine echten Daten (2026-06-11, v0.3.9.1) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -726,6 +733,14 @@ App-Rollenprüfung; andere Rollen sehen Read-only. Verlinkt von
 ZEFIX-/SIMAP-/Handelsregister-Abfrage, keine externen Quellen.** Keine neue
 Migration. Doku `docs/clean24-lead-hunter-source-registry.md`.
 
+**v0.3.9.1 (erledigt, Patch)** – **Quellen-Registry auf Staging verifiziert**
+(manuell, 2026-06-11): `/app-shell/lead-hunter/sources` nach Login erreichbar,
+manuelle Quelle-Registrierung + Liste/Übersicht funktionieren, Aktiv/Inaktiv- und
+Phasen-Badges sowie Vorlagen-Chips korrekt, Session-Client-/RLS-Schreibpfad
+(Settings-Domäne `can_write_settings` = owner/admin) bestätigt, kein Scraping/
+keine API, keine echten Kundendaten. Festgehalten in
+`docs/clean24-lead-hunter-source-registry-results.md`. Nur Docs.
+
 **v0.3.10 (nächster Schritt)** – **Source→Opportunity-Workflow** (eine Opportunity
 hält fest, aus welcher registrierten Quelle sie stammt) **oder Lead-Hunter-Quellen-
 Ausführungsplan** (wie eine freigegebene Quelle manuell „abgearbeitet" wird, vor
@@ -735,8 +750,9 @@ bis der Nutzer sie anfordert.* Echte Daten erst nach dem Backup-/Trennungs-Gate.
 ## Empfohlener nächster Schritt
 
 Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.8 (Opportunity →
-Lead-Inbox-Konversion) und **v0.3.9 (Lead-Hunter-Quellen-Registry-Fundament)**
-sind erledigt. Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo
+Lead-Inbox-Konversion) und **v0.3.9/.9.1 (Lead-Hunter-Quellen-Registry-Fundament,
+auf Staging verifiziert)** sind erledigt. Parallel bleibt **A) Deploy / Visual
+Review** der Verkaufs-Demo
 möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export,
 Erklärvideo).
 

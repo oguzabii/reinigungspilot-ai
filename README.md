@@ -7,26 +7,26 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.3.6** — **Lead Hunter- / Opportunity-Radar-Fundament.** Neue geschützte
-Route **`/app-shell/lead-hunter`** startet den Lead Hunter als **manuelles
-Opportunity Radar**: Opportunities **manuell erfassen** und anzeigen — mit
-einfachen **Radar-Übersichtskarten** (Anzahl, Ø Score, aktiv verfolgt, Typ-Chips)
-und Leerzustand. Formularfelder bilden auf das bestehende **`prospects`-Schema**
-ab (Titel→`name`, Typ→`category`, Region→`region`, Quelle→`source_type`,
-Service-Potenzial→`search_query`, Score→`score`, Grund→`reason`, Nächste
-Aktion→`suggested_message`, Status→`prospect_status`). Opportunity-Typen: Neubau,
-Praxis, Verwaltung, Ausschreibung, Firma, Partner, Manuell. Schreiben über
-**Server-Action + Session-Client (RLS)**; prospects sind die **Sales-Domäne**
-(`can_write_sales`). **Menschliche Erfassung only — kein Scraping, keine
-Auto-Suche, keine Google-/ZEFIX-/SIMAP-API, keine externen Quellen, kein Spam,
-keine E-Mail, keine bexio-Übergabe, keine echten Daten. Keine neue Migration**
-(nutzt bestehendes Schema). 001–005 unverändert. Lead-Hunter-Karte auf
-`/app-shell` verlinkt. **v0.3.6.1 (Patch):** auf Staging **verifiziert**
-(2026-06-11, manuell): `/app-shell/lead-hunter` nach Login erreichbar, manuelle
-Opportunity-Erfassung + Liste funktionieren, Radar-Karten aktualisieren sich,
-Session-Client/RLS-Schreibpfad (Sales-Domäne) bestätigt, keine Auto-Suche/kein
-Scraping, keine echten Daten — `docs/clean24-lead-hunter-results.md`. Die
+**v0.3.7** — **Lead-Hunter-Scoring & Service-Matching-Fundament.** Macht das
+manuelle Opportunity Radar **smarter ohne Auto-Suche**: ein **deterministischer,
+client-seitiger** Helper (`components/lead-hunter/scoring.ts`) matcht passende
+Clean24-Services (Umzugs-, Treppenhaus-, Hauswartung, Bauend-, Büro-, Fenster-,
+Tiefgaragenreinigung), erklärt den Score (Faktoren aus Typ, Region, Service-
+Potenzial, Timing-Wörtern, Quelle, Score) und schlägt eine **nächste Aktion** vor
+— **live beim Tippen**, mit Service-Match-Badges. „**Vorschläge übernehmen**"
+füllt Grund/Nächste-Aktion/Score client-seitig (editierbar). **Keine KI, keine
+API, kein Netzwerk, kein Scraping, keine externe Quelle** — die Analyse läuft rein
+im Browser; der Mensch behält die Kontrolle (nichts wird versteckt/automatisch
+gesendet). Die Liste zeigt dieselben Service-Match-Badges (deterministisch aus den
+gespeicherten Feldern). Schreiben weiterhin **Session-Client (RLS,
+`can_write_sales`)**. **Keine neue Migration** (001–005 unverändert). Die
 Verkaufs-Demo (v0.1.7) bleibt unverändert.
+
+> **v0.3.6/.6.1:** Lead Hunter- / Opportunity-Radar-Fundament — `/app-shell/lead-hunter`,
+> Opportunities **manuell erfassen** (Felder auf `prospects` gemappt) + Radar-
+> Übersicht, Sales-Domäne (`can_write_sales`), keine neue Migration, **kein
+> Scraping/externe Quelle**. Auf Staging **verifiziert** (2026-06-11) —
+> `docs/clean24-lead-hunter-results.md`.
 
 > **v0.3.5/.5.1:** Job-Workflow- & Kalender-Fundament — `/app-shell/jobs` mit
 > Status pflegen + Termin (`scheduled_for`, Browser→UTC) + Route-Handler
@@ -73,7 +73,8 @@ Verkaufs-Demo (v0.1.7) bleibt unverändert.
 > v0.3.3/.3.1 (Offer PDF- & Versand-Fundament, auf Staging verifiziert),
 > v0.3.4/.4.1 (Auftrag-aus-Offerte-Fundament + Migration 005, auf Staging verifiziert),
 > v0.3.5/.5.1 (Job-Workflow- & Kalender-Fundament, .ics-Download, auf Staging verifiziert),
-> **v0.3.6/.6.1 (Lead Hunter- / Opportunity-Radar-Fundament, manuell, auf Staging verifiziert)**.
+> v0.3.6/.6.1 (Lead Hunter- / Opportunity-Radar-Fundament, manuell, auf Staging verifiziert),
+> **v0.3.7 (Lead-Hunter-Scoring & Service-Matching, deterministisch/offline)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -131,7 +132,7 @@ npm run start    # Produktionsserver (nach build)
 | `/login`        | **Intern** (noindex): Login-Skelett (Supabase Auth). Inaktiv ohne Staging-Env, keine echten Daten |
 | `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): authentifizierter Tenant-Arbeitsbereich – Redirect ohne Session, RLS-gefilterte Staging-Zähler, kein Service-Role-Lesen. Ohne Env: „Setup erforderlich" |
 | `/app-shell/leads` | **Intern** (noindex, **dynamisch/geschützt**): Lead Inbox – Tenant-Leads anzeigen, manuell erfassen, **Status pflegen** und **Follow-ups planen** (Server-Actions, Session-Client/RLS). Kein Versand, keine externen Integrationen |
-| `/app-shell/lead-hunter` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter / Opportunity Radar – Opportunities **manuell erfassen** + Radar-Übersicht (Server-Action, Session-Client/RLS). Kein Scraping/Auto-Suche/externe Quellen |
+| `/app-shell/lead-hunter` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter / Opportunity Radar – Opportunities **manuell erfassen** + Radar-Übersicht + **deterministisches Service-Matching/Scoring** (live, client-seitig) (Server-Action, Session-Client/RLS). Kein Scraping/Auto-Suche/KI/externe Quellen |
 | `/app-shell/offers` | **Intern** (noindex, **dynamisch/geschützt**): Offer Engine – Offerten-Entwürfe manuell erstellen (optional aus Lead), Positionen + Netto/MwSt/Brutto, **Status pflegen**, **PDF-Download** + manueller Versand-Entwurf (Server-Actions, Session-Client/RLS). Kein echter Versand/bexio |
 | `/app-shell/offers/[id]/pdf` | **Intern** (noindex, **dynamisch/geschützt**): Route-Handler – generiert das Offerten-PDF (Session-Client/RLS, nur eigene Offerte, sonst 404). Ohne Abhängigkeit/Asset, kein Versand |
 | `/app-shell/jobs` | **Intern** (noindex, **dynamisch/geschützt**): Auftragsliste – aus angenommenen Offerten erstellte Jobs, **Status & Termin pflegen**, .ics-Download (Status, Termin, Kunde, Quell-Offerte, Wert). Session-Client/RLS. Kein Kalender-Sync/E-Mail/bexio |
@@ -196,7 +197,8 @@ components/          # Wiederverwendbare UI-Bausteine
   jobs/JobStatusForm.tsx  # Status-Select je Auftrag (kanonische Reihenfolge, Server-Action) (v0.3.5)
   jobs/JobScheduleForm.tsx # Termin setzen/entfernen (datetime-local → UTC-Instant, Server-Action) (v0.3.5)
   lead-hunter/NewOpportunityForm.tsx # „Opportunity erfassen" (manuell, Server-Action) (v0.3.6)
-  lead-hunter/opportunity-meta.ts # geteilte Opportunity-Metadaten (Typen, Service-Beispiele, Status, Score-Badge) (v0.3.6)
+  lead-hunter/opportunity-meta.ts # geteilte Opportunity-Metadaten (Typen, 7 Services, Status, Score-Badge) (v0.3.6)
+  lead-hunter/scoring.ts  # deterministisches Service-Matching + Score-Erklärung + nächste Aktion (pur, offline, keine KI/API) (v0.3.7)
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
@@ -243,6 +245,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-job-workflow-calendar-foundation.md # Job-Status-Workflow + Termin (scheduled_for) + .ics-Download (ohne Sync), Security (v0.3.5)
   clean24-job-workflow-calendar-results.md # Ergebnis: Job-Workflow + Kalender auf Staging verifiziert (Status, Termin, .ics) (v0.3.5.1)
   clean24-lead-hunter-foundation.md  # Lead Hunter / Opportunity Radar (manuell): Feld-Mapping auf prospects, Vokabulare, Security, kein Scraping (v0.3.6)
+  clean24-lead-hunter-scoring.md     # Deterministisches Scoring + Service-Matching (offline, keine KI/API), Score-Tabelle, Boundaries (v0.3.7)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
@@ -457,6 +460,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-job-workflow-calendar-results.md](docs/clean24-job-workflow-calendar-results.md) | Ergebnis: Job-Workflow & Kalender auf Staging verifiziert — Status-Update, Terminplanung, `.ics`-Download, RLS-Schreibpfad (Ops-Domäne) bestätigt (2026-06-11, v0.3.5.1) |
 | [clean24-lead-hunter-foundation.md](docs/clean24-lead-hunter-foundation.md) | Lead Hunter / Opportunity Radar (manuell): `/app-shell/lead-hunter`, Feld-Mapping auf `prospects` (Sales-Domäne `can_write_sales`), Typen/Service-Vokabulare, Radar-Übersicht, Security, **kein Scraping/externe Quelle**, Checkliste (v0.3.6) |
 | [clean24-lead-hunter-results.md](docs/clean24-lead-hunter-results.md) | Ergebnis: Opportunity Radar auf Staging verifiziert — manuelle Erfassung + Liste, Radar-Karten aktualisiert, RLS-Schreibpfad (Sales-Domäne) bestätigt, kein Scraping (2026-06-11, v0.3.6.1) |
+| [clean24-lead-hunter-scoring.md](docs/clean24-lead-hunter-scoring.md) | Deterministisches Scoring & Service-Matching (offline, keine KI/API): `scoring.ts`, Service-Vokabular, Score-Faktoren-Tabelle, Auto-Fill (client-seitig), Boundaries, Checkliste (v0.3.7) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -657,22 +661,31 @@ Session-Client-/RLS-Schreibpfad (Sales-Domäne) bestätigt, kein Scraping/keine
 Auto-Suche, keine echten Kundendaten. Festgehalten in
 `docs/clean24-lead-hunter-results.md`. Nur Docs.
 
-**v0.3.7 (nächster Schritt)** – **Lead-Hunter-Scoring / Service-Matching** (reicheres
-Scoring + strukturiertes Service-Match-Modell) **oder Source-Registry**
-(`lead_sources` als Katalog freigegebener, menschlich geprüfter Quellen). Manuell,
-RLS-gescopt. *Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie anfordert.*
-Echte Daten erst nach dem Backup-/Trennungs-Gate.
+**v0.3.7 (erledigt)** – **Lead-Hunter-Scoring & Service-Matching-Fundament**:
+deterministischer, client-seitiger Helper (`components/lead-hunter/scoring.ts`)
+matcht Clean24-Services, erklärt den Score (Typ/Region/Service/Timing/Quelle/
+Score) und schlägt eine nächste Aktion vor — live beim Tippen, mit Badges und
+„Vorschläge übernehmen" (editierbar). Keine KI/API/Netzwerk/Scraping; rein im
+Browser. Liste zeigt Service-Match-Badges. Keine neue Migration. Doku
+`docs/clean24-lead-hunter-scoring.md`.
+
+**v0.3.8 (nächster Schritt)** – **Source-Registry-Fundament** (`lead_sources` als
+Katalog freigegebener, menschlich geprüfter Quellen) **oder Opportunity →
+Lead-Inbox-Konversion** (qualifizierte Opportunity via `promoted_lead_id` in
+einen `leads`-Eintrag überführen). Manuell, RLS-gescopt. *Offer-PDF-Politur ist
+aufgeschoben, bis der Nutzer sie anfordert.* Echte Daten erst nach dem
+Backup-/Trennungs-Gate.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.5/.5.1
-(Job-Workflow- & Kalender-Fundament) und **v0.3.6/.6.1 (Lead Hunter- /
-Opportunity-Radar-Fundament, manuell, auf Staging verifiziert)** sind erledigt.
-Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich
-(Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.6/.6.1 (Lead
+Hunter- / Opportunity-Radar-Fundament) und **v0.3.7 (Lead-Hunter-Scoring &
+Service-Matching, deterministisch/offline)** sind erledigt. Parallel bleibt
+**A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment, echtes
+Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.7 — Lead-Hunter-Scoring / Service-Matching
-oder Source-Registry** (manuell, RLS-gescopt). **Offer-PDF-Politur ist
+**Empfehlung:** als Nächstes **v0.3.8 — Source-Registry oder Opportunity →
+Lead-Inbox-Konversion** (manuell, RLS-gescopt). **Offer-PDF-Politur ist
 aufgeschoben, bis angefordert.** **Voraussetzung vor echten Kundendaten:**
 Backup/Restore eingerichtet und getestet, **Staging und Produktion strikt
 getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —

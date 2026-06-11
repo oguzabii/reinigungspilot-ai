@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
-import { Crosshair } from "lucide-react";
+import { useActionState, useMemo, useState } from "react";
+import { Crosshair, Sparkles, Wand2, Target } from "lucide-react";
 import {
   createOpportunity,
   type ActionState,
@@ -12,7 +12,9 @@ import {
   SERVICE_SUGGESTIONS,
   PROSPECT_STATUS_FLOW,
   PROSPECT_STATUS_META,
+  scoreBadgeClass,
 } from "@/components/lead-hunter/opportunity-meta";
+import { analyzeOpportunity } from "@/components/lead-hunter/scoring";
 import {
   inputClass,
   labelClass,
@@ -24,23 +26,65 @@ import {
 const initialState: ActionState = { status: "idle" };
 
 /**
- * Manual "Opportunity erfassen" form. Submits to the `createOpportunity` server
- * action (session client + RLS). No scraping, no auto-search, no external
- * source — a human enters the opportunity.
+ * Manual "Opportunity erfassen" form with a LIVE, deterministic analysis panel
+ * (service matching + score explanation + recommended next action). No AI, no
+ * API, no scraping — everything is computed client-side from the entered
+ * signals. The human keeps control: suggestions are only applied when the user
+ * clicks "übernehmen". Submits to the `createOpportunity` server action.
  */
 export function NewOpportunityForm() {
   const [state, formAction, pending] = useActionState(
     createOpportunity,
     initialState,
   );
-  const formRef = useRef<HTMLFormElement>(null);
+  // Remount (clearing all fields) on each successful submit via the changing
+  // key — avoids a setState-in-effect; errors keep the user's input.
+  return (
+    <OpportunityFields
+      key={state.resetToken ?? "init"}
+      state={state}
+      formAction={formAction}
+      pending={pending}
+    />
+  );
+}
 
-  useEffect(() => {
-    if (state.status === "success") formRef.current?.reset();
-  }, [state]);
+function OpportunityFields({
+  state,
+  formAction,
+  pending,
+}: {
+  state: ActionState;
+  formAction: (formData: FormData) => void;
+  pending: boolean;
+}) {
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("Manuell");
+  const [region, setRegion] = useState("");
+  const [service, setService] = useState("");
+  const [sourceType, setSourceType] = useState("manual");
+  const [score, setScore] = useState("");
+  const [reason, setReason] = useState("");
+  const [nextAction, setNextAction] = useState("");
+
+  const analysis = useMemo(
+    () =>
+      analyzeOpportunity({
+        name,
+        category,
+        region,
+        servicePotential: service,
+        sourceType,
+        score: score.trim() === "" ? null : Number.parseInt(score, 10),
+      }),
+    [name, category, region, service, sourceType, score],
+  );
+
+  const hasInput =
+    name.trim() !== "" || service.trim() !== "" || region.trim() !== "";
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-4">
       <div>
         <label htmlFor="op_name" className={labelClass}>
           Titel / Firma / Projekt *
@@ -50,6 +94,8 @@ export function NewOpportunityForm() {
           name="name"
           type="text"
           required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           className={inputClass}
           placeholder="z. B. Neubau Wohnüberbauung Seefeld"
         />
@@ -60,7 +106,13 @@ export function NewOpportunityForm() {
           <label htmlFor="op_category" className={labelClass}>
             Opportunity-Typ
           </label>
-          <select id="op_category" name="category" defaultValue="Manuell" className={inputClass}>
+          <select
+            id="op_category"
+            name="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={inputClass}
+          >
             {OPPORTUNITY_TYPES.map((t) => (
               <option key={t} value={t}>
                 {t}
@@ -76,6 +128,8 @@ export function NewOpportunityForm() {
             id="op_region"
             name="region"
             type="text"
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
             className={inputClass}
             placeholder="z. B. Zürich"
           />
@@ -84,7 +138,13 @@ export function NewOpportunityForm() {
           <label htmlFor="op_source" className={labelClass}>
             Quelle
           </label>
-          <select id="op_source" name="source_type" defaultValue="manual" className={inputClass}>
+          <select
+            id="op_source"
+            name="source_type"
+            value={sourceType}
+            onChange={(e) => setSourceType(e.target.value)}
+            className={inputClass}
+          >
             {OPPORTUNITY_SOURCES.map((s) => (
               <option key={s.value} value={s.value}>
                 {s.label}
@@ -101,6 +161,8 @@ export function NewOpportunityForm() {
             name="service_potential"
             type="text"
             list="op_service_suggestions"
+            value={service}
+            onChange={(e) => setService(e.target.value)}
             className={inputClass}
             placeholder="z. B. Bauendreinigung"
           />
@@ -120,6 +182,8 @@ export function NewOpportunityForm() {
             type="number"
             min={0}
             max={100}
+            value={score}
+            onChange={(e) => setScore(e.target.value)}
             className={inputClass}
             placeholder="z. B. 70"
           />
@@ -138,6 +202,81 @@ export function NewOpportunityForm() {
         </div>
       </div>
 
+      {/* Live deterministic analysis — no AI/API, computed from the inputs. */}
+      {hasInput && (
+        <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-900">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              Analyse (deterministisch, keine KI/API)
+            </span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${scoreBadgeClass(analysis.suggestedScore)}`}
+            >
+              Vorschlag Score {analysis.suggestedScore}
+            </span>
+          </div>
+
+          {analysis.matchedServices.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {analysis.matchedServices.map((svc) => (
+                <span
+                  key={svc}
+                  className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-xs font-medium text-navy-700 ring-1 ring-inset ring-blue-200"
+                >
+                  <Target className="h-3 w-3 text-blue-600" />
+                  {svc}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <ul className="mt-3 space-y-1.5">
+            {analysis.factors.map((f, i) => (
+              <li key={i} className="flex items-start gap-2 text-xs text-slate-600">
+                <span
+                  aria-hidden
+                  className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${
+                    f.tone === "positive"
+                      ? "bg-emerald-500"
+                      : f.tone === "hint"
+                        ? "bg-amber-500"
+                        : "bg-slate-300"
+                  }`}
+                />
+                <span>
+                  <strong className="font-medium text-navy-800">{f.label}</strong>{" "}
+                  – {f.detail}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-3 rounded-lg bg-white px-3 py-2 text-xs text-slate-600 ring-1 ring-inset ring-slate-100">
+            <span className="font-medium text-slate-500">Empfohlene nächste Aktion:</span>{" "}
+            {analysis.recommendedNextAction}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setReason(analysis.whyInteresting);
+                setNextAction(analysis.recommendedNextAction);
+                if (score.trim() === "") setScore(String(analysis.suggestedScore));
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-50"
+            >
+              <Wand2 className="h-3.5 w-3.5" />
+              Vorschläge übernehmen
+            </button>
+            <span className="self-center text-[11px] text-slate-400">
+              füllt Grund, nächste Aktion und (falls leer) Score – bleibt editierbar
+            </span>
+          </div>
+        </div>
+      )}
+
       <div>
         <label htmlFor="op_reason" className={labelClass}>
           Warum interessant
@@ -146,6 +285,8 @@ export function NewOpportunityForm() {
           id="op_reason"
           name="reason"
           rows={2}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
           className={inputClass}
           placeholder="Kurzbegründung – warum diese Opportunity relevant ist"
         />
@@ -159,6 +300,8 @@ export function NewOpportunityForm() {
           id="op_next"
           name="next_action"
           type="text"
+          value={nextAction}
+          onChange={(e) => setNextAction(e.target.value)}
           className={inputClass}
           placeholder="z. B. Bauleitung kontaktieren"
         />

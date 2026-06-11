@@ -26,6 +26,12 @@ import {
 export interface ActionState {
   status: "idle" | "success" | "error";
   message?: string;
+  /**
+   * Changes on every successful submit so the client form can remount-clear
+   * (via React `key`) without a setState-in-effect. Preserved on error so a
+   * failed submit keeps the user's input.
+   */
+  resetToken?: string;
 }
 
 function field(
@@ -51,12 +57,17 @@ export async function createOpportunity(
     return {
       status: "error",
       message: "Kein aktiver Mandant – bitte erneut anmelden.",
+      resetToken: _prev.resetToken,
     };
   }
 
   const name = field(formData, "name", 200);
   if (!name) {
-    return { status: "error", message: "Titel / Firma / Projekt ist erforderlich." };
+    return {
+      status: "error",
+      message: "Titel / Firma / Projekt ist erforderlich.",
+      resetToken: _prev.resetToken,
+    };
   }
 
   // Opportunity type → category (whitelist; default "Manuell").
@@ -110,9 +121,14 @@ export async function createOpportunity(
       status: "error",
       message:
         "Opportunity konnte nicht gespeichert werden. Prüfen Sie Ihre Berechtigung.",
+      resetToken: _prev.resetToken,
     };
   }
 
   revalidatePath("/app-shell/lead-hunter");
-  return { status: "success", message: `Opportunity „${name}" erfasst.` };
+  return {
+    status: "success",
+    message: `Opportunity „${name}" erfasst.`,
+    resetToken: `ok-${Date.now()}`,
+  };
 }

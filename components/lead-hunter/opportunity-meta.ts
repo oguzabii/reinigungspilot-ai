@@ -30,13 +30,15 @@ export const OPPORTUNITY_TYPES = [
   "Manuell",
 ] as const;
 
-/** Service-match examples (datalist suggestions for "Service-Potenzial"). */
+/** Clean24 service vocabulary (datalist + deterministic service matching). */
 export const SERVICE_SUGGESTIONS = [
   "Umzugsreinigung",
   "Treppenhausreinigung",
   "Hauswartung",
   "Bauendreinigung",
   "Büroreinigung",
+  "Fensterreinigung",
+  "Tiefgaragenreinigung",
 ] as const;
 
 /** Sources offered for a MANUAL opportunity (subset of the source_type enum). */

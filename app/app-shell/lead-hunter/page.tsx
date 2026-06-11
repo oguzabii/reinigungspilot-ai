@@ -19,6 +19,7 @@ import {
   ACTIVE_PURSUIT_STATUSES,
   scoreBadgeClass,
 } from "@/components/lead-hunter/opportunity-meta";
+import { matchServices } from "@/components/lead-hunter/scoring";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
@@ -205,6 +206,14 @@ function StatCard({
 
 function OpportunityRow({ op }: { op: OpportunityListItem }) {
   const status = PROSPECT_STATUS_META[op.status] ?? PROSPECT_STATUS_META.raw;
+  const matched = matchServices({
+    name: op.name,
+    category: op.category ?? "Manuell",
+    region: op.region ?? "",
+    servicePotential: op.servicePotential ?? "",
+    sourceType: op.sourceType,
+    score: op.score,
+  });
   return (
     <li className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -246,6 +255,23 @@ function OpportunityRow({ op }: { op: OpportunityListItem }) {
           Quelle: {op.sourceType}
         </span>
       </div>
+
+      {matched.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] font-medium text-slate-400">
+            Service-Match:
+          </span>
+          {matched.map((svc) => (
+            <span
+              key={svc}
+              className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-100"
+            >
+              <Target className="h-3 w-3" />
+              {svc}
+            </span>
+          ))}
+        </div>
+      )}
 
       {op.reason && (
         <p className="mt-2 whitespace-pre-line rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600 ring-1 ring-inset ring-slate-100">

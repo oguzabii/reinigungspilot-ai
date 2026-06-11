@@ -536,6 +536,60 @@ export async function getProspects(
   }));
 }
 
+/* -------------------------------------------------------------------------- */
+/* Lead sources (Lead Hunter — Source Registry)                                */
+/* -------------------------------------------------------------------------- */
+
+export interface LeadSourceListItem {
+  id: string;
+  type: SourceType;
+  label: string;
+  enabled: boolean;
+  notes: string | null;
+  createdAt: string;
+}
+
+/**
+ * The active company's registered lead sources, newest first, excluding
+ * soft-deleted. RLS-scoped via the session client (never service-role). Capped
+ * for safety. These are a human-curated catalog — no external lookup runs.
+ */
+export async function getLeadSources(
+  companyId: string,
+): Promise<LeadSourceListItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("lead_sources")
+    .select("id, type, label, enabled, notes, created_at")
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    console.error("[tenant-data] getLeadSources failed:", error.message);
+    return [];
+  }
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    type: SourceType;
+    label: string;
+    enabled: boolean;
+    notes: string | null;
+    created_at: string;
+  }>;
+
+  return rows.map((row) => ({
+    id: row.id,
+    type: row.type,
+    label: row.label,
+    enabled: row.enabled,
+    notes: row.notes,
+    createdAt: row.created_at,
+  }));
+}
+
 /** Active company's service labels (for the new-lead form datalist). RLS-scoped. */
 export async function getServiceLabels(companyId: string): Promise<string[]> {
   const supabase = await createClient();

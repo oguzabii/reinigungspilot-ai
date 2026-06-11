@@ -1,12 +1,16 @@
 # Klarsa Core — Lead Hunter / Opportunity Radar Foundation (v0.3.6)
 
-> **Status: FOUNDATION (staging).** Starts the **Lead Hunter** as a **manual
-> Opportunity Radar**: a protected **`/app-shell/lead-hunter`** route to capture
-> and list opportunities. **Human entry only — no scraping, no auto-search, no
-> Google/ZEFIX/SIMAP API, no external source, no spam.** All writes go through
-> the **session client (RLS)** — prospects are the **sales domain**
-> (owner/admin/sales) — never the service-role client. **No new migration**
-> (uses the existing `prospects` schema), no real customer data.
+> **Status: VERIFIED on staging (2026-06-11).** Starts the **Lead Hunter** as a
+> **manual Opportunity Radar**: a protected **`/app-shell/lead-hunter`** route to
+> capture and list opportunities. **Human entry only — no scraping, no
+> auto-search, no Google/ZEFIX/SIMAP API, no external source, no spam.** All
+> writes go through the **session client (RLS)** — prospects are the **sales
+> domain** (owner/admin/sales) — never the service-role client. **No new
+> migration** (uses the existing `prospects` schema), no real customer data.
+>
+> Staging verification (manual capture + list + radar overview, RLS write path,
+> Clean24 tenant, no real data — user-reported manual test):
+> [`clean24-lead-hunter-results.md`](./clean24-lead-hunter-results.md).
 
 Related: [`lead-hunter-engine.md`](./lead-hunter-engine.md) (the future engine
 plan), [`clean24-lead-inbox-foundation.md`](./clean24-lead-inbox-foundation.md),

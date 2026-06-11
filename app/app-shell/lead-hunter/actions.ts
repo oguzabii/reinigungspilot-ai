@@ -16,7 +16,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
-import type { ProspectStatus, SourceType } from "@/lib/database-types";
+import type { ProspectStatus, SourceType, LeadStatus } from "@/lib/database-types";
 import {
   OPPORTUNITY_TYPES,
   OPPORTUNITY_SOURCES,
@@ -131,4 +131,134 @@ export async function createOpportunity(
     message: `Opportunity „${name}" erfasst.`,
     resetToken: `ok-${Date.now()}`,
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Promote an opportunity into the Lead Inbox (v0.3.8)                         */
+/* -------------------------------------------------------------------------- */
+
+export async function promoteOpportunity(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const context = await getCurrentCompanyContext();
+  if (!context || !context.activeCompanyId) {
+    return {
+      status: "error",
+      message: "Kein aktiver Mandant – bitte erneut anmelden.",
+    };
+  }
+  const companyId = context.activeCompanyId;
+
+  const prospectId = field(formData, "prospect_id");
+  if (!prospectId) {
+    return { status: "error", message: "Keine Opportunity ausgewählt." };
+  }
+
+  const supabase = await createClient();
+
+  // The opportunity must belong to the ACTIVE tenant and not be deleted.
+  const { data: prospect, error: prospectError } = await supabase
+    .from("prospects")
+    .select(
+      "id, name, region, source_type, search_query, reason, suggested_message, promoted_lead_id",
+    )
+    .eq("id", prospectId)
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (prospectError) {
+    console.error("[lead-hunter] promote prospect read failed:", prospectError.message);
+    return {
+      status: "error",
+      message: "Übernahme fehlgeschlagen. Bitte erneut versuchen.",
+    };
+  }
+  if (!prospect) {
+    return {
+      status: "error",
+      message: "Opportunity nicht gefunden (gehört nicht zum aktiven Mandanten).",
+    };
+  }
+  const p = prospect as unknown as {
+    name: string;
+    region: string | null;
+    source_type: SourceType;
+    search_query: string | null;
+    reason: string | null;
+    suggested_message: string | null;
+    promoted_lead_id: string | null;
+  };
+  if (p.promoted_lead_id) {
+    return {
+      status: "error",
+      message: "Diese Opportunity wurde bereits in den Lead Inbox übernommen.",
+    };
+  }
+
+  const noteParts: string[] = [];
+  if (p.reason) noteParts.push(p.reason);
+  if (p.suggested_message) noteParts.push(`Nächste Aktion: ${p.suggested_message}`);
+  const notes = noteParts.length > 0 ? noteParts.join("\n\n") : null;
+
+  // Create the lead from the opportunity (linked back via prospect_id).
+  const { data: lead, error: leadError } = await supabase
+    .from("leads")
+    .insert({
+      company_id: companyId,
+      company_name: p.name,
+      region: p.region,
+      source_type: p.source_type,
+      service_interest: p.search_query,
+      status: "qualified" as LeadStatus,
+      notes,
+      prospect_id: prospectId,
+      created_by: context.user.id,
+      updated_by: context.user.id,
+    })
+    .select("id")
+    .single();
+
+  if (leadError || !lead) {
+    console.error("[lead-hunter] promote lead insert failed:", leadError?.message);
+    return {
+      status: "error",
+      message: "Lead konnte nicht erstellt werden. Prüfen Sie Ihre Berechtigung.",
+    };
+  }
+
+  // Atomically claim the opportunity: only succeeds while promoted_lead_id is
+  // still null, so a concurrent promotion can't create a second lead.
+  const { data: claimed, error: claimError } = await supabase
+    .from("prospects")
+    .update({
+      promoted_lead_id: lead.id,
+      status: "converted" as ProspectStatus,
+      updated_by: context.user.id,
+    })
+    .eq("id", prospectId)
+    .eq("company_id", companyId)
+    .is("promoted_lead_id", null)
+    .select("id");
+
+  if (claimError || !claimed || claimed.length === 0) {
+    // Lost the race (or update failed): soft-delete the orphaned lead.
+    await supabase
+      .from("leads")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", lead.id)
+      .eq("company_id", companyId);
+    if (claimError) {
+      console.error("[lead-hunter] promote claim failed:", claimError.message);
+    }
+    return {
+      status: "error",
+      message: "Diese Opportunity wurde bereits in den Lead Inbox übernommen.",
+    };
+  }
+
+  revalidatePath("/app-shell/lead-hunter");
+  revalidatePath("/app-shell/leads");
+  return { status: "success", message: "In den Lead Inbox übernommen." };
 }

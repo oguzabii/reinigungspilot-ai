@@ -477,6 +477,8 @@ export interface OpportunityListItem {
   nextAction: string | null;
   status: ProspectStatus;
   createdAt: string;
+  /** Set once promoted into the Lead Inbox (prospects.promoted_lead_id). */
+  promotedLeadId: string | null;
 }
 
 /**
@@ -491,7 +493,7 @@ export async function getProspects(
   const { data, error } = await supabase
     .from("prospects")
     .select(
-      "id, name, category, region, source_type, search_query, score, reason, suggested_message, status, created_at",
+      "id, name, category, region, source_type, search_query, score, reason, suggested_message, status, created_at, promoted_lead_id",
     )
     .eq("company_id", companyId)
     .is("deleted_at", null)
@@ -515,6 +517,7 @@ export async function getProspects(
     suggested_message: string | null;
     status: ProspectStatus;
     created_at: string;
+    promoted_lead_id: string | null;
   }>;
 
   return rows.map((row) => ({
@@ -529,6 +532,7 @@ export async function getProspects(
     nextAction: row.suggested_message,
     status: row.status,
     createdAt: row.created_at,
+    promotedLeadId: row.promoted_lead_id,
   }));
 }
 

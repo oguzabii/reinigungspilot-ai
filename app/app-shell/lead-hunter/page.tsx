@@ -20,6 +20,7 @@ import {
   scoreBadgeClass,
 } from "@/components/lead-hunter/opportunity-meta";
 import { matchServices } from "@/components/lead-hunter/scoring";
+import { PromoteOpportunityButton } from "@/components/lead-hunter/PromoteOpportunityButton";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
@@ -285,6 +286,13 @@ function OpportunityRow({ op }: { op: OpportunityListItem }) {
           {op.nextAction}
         </p>
       )}
+
+      <div className="mt-3 border-t border-slate-100 pt-3">
+        <PromoteOpportunityButton
+          opportunityId={op.id}
+          promoted={op.promotedLeadId !== null}
+        />
+      </div>
 
       <p className="mt-2 text-xs text-slate-400">
         erfasst {op.createdAt.slice(0, 10)}

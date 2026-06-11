@@ -252,6 +252,8 @@ export interface ProspectRow extends BaseColumns, TenantColumns {
   category: string | null;
   region: string | null;
   source_type: SourceType;
+  /** Optional link to the registered lead_source it was prepared from (006). */
+  source_id: string | null;
   search_query: string | null;
   score: number | null;
   confidence: number | null;

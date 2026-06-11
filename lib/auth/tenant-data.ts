@@ -479,6 +479,10 @@ export interface OpportunityListItem {
   createdAt: string;
   /** Set once promoted into the Lead Inbox (prospects.promoted_lead_id). */
   promotedLeadId: string | null;
+  /** Optional registered source it was prepared from (prospects.source_id, 006). */
+  sourceId: string | null;
+  /** Embedded label of that source (lead_sources.label), or null. */
+  sourceLabel: string | null;
 }
 
 /**
@@ -493,7 +497,7 @@ export async function getProspects(
   const { data, error } = await supabase
     .from("prospects")
     .select(
-      "id, name, category, region, source_type, search_query, score, reason, suggested_message, status, created_at, promoted_lead_id",
+      "id, name, category, region, source_type, source_id, search_query, score, reason, suggested_message, status, created_at, promoted_lead_id, lead_sources ( label )",
     )
     .eq("company_id", companyId)
     .is("deleted_at", null)
@@ -505,12 +509,15 @@ export async function getProspects(
     return [];
   }
 
-  const rows = (data ?? []) as Array<{
+  // The untyped client infers the embed as an array; PostgREST returns an object
+  // for a to-one FK. Accept both shapes and narrow.
+  const rows = (data ?? []) as unknown as Array<{
     id: string;
     name: string;
     category: string | null;
     region: string | null;
     source_type: SourceType;
+    source_id: string | null;
     search_query: string | null;
     score: number | null;
     reason: string | null;
@@ -518,22 +525,30 @@ export async function getProspects(
     status: ProspectStatus;
     created_at: string;
     promoted_lead_id: string | null;
+    lead_sources: { label: string } | Array<{ label: string }> | null;
   }>;
 
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    category: row.category,
-    region: row.region,
-    sourceType: row.source_type,
-    servicePotential: row.search_query,
-    score: row.score,
-    reason: row.reason,
-    nextAction: row.suggested_message,
-    status: row.status,
-    createdAt: row.created_at,
-    promotedLeadId: row.promoted_lead_id,
-  }));
+  return rows.map((row) => {
+    const source = Array.isArray(row.lead_sources)
+      ? row.lead_sources[0]
+      : row.lead_sources;
+    return {
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      region: row.region,
+      sourceType: row.source_type,
+      servicePotential: row.search_query,
+      score: row.score,
+      reason: row.reason,
+      nextAction: row.suggested_message,
+      status: row.status,
+      createdAt: row.created_at,
+      promotedLeadId: row.promoted_lead_id,
+      sourceId: row.source_id,
+      sourceLabel: source?.label ?? null,
+    };
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -547,6 +562,49 @@ export interface LeadSourceListItem {
   enabled: boolean;
   notes: string | null;
   createdAt: string;
+}
+
+/**
+ * A single registered lead source by id, scoped to the active company and not
+ * soft-deleted. RLS-scoped via the session client (never service-role). Returns
+ * null if the source does not exist for this tenant — used to seed the
+ * "Opportunity aus Quelle" workflow (foreign/unknown id → null, never leaks).
+ */
+export async function getLeadSourceById(
+  companyId: string,
+  sourceId: string,
+): Promise<LeadSourceListItem | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("lead_sources")
+    .select("id, type, label, enabled, notes, created_at")
+    .eq("company_id", companyId)
+    .eq("id", sourceId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[tenant-data] getLeadSourceById failed:", error.message);
+    return null;
+  }
+  if (!data) return null;
+
+  const row = data as {
+    id: string;
+    type: SourceType;
+    label: string;
+    enabled: boolean;
+    notes: string | null;
+    created_at: string;
+  };
+  return {
+    id: row.id,
+    type: row.type,
+    label: row.label,
+    enabled: row.enabled,
+    notes: row.notes,
+    createdAt: row.created_at,
+  };
 }
 
 /**

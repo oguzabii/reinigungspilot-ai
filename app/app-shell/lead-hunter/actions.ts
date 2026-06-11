@@ -100,12 +100,31 @@ export async function createOpportunity(
   }
 
   const supabase = await createClient();
+
+  // Optional link to a registered source (v0.3.10 Source -> Opportunity).
+  // Defense in depth: only accept a source that belongs to the ACTIVE tenant and
+  // is not soft-deleted — never link across tenants (the FK alone would not
+  // enforce same-company). An invalid/foreign id is silently dropped to null.
+  let sourceId: string | null = null;
+  const sourceIdRaw = field(formData, "source_id", 60);
+  if (sourceIdRaw) {
+    const { data: src } = await supabase
+      .from("lead_sources")
+      .select("id")
+      .eq("id", sourceIdRaw)
+      .eq("company_id", context.activeCompanyId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (src) sourceId = sourceIdRaw;
+  }
+
   const { error } = await supabase.from("prospects").insert({
     company_id: context.activeCompanyId,
     name,
     category,
     region: field(formData, "region", 200),
     source_type: sourceType,
+    source_id: sourceId,
     search_query: field(formData, "service_potential", 300), // service potential
     score,
     reason: field(formData, "reason", 2000),

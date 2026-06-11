@@ -9,6 +9,7 @@ import {
   Power,
   ShieldCheck,
   Info,
+  Crosshair,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { NewSourceForm } from "@/components/lead-hunter/NewSourceForm";
@@ -174,6 +175,10 @@ export default async function AppShellLeadSourcesPage() {
           <h2 className="text-lg font-semibold tracking-tight text-navy-900">
             Registrierte Quellen
           </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Aus jeder Quelle lässt sich manuell eine Opportunity vorbereiten –
+            kein automatisches Auslesen, keine externe Abfrage.
+          </p>
           {total === 0 ? (
             <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
               <Library
@@ -269,9 +274,18 @@ function SourceRow({ src }: { src: LeadSourceListItem }) {
         </p>
       )}
 
-      <p className="mt-2 text-xs text-slate-400">
-        registriert {src.createdAt.slice(0, 10)}
-      </p>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+        <Link
+          href={`/app-shell/lead-hunter?source=${src.id}`}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-50"
+        >
+          <Crosshair className="h-3.5 w-3.5" />
+          Opportunity vorbereiten
+        </Link>
+        <span className="text-xs text-slate-400">
+          registriert {src.createdAt.slice(0, 10)}
+        </span>
+      </div>
     </li>
   );
 }

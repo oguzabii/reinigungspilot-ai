@@ -12,15 +12,21 @@ import {
   ListChecks,
   Library,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
-import { NewOpportunityForm } from "@/components/lead-hunter/NewOpportunityForm";
+import {
+  NewOpportunityForm,
+  type OpportunitySeed,
+} from "@/components/lead-hunter/NewOpportunityForm";
 import {
   OPPORTUNITY_TYPES,
+  OPPORTUNITY_SOURCES,
   PROSPECT_STATUS_META,
   ACTIVE_PURSUIT_STATUSES,
   scoreBadgeClass,
 } from "@/components/lead-hunter/opportunity-meta";
+import { SOURCE_TYPE_META } from "@/components/lead-hunter/source-meta";
 import { matchServices } from "@/components/lead-hunter/scoring";
 import { PromoteOpportunityButton } from "@/components/lead-hunter/PromoteOpportunityButton";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -28,6 +34,7 @@ import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
   getCompanySummary,
   getProspects,
+  getLeadSourceById,
   type OpportunityListItem,
 } from "@/lib/auth/tenant-data";
 
@@ -41,7 +48,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function AppShellLeadHunterPage() {
+export default async function AppShellLeadHunterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   if (!isSupabaseConfigured()) redirect("/app-shell");
 
   const context = await getCurrentCompanyContext();
@@ -49,10 +60,34 @@ export default async function AppShellLeadHunterPage() {
   const companyId = context.activeCompanyId;
   if (!companyId) redirect("/app-shell");
 
-  const [summary, opportunities] = await Promise.all([
+  const sp = await searchParams;
+  const sourceParam = typeof sp.source === "string" ? sp.source : undefined;
+
+  const [summary, opportunities, source] = await Promise.all([
     getCompanySummary(companyId),
     getProspects(companyId),
+    sourceParam
+      ? getLeadSourceById(companyId, sourceParam)
+      : Promise.resolve(null),
   ]);
+
+  // Seed the capture form from a registered source (manual workflow — the user
+  // still confirms + saves; nothing auto-runs). Map the source type to an
+  // allowed opportunity source value and fold label + notes into the reason
+  // context. The link itself travels as a hidden `source_id` in the form.
+  const allowedSourceValues = OPPORTUNITY_SOURCES.map((s) => s.value as string);
+  const seed: OpportunitySeed | undefined = source
+    ? {
+        sourceId: source.id,
+        sourceLabel: source.label,
+        sourceType: allowedSourceValues.includes(source.type)
+          ? source.type
+          : "other",
+        reason:
+          `Aus Quelle: ${source.label} (${SOURCE_TYPE_META[source.type].label}).` +
+          (source.notes ? `\n${source.notes}` : ""),
+      }
+    : undefined;
 
   // Radar overview aggregates (computed from the RLS-filtered list).
   const total = opportunities.length;
@@ -163,16 +198,43 @@ export default async function AppShellLeadHunterPage() {
           </section>
         )}
 
-        {/* Capture form */}
+        {/* Source given but not found for this tenant — honest, non-leaking note */}
+        {sourceParam && !source && (
+          <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Quelle nicht gefunden (gehört nicht zum aktiven Mandanten). Sie können
+            unten trotzdem manuell erfassen.
+          </div>
+        )}
+
+        {/* Capture form (optionally seeded from a registered source) */}
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold tracking-tight text-navy-900">
-            Opportunity erfassen
+            {seed ? "Opportunity aus Quelle erstellen" : "Opportunity erfassen"}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Pflichtfeld: Titel / Firma / Projekt. Übrige Felder optional.
-          </p>
+          {seed ? (
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="inline-flex items-center gap-1.5 text-sm text-slate-600">
+                <Library className="h-4 w-4 text-blue-600" />
+                Vorbereitet aus Quelle{" "}
+                <strong className="font-semibold text-navy-800">
+                  {seed.sourceLabel}
+                </strong>
+                . Felder prüfen, ergänzen und speichern.
+              </p>
+              <Link
+                href="/app-shell/lead-hunter"
+                className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700"
+              >
+                <X className="h-3.5 w-3.5" /> Quelle entfernen
+              </Link>
+            </div>
+          ) : (
+            <p className="mt-1 text-sm text-slate-500">
+              Pflichtfeld: Titel / Firma / Projekt. Übrige Felder optional.
+            </p>
+          )}
           <div className="mt-4">
-            <NewOpportunityForm />
+            <NewOpportunityForm seed={seed} />
           </div>
         </section>
 
@@ -274,8 +336,9 @@ function OpportunityRow({ op }: { op: OpportunityListItem }) {
             {op.servicePotential}
           </span>
         )}
-        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
-          Quelle: {op.sourceType}
+        <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+          {op.sourceLabel && <Library className="h-3 w-3 text-blue-600" />}
+          Quelle: {op.sourceLabel ?? op.sourceType}
         </span>
       </div>
 

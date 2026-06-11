@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { Crosshair, Sparkles, Wand2, Target } from "lucide-react";
+import { Crosshair, Sparkles, Wand2, Target, Library } from "lucide-react";
 import {
   createOpportunity,
   type ActionState,
@@ -26,13 +26,31 @@ import {
 const initialState: ActionState = { status: "idle" };
 
 /**
+ * Optional seed when an opportunity is being prepared FROM a registered source
+ * (v0.3.10 Source → Opportunity workflow). Pre-fills fields and carries the
+ * source link (hidden `source_id`). The human still confirms and saves —
+ * nothing is hidden or auto-submitted.
+ */
+export interface OpportunitySeed {
+  sourceId: string;
+  sourceLabel: string;
+  /** Mapped to an allowed opportunity source value (whitelisted server-side). */
+  sourceType?: string;
+  /** Pre-filled "why interesting" context derived from the source. */
+  reason?: string;
+}
+
+/**
  * Manual "Opportunity erfassen" form with a LIVE, deterministic analysis panel
  * (service matching + score explanation + recommended next action). No AI, no
  * API, no scraping — everything is computed client-side from the entered
  * signals. The human keeps control: suggestions are only applied when the user
  * clicks "übernehmen". Submits to the `createOpportunity` server action.
+ *
+ * When `seed` is provided, the form is pre-filled from a registered source and
+ * the link is submitted as a hidden `source_id` field.
  */
-export function NewOpportunityForm() {
+export function NewOpportunityForm({ seed }: { seed?: OpportunitySeed }) {
   const [state, formAction, pending] = useActionState(
     createOpportunity,
     initialState,
@@ -45,6 +63,7 @@ export function NewOpportunityForm() {
       state={state}
       formAction={formAction}
       pending={pending}
+      seed={seed}
     />
   );
 }
@@ -53,18 +72,20 @@ function OpportunityFields({
   state,
   formAction,
   pending,
+  seed,
 }: {
   state: ActionState;
   formAction: (formData: FormData) => void;
   pending: boolean;
+  seed?: OpportunitySeed;
 }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("Manuell");
   const [region, setRegion] = useState("");
   const [service, setService] = useState("");
-  const [sourceType, setSourceType] = useState("manual");
+  const [sourceType, setSourceType] = useState(seed?.sourceType ?? "manual");
   const [score, setScore] = useState("");
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState(seed?.reason ?? "");
   const [nextAction, setNextAction] = useState("");
 
   const analysis = useMemo(
@@ -85,6 +106,22 @@ function OpportunityFields({
 
   return (
     <form action={formAction} className="space-y-4">
+      {seed && (
+        <>
+          {/* Carries the source link; the human still confirms + saves. */}
+          <input type="hidden" name="source_id" value={seed.sourceId} />
+          <div className="flex items-start gap-2 rounded-lg bg-navy-50 px-3 py-2 text-xs text-navy-700 ring-1 ring-inset ring-navy-100">
+            <Library className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+            <span>
+              Aus Quelle:{" "}
+              <strong className="font-semibold">{seed.sourceLabel}</strong> – die
+              Opportunity wird mit dieser Quelle verknüpft. Felder prüfen und
+              speichern.
+            </span>
+          </div>
+        </>
+      )}
+
       <div>
         <label htmlFor="op_name" className={labelClass}>
           Titel / Firma / Projekt *

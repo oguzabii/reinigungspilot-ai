@@ -7,27 +7,29 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.3.9.1** — **Lead-Hunter-Quellen-Registry-Fundament (auf Staging
-verifiziert).** Eine geschützte Route
-`/app-shell/lead-hunter/sources` verwaltet die **kontrollierten, von Menschen
-freigegebenen** Lead-Quellen eines Mandanten: owner/admin **registrieren** eine
-Quelle (Felder auf das bestehende `lead_sources`-Schema gemappt: Bezeichnung→`label`,
-Quellen-Typ→`type` (`source_type`), Aktiv→`enabled`, Notiz→`notes`), die Liste
-zeigt **Badges** (Aktiv/Inaktiv **plus** Phase: *Manuell* / *Künftige API* /
-*Künftiges Register*) und eine Übersicht (Total/Aktiv/Inaktiv + Phasen-Chips).
-Vorlagen-Chips (Manuell, Empfehlung, Bauprojekt, Praxis/Ärzte, Verwaltung,
-Ausschreibung, Google/Maps *(später)*, ZEFIX *(später)*) füllen nur leere Felder.
-Schreibpfad über **Session-Client (RLS, `can_write_settings` = owner/admin)** mit
-zusätzlicher App-Rollenprüfung (Defense-in-Depth); andere Rollen sehen eine
-Read-only-Ansicht. Verlinkt von `/app-shell/lead-hunter`. **Kein Scraping, keine
-Auto-Suche, keine Google-/Maps-/ZEFIX-/SIMAP-/Handelsregister-Abfrage, keine
-externe API, keine E-Mail, keine echten Daten. Keine neue Migration** (bestehendes
-`lead_sources`-Schema). 001–005 unverändert. Auf Staging **verifiziert**
-(2026-06-11, manueller Nutzertest): Login → `/app-shell/lead-hunter/sources`,
-Quelle registrieren + Liste/Übersicht/Badges/Vorlagen, Session-Client-/RLS-
-Schreibpfad (Settings-Domäne `can_write_settings`) bestätigt, kein Scraping/keine
-API, keine echten Daten — `docs/clean24-lead-hunter-source-registry-results.md`.
-Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
+**v0.3.10** — **Source → Opportunity-Workflow.** Aus einer registrierten Quelle
+(`/app-shell/lead-hunter/sources`) startet **„Opportunity vorbereiten"** ein
+**vorausgefülltes** Erfassungsformular unter `/app-shell/lead-hunter?source=<id>`:
+die Quelle wird RLS-gescopt geladen (fremde/unbekannte id → neutraler „nicht
+gefunden"-Hinweis, kein Leak), **Quelle** (`source_type`) und **„Warum
+interessant"** (aus `source.label` + `source.notes`) werden vorbefüllt, der Link
+reist als verstecktes `source_id`. Der Mensch **bestätigt/ergänzt** Name / Typ /
+Region / Service-Potenzial / Score / Grund / Nächste-Aktion und speichert — die
+Opportunity wird über `prospects.source_id` mit der Quelle **verknüpft** (die
+Liste zeigt dann „Quelle: <Label>"). Das deterministische Scoring/Service-Matching
+(`scoring.ts`) wird live wiederverwendet. Schreibpfad über **Session-Client (RLS,
+`can_write_sales`)** mit Defense-in-Depth-Prüfung, dass die Quelle zum aktiven
+Mandanten gehört. **Additive, idempotente Migration `006`** (`prospects.source_id`
+→ `lead_sources(id)`, spiegelt `leads.source_id`; **001–005 unverändert**). **Kein
+Auto-Auslesen, kein Scraping, keine Google-/Maps-/ZEFIX-/SIMAP-/Handelsregister-
+Abfrage, keine externe API, keine KI, keine E-Mail, keine echten Daten.** Die
+Verkaufs-Demo (v0.1.7) bleibt unverändert.
+
+> **v0.3.9/.9.1:** Lead-Hunter-Quellen-Registry-Fundament — `/app-shell/lead-hunter/sources`,
+> owner/admin registrieren kontrollierte `lead_sources` (label/type/enabled/notes)
+> + Badges (Aktiv + Phase Manuell/API/Register) + Vorlagen, Settings-Domäne
+> (`can_write_settings`), keine neue Migration. Auf Staging **verifiziert**
+> (2026-06-11) — `docs/clean24-lead-hunter-source-registry-results.md`.
 
 > **v0.3.8:** Opportunity → Lead-Inbox-Konversion — auf `/app-shell/lead-hunter`
 > per „In Lead Inbox übernehmen" eine qualifizierte Opportunity manuell in den
@@ -96,7 +98,8 @@ Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 > v0.3.6/.6.1 (Lead Hunter- / Opportunity-Radar-Fundament, manuell, auf Staging verifiziert),
 > v0.3.7/.7.1 (Lead-Hunter-Scoring & Service-Matching, deterministisch/offline, auf Staging verifiziert),
 > v0.3.8 (Opportunity → Lead-Inbox-Konversion, manuell),
-> **v0.3.9/.9.1 (Lead-Hunter-Quellen-Registry-Fundament, manuell, auf Staging verifiziert)**.
+> v0.3.9/.9.1 (Lead-Hunter-Quellen-Registry-Fundament, manuell, auf Staging verifiziert),
+> **v0.3.10 (Source → Opportunity-Workflow, manuell, Migration 006)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -154,8 +157,8 @@ npm run start    # Produktionsserver (nach build)
 | `/login`        | **Intern** (noindex): Login-Skelett (Supabase Auth). Inaktiv ohne Staging-Env, keine echten Daten |
 | `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): authentifizierter Tenant-Arbeitsbereich – Redirect ohne Session, RLS-gefilterte Staging-Zähler, kein Service-Role-Lesen. Ohne Env: „Setup erforderlich" |
 | `/app-shell/leads` | **Intern** (noindex, **dynamisch/geschützt**): Lead Inbox – Tenant-Leads anzeigen, manuell erfassen, **Status pflegen** und **Follow-ups planen** (Server-Actions, Session-Client/RLS). Kein Versand, keine externen Integrationen |
-| `/app-shell/lead-hunter` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter / Opportunity Radar – Opportunities **manuell erfassen** + Radar-Übersicht + **deterministisches Service-Matching/Scoring** (live) + **„In Lead Inbox übernehmen"** (Promotion zu `leads`) + Link zur **Quellen-Registry** (Server-Actions, Session-Client/RLS). Kein Scraping/Auto-Suche/KI/externe Quellen |
-| `/app-shell/lead-hunter/sources` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter **Quellen-Registry** – kontrollierte, von Menschen freigegebene Lead-Quellen **manuell registrieren** + Liste mit Badges (Aktiv/Inaktiv + Phase) (Server-Action, Session-Client/RLS, Settings-Domäne `can_write_settings` = owner/admin). Kein Scraping/Google/ZEFIX/SIMAP/Auto-Abfrage |
+| `/app-shell/lead-hunter` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter / Opportunity Radar – Opportunities **manuell erfassen** + Radar-Übersicht + **deterministisches Service-Matching/Scoring** (live) + **„In Lead Inbox übernehmen"** (Promotion zu `leads`) + **„Opportunity aus Quelle"** (vorausgefülltes Formular via `?source=<id>`, verknüpft `prospects.source_id`) + Link zur **Quellen-Registry** (Server-Actions, Session-Client/RLS). Kein Scraping/Auto-Suche/KI/externe Quellen |
+| `/app-shell/lead-hunter/sources` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter **Quellen-Registry** – kontrollierte, von Menschen freigegebene Lead-Quellen **manuell registrieren** + Liste mit Badges (Aktiv/Inaktiv + Phase) + **„Opportunity vorbereiten"** je Quelle (Server-Action, Session-Client/RLS, Settings-Domäne `can_write_settings` = owner/admin). Kein Scraping/Google/ZEFIX/SIMAP/Auto-Abfrage |
 | `/app-shell/offers` | **Intern** (noindex, **dynamisch/geschützt**): Offer Engine – Offerten-Entwürfe manuell erstellen (optional aus Lead), Positionen + Netto/MwSt/Brutto, **Status pflegen**, **PDF-Download** + manueller Versand-Entwurf (Server-Actions, Session-Client/RLS). Kein echter Versand/bexio |
 | `/app-shell/offers/[id]/pdf` | **Intern** (noindex, **dynamisch/geschützt**): Route-Handler – generiert das Offerten-PDF (Session-Client/RLS, nur eigene Offerte, sonst 404). Ohne Abhängigkeit/Asset, kein Versand |
 | `/app-shell/jobs` | **Intern** (noindex, **dynamisch/geschützt**): Auftragsliste – aus angenommenen Offerten erstellte Jobs, **Status & Termin pflegen**, .ics-Download (Status, Termin, Kunde, Quell-Offerte, Wert). Session-Client/RLS. Kein Kalender-Sync/E-Mail/bexio |
@@ -193,7 +196,7 @@ lib/
   env.ts               # Lazy Env-Validierung (build-sicher; Service-Role nur Server)
   supabase/            # Clients: browser.ts (Anon), server.ts (Cookies), admin.ts (Service-Role, Server), middleware.ts
   auth/session.ts      # Server-Session-Helfer: getCurrentUser/Profile/Memberships/CompanyContext
-  auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Zähler, Leads, Follow-ups, Offerten, Jobs, Opportunities/getProspects, Quellen/getLeadSources) via Session-Client
+  auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Zähler, Leads, Follow-ups, Offerten, Jobs, Opportunities/getProspects, Quellen/getLeadSources + getLeadSourceById) via Session-Client
   pdf/offer-pdf.ts     # abhängigkeitsfreier PDF-1.4-Generator (Standard-Helvetica/WinAnsi, keine Assets) (v0.3.3)
   ics/job-ics.ts       # abhängigkeitsfreier iCalendar-(.ics)-Generator (RFC 5545 VEVENT, keine Assets/Sync) (v0.3.5)
 
@@ -219,7 +222,7 @@ components/          # Wiederverwendbare UI-Bausteine
   jobs/job-status.ts      # geteilte Job-Status-Metadaten (Labels, Badges) (v0.3.4)
   jobs/JobStatusForm.tsx  # Status-Select je Auftrag (kanonische Reihenfolge, Server-Action) (v0.3.5)
   jobs/JobScheduleForm.tsx # Termin setzen/entfernen (datetime-local → UTC-Instant, Server-Action) (v0.3.5)
-  lead-hunter/NewOpportunityForm.tsx # „Opportunity erfassen" (manuell, Server-Action) (v0.3.6)
+  lead-hunter/NewOpportunityForm.tsx # „Opportunity erfassen" (manuell, Server-Action; optionaler Quellen-Seed + verstecktes source_id v0.3.10) (v0.3.6)
   lead-hunter/opportunity-meta.ts # geteilte Opportunity-Metadaten (Typen, 7 Services, Status, Score-Badge) (v0.3.6)
   lead-hunter/scoring.ts  # deterministisches Service-Matching + Score-Erklärung + nächste Aktion (pur, offline, keine KI/API) (v0.3.7)
   lead-hunter/PromoteOpportunityButton.tsx # „In Lead Inbox übernehmen" / „Bereits im Lead Inbox" (Server-Action) (v0.3.8)
@@ -235,8 +238,8 @@ app/
   workspace/         # interne App-Foundation (noindex, statisch)
   app-shell/         # geschützter Tenant-Arbeitsbereich (noindex, force-dynamic, Session+RLS)
     leads/           # Lead Inbox: page.tsx (Liste, Status, Follow-ups) + actions.ts (createLead, updateLeadStatus, createFollowup)
-    lead-hunter/     # Lead Hunter / Opportunity Radar: page.tsx (Radar-Übersicht, Liste, Promotion, Registry-Link) + actions.ts (createOpportunity, promoteOpportunity)
-      sources/       # Quellen-Registry: page.tsx (Liste, Badges, Übersicht, owner/admin-Formular) + actions.ts (createLeadSource; Settings-Domäne) (v0.3.9)
+    lead-hunter/     # Lead Hunter / Opportunity Radar: page.tsx (Radar-Übersicht, Liste, Promotion, Registry-Link, Seed aus Quelle via ?source=) + actions.ts (createOpportunity [+ source_id], promoteOpportunity)
+      sources/       # Quellen-Registry: page.tsx (Liste, Badges, Übersicht, owner/admin-Formular, „Opportunity vorbereiten") + actions.ts (createLeadSource; Settings-Domäne) (v0.3.9)
     offers/          # Offer Engine: page.tsx (Liste, Positionen, Summen, Status, PDF, Versand-Entwurf, Auftrag erstellen) + actions.ts (createOffer, updateOfferStatus, addOfferItem)
       [id]/pdf/route.ts  # geschützter Route-Handler: Offerten-PDF (Session-Client/RLS, sonst 404) (v0.3.3)
     jobs/            # Aufträge: page.tsx (Liste, Status, Termin) + actions.ts (createJobFromOffer, updateJobStatus, updateJobSchedule; Ops-Domäne)
@@ -277,6 +280,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-opportunity-to-lead-foundation.md # Opportunity → Lead Inbox: Promotion, Feld-Mapping, Duplikat-Guard (atomarer Claim), Security (v0.3.8)
   clean24-lead-hunter-source-registry.md # Lead Hunter Quellen-Registry: lead_sources, manuell, Badges (Phase/Aktiv), Settings-Domäne, kein Scraping/Google/ZEFIX/SIMAP (v0.3.9)
   clean24-lead-hunter-source-registry-results.md # Ergebnis: Quellen-Registry auf Staging verifiziert (Register/List, Badges/Vorlagen, RLS Settings-Domäne) (v0.3.9.1)
+  clean24-source-to-opportunity-foundation.md # Source→Opportunity-Workflow: „Opportunity vorbereiten", Seed via ?source=, prospects.source_id (Migration 006), manuell, kein Scraping (v0.3.10)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
@@ -289,6 +293,7 @@ supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/
     003_leads_notes.sql                  # additiv: leads.notes (Lead Inbox) (v0.3.0)
     004_followup_lead_tenant_integrity.sql # additiv/idempotent: unique leads(id,company_id) + Composite FK followup_tasks→leads (F6, v0.3.2)
     005_jobs_one_live_per_offer.sql      # additiv/idempotent: partieller Unique-Index – ein lebender Job pro Offerte (v0.3.4)
+    006_prospects_source_id.sql          # additiv/idempotent: prospects.source_id → lead_sources(id) (Source→Opportunity, v0.3.10)
   verification/      # Verifikations-/Setup-Skripte:
     001_verify_schema.sql            # read-only: Schema/RLS prüfen, keine Daten
     002_fake_seed_for_rls_tests.sql  # fiktive Staging-Daten (@example.test)
@@ -496,6 +501,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-opportunity-to-lead-foundation.md](docs/clean24-opportunity-to-lead-foundation.md) | Opportunity → Lead Inbox-Konversion: „In Lead Inbox übernehmen", Feld-Mapping (prospects→leads), bidirektionaler Link, Duplikat-Guard (atomarer Claim + Orphan-Rollback), Sales-Domäne, Security, Checkliste (v0.3.8) |
 | [clean24-lead-hunter-source-registry.md](docs/clean24-lead-hunter-source-registry.md) | Lead Hunter Quellen-Registry: kontrollierte, von Menschen freigegebene `lead_sources` manuell registrieren (`/app-shell/lead-hunter/sources`), Feld-Mapping (label/type/enabled/notes), Phasen-Badges (Manuell/Künftige API/Künftiges Register), Settings-Domäne (`can_write_settings` = owner/admin), kein Scraping/Google/ZEFIX/SIMAP, Security, Checkliste (v0.3.9) |
 | [clean24-lead-hunter-source-registry-results.md](docs/clean24-lead-hunter-source-registry-results.md) | Ergebnis: Quellen-Registry auf Staging verifiziert — Quelle registrieren + Liste/Übersicht, Badges/Vorlagen, Session-Client-/RLS-Schreibpfad (Settings-Domäne) bestätigt, kein Scraping/keine API, keine echten Daten (2026-06-11, v0.3.9.1) |
+| [clean24-source-to-opportunity-foundation.md](docs/clean24-source-to-opportunity-foundation.md) | Source → Opportunity-Workflow: aus registrierter Quelle „Opportunity vorbereiten" → vorausgefülltes Formular (`?source=`), Feld-Seed (source_type + Grund aus label/notes), Rückverknüpfung `prospects.source_id` (additive Migration 006, spiegelt `leads.source_id`), Defense-in-Depth (Quelle = aktiver Mandant), deterministisches Scoring wiederverwendet, kein Scraping/keine API, Security, Checkliste (v0.3.10) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -741,24 +747,40 @@ Phasen-Badges sowie Vorlagen-Chips korrekt, Session-Client-/RLS-Schreibpfad
 keine API, keine echten Kundendaten. Festgehalten in
 `docs/clean24-lead-hunter-source-registry-results.md`. Nur Docs.
 
-**v0.3.10 (nächster Schritt)** – **Source→Opportunity-Workflow** (eine Opportunity
-hält fest, aus welcher registrierten Quelle sie stammt) **oder Lead-Hunter-Quellen-
-Ausführungsplan** (wie eine freigegebene Quelle manuell „abgearbeitet" wird, vor
-jeder Automatisierung). Manuell, RLS-gescopt. *Offer-PDF-Politur ist aufgeschoben,
-bis der Nutzer sie anfordert.* Echte Daten erst nach dem Backup-/Trennungs-Gate.
+**v0.3.10 (erledigt)** – **Source→Opportunity-Workflow**: aus einer registrierten
+Quelle (`/app-shell/lead-hunter/sources`) startet „Opportunity vorbereiten" ein
+vorausgefülltes Erfassungsformular (`/app-shell/lead-hunter?source=<id>`); die
+Quelle wird RLS-gescopt geladen (fremde id → neutraler „nicht gefunden"-Hinweis,
+kein Leak), `source_type` + „Warum interessant" (aus `label`/`notes`) werden
+vorbefüllt, der Link reist als verstecktes `source_id`. Der Mensch bestätigt/
+ergänzt Name/Typ/Region/Service/Score/Grund/Nächste-Aktion und speichert; die
+Opportunity wird über `prospects.source_id` mit der Quelle verknüpft (Liste zeigt
+dann „Quelle: <Label>"). Deterministisches Scoring (`scoring.ts`) live
+wiederverwendet. Server-Action + Session-Client (RLS, `can_write_sales`) mit
+Defense-in-Depth (Quelle gehört zum aktiven Mandanten; verstecktes `source_id`
+serverseitig gegen den Mandanten geprüft). **Additive, idempotente Migration
+`006`** (`prospects.source_id` → `lead_sources(id)`, spiegelt `leads.source_id`;
+001–005 unverändert). Kein Auto-Auslesen/Scraping/Google/ZEFIX/SIMAP/KI/externe
+API. Doku `docs/clean24-source-to-opportunity-foundation.md`.
+
+**v0.3.11 (nächster Schritt)** – **Swiss Opportunity Radar Map-Fundament**
+(Opportunities nach Region/Kanton auf einer Schweizer Karte visualisieren;
+statisch/manuell, auf vorhandenen Daten inkl. der neuen Quellen-Verknüpfung).
+Manuell, RLS-gescopt. *Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie
+anfordert.* Echte Daten erst nach dem Backup-/Trennungs-Gate.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.8 (Opportunity →
-Lead-Inbox-Konversion) und **v0.3.9/.9.1 (Lead-Hunter-Quellen-Registry-Fundament,
-auf Staging verifiziert)** sind erledigt. Parallel bleibt **A) Deploy / Visual
-Review** der Verkaufs-Demo
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.9/.9.1
+(Lead-Hunter-Quellen-Registry, auf Staging verifiziert) und **v0.3.10 (Source →
+Opportunity-Workflow, Migration 006)** sind erledigt. Parallel bleibt **A) Deploy
+/ Visual Review** der Verkaufs-Demo
 möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export,
 Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.10 — Source→Opportunity-Workflow oder
-Lead-Hunter-Quellen-Ausführungsplan** (manuell, RLS-gescopt). **Offer-PDF-Politur
-ist aufgeschoben, bis angefordert.** **Voraussetzung vor echten Kundendaten:**
+**Empfehlung:** als Nächstes **v0.3.11 — Swiss Opportunity Radar Map-Fundament**
+(manuell, RLS-gescopt, auf vorhandenen Daten). **Offer-PDF-Politur ist
+aufgeschoben, bis angefordert.** **Voraussetzung vor echten Kundendaten:**
 Backup/Restore eingerichtet und getestet, **Staging und Produktion strikt
 getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —
 **nie vor** diesem Gate.

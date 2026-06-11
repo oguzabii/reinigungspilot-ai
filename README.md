@@ -7,25 +7,27 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.3.5** — **Job-Workflow- & Kalender-Fundament.** `/app-shell/jobs` kann jetzt
-pro Auftrag den **Status pflegen** (`planned → confirmed → in_progress →
-completed → cancelled → archived`; nicht starr) und einen **Termin** setzen
-(`scheduled_for`; der Browser rechnet die Lokalzeit in einen UTC-Instant um, der
-Server interpretiert nichts um; „Termin entfernen" statt versehentlichem
-Löschen). Neuer geschützter Route-Handler **`GET /app-shell/jobs/[id]/ics`**
-liefert eine **.ics-Datei** (iCalendar VEVENT, RFC 5545) zum manuellen Import in
-den eigenen Kalender — erzeugt **ohne Abhängigkeit/Asset** (`lib/ics/job-ics.ts`).
-Beide Schreibpfade laufen über **Server-Actions + Session-Client (RLS)**; Jobs
-sind die **Ops-Domäne** (`can_write_ops`; Sales/readonly werden abgewiesen).
-**Kein Kalender-Sync (kein Google/Outlook/CalDAV), keine E-Mail, keine
-bexio-Übergabe, keine externen Integrationen, keine echten Daten. Keine neue
-Migration** (nutzt bestehende Spalten `status`/`scheduled_for`/`location`).
-001–005 unverändert. **v0.3.5.1 (Patch):** auf Staging **verifiziert**
-(2026-06-11, manuell): Job-Status-Update funktioniert, Termin (`scheduled_for`)
-setzen funktioniert, `.ics`-Download funktioniert, Session-Client/RLS-Schreibpfad
-(Ops-Domäne) bestätigt, keine echten Daten —
-`docs/clean24-job-workflow-calendar-results.md`. Die Verkaufs-Demo (v0.1.7)
-bleibt unverändert.
+**v0.3.6** — **Lead Hunter- / Opportunity-Radar-Fundament.** Neue geschützte
+Route **`/app-shell/lead-hunter`** startet den Lead Hunter als **manuelles
+Opportunity Radar**: Opportunities **manuell erfassen** und anzeigen — mit
+einfachen **Radar-Übersichtskarten** (Anzahl, Ø Score, aktiv verfolgt, Typ-Chips)
+und Leerzustand. Formularfelder bilden auf das bestehende **`prospects`-Schema**
+ab (Titel→`name`, Typ→`category`, Region→`region`, Quelle→`source_type`,
+Service-Potenzial→`search_query`, Score→`score`, Grund→`reason`, Nächste
+Aktion→`suggested_message`, Status→`prospect_status`). Opportunity-Typen: Neubau,
+Praxis, Verwaltung, Ausschreibung, Firma, Partner, Manuell. Schreiben über
+**Server-Action + Session-Client (RLS)**; prospects sind die **Sales-Domäne**
+(`can_write_sales`). **Menschliche Erfassung only — kein Scraping, keine
+Auto-Suche, keine Google-/ZEFIX-/SIMAP-API, keine externen Quellen, kein Spam,
+keine E-Mail, keine bexio-Übergabe, keine echten Daten. Keine neue Migration**
+(nutzt bestehendes Schema). 001–005 unverändert. Lead-Hunter-Karte auf
+`/app-shell` verlinkt. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
+
+> **v0.3.5/.5.1:** Job-Workflow- & Kalender-Fundament — `/app-shell/jobs` mit
+> Status pflegen + Termin (`scheduled_for`, Browser→UTC) + Route-Handler
+> `GET /app-shell/jobs/[id]/ics` (.ics, RFC 5545, ohne Library/Asset/Sync).
+> Server-Actions + Session-Client (RLS, Ops-Domäne), keine neue Migration. Auf
+> Staging **verifiziert** (2026-06-11) — `docs/clean24-job-workflow-calendar-results.md`.
 
 > **v0.3.4/.4.1:** Auftrag-aus-Offerte-Fundament — aus einer angenommenen Offerte
 > per „Auftrag erstellen" manuell eine `jobs`-Zeile (Ops-Domäne `can_write_ops`),
@@ -65,7 +67,8 @@ bleibt unverändert.
 > v0.3.2/.2.1 (Offer Draft-Fundament + Migration 004, auf Staging verifiziert),
 > v0.3.3/.3.1 (Offer PDF- & Versand-Fundament, auf Staging verifiziert),
 > v0.3.4/.4.1 (Auftrag-aus-Offerte-Fundament + Migration 005, auf Staging verifiziert),
-> **v0.3.5/.5.1 (Job-Workflow- & Kalender-Fundament, .ics-Download, auf Staging verifiziert)**.
+> v0.3.5/.5.1 (Job-Workflow- & Kalender-Fundament, .ics-Download, auf Staging verifiziert),
+> **v0.3.6 (Lead Hunter- / Opportunity-Radar-Fundament, manuell)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -123,6 +126,7 @@ npm run start    # Produktionsserver (nach build)
 | `/login`        | **Intern** (noindex): Login-Skelett (Supabase Auth). Inaktiv ohne Staging-Env, keine echten Daten |
 | `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): authentifizierter Tenant-Arbeitsbereich – Redirect ohne Session, RLS-gefilterte Staging-Zähler, kein Service-Role-Lesen. Ohne Env: „Setup erforderlich" |
 | `/app-shell/leads` | **Intern** (noindex, **dynamisch/geschützt**): Lead Inbox – Tenant-Leads anzeigen, manuell erfassen, **Status pflegen** und **Follow-ups planen** (Server-Actions, Session-Client/RLS). Kein Versand, keine externen Integrationen |
+| `/app-shell/lead-hunter` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter / Opportunity Radar – Opportunities **manuell erfassen** + Radar-Übersicht (Server-Action, Session-Client/RLS). Kein Scraping/Auto-Suche/externe Quellen |
 | `/app-shell/offers` | **Intern** (noindex, **dynamisch/geschützt**): Offer Engine – Offerten-Entwürfe manuell erstellen (optional aus Lead), Positionen + Netto/MwSt/Brutto, **Status pflegen**, **PDF-Download** + manueller Versand-Entwurf (Server-Actions, Session-Client/RLS). Kein echter Versand/bexio |
 | `/app-shell/offers/[id]/pdf` | **Intern** (noindex, **dynamisch/geschützt**): Route-Handler – generiert das Offerten-PDF (Session-Client/RLS, nur eigene Offerte, sonst 404). Ohne Abhängigkeit/Asset, kein Versand |
 | `/app-shell/jobs` | **Intern** (noindex, **dynamisch/geschützt**): Auftragsliste – aus angenommenen Offerten erstellte Jobs, **Status & Termin pflegen**, .ics-Download (Status, Termin, Kunde, Quell-Offerte, Wert). Session-Client/RLS. Kein Kalender-Sync/E-Mail/bexio |
@@ -160,7 +164,7 @@ lib/
   env.ts               # Lazy Env-Validierung (build-sicher; Service-Role nur Server)
   supabase/            # Clients: browser.ts (Anon), server.ts (Cookies), admin.ts (Service-Role, Server), middleware.ts
   auth/session.ts      # Server-Session-Helfer: getCurrentUser/Profile/Memberships/CompanyContext
-  auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Modul-Zähler, Leads, Follow-ups, Offerten inkl. getOfferById) via Session-Client
+  auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Zähler, Leads, Follow-ups, Offerten, Jobs, Opportunities/getProspects) via Session-Client
   pdf/offer-pdf.ts     # abhängigkeitsfreier PDF-1.4-Generator (Standard-Helvetica/WinAnsi, keine Assets) (v0.3.3)
   ics/job-ics.ts       # abhängigkeitsfreier iCalendar-(.ics)-Generator (RFC 5545 VEVENT, keine Assets/Sync) (v0.3.5)
 
@@ -186,6 +190,8 @@ components/          # Wiederverwendbare UI-Bausteine
   jobs/job-status.ts      # geteilte Job-Status-Metadaten (Labels, Badges) (v0.3.4)
   jobs/JobStatusForm.tsx  # Status-Select je Auftrag (kanonische Reihenfolge, Server-Action) (v0.3.5)
   jobs/JobScheduleForm.tsx # Termin setzen/entfernen (datetime-local → UTC-Instant, Server-Action) (v0.3.5)
+  lead-hunter/NewOpportunityForm.tsx # „Opportunity erfassen" (manuell, Server-Action) (v0.3.6)
+  lead-hunter/opportunity-meta.ts # geteilte Opportunity-Metadaten (Typen, Service-Beispiele, Status, Score-Badge) (v0.3.6)
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
@@ -196,6 +202,7 @@ app/
   workspace/         # interne App-Foundation (noindex, statisch)
   app-shell/         # geschützter Tenant-Arbeitsbereich (noindex, force-dynamic, Session+RLS)
     leads/           # Lead Inbox: page.tsx (Liste, Status, Follow-ups) + actions.ts (createLead, updateLeadStatus, createFollowup)
+    lead-hunter/     # Lead Hunter / Opportunity Radar: page.tsx (Radar-Übersicht, Liste) + actions.ts (createOpportunity; manuell) (v0.3.6)
     offers/          # Offer Engine: page.tsx (Liste, Positionen, Summen, Status, PDF, Versand-Entwurf, Auftrag erstellen) + actions.ts (createOffer, updateOfferStatus, addOfferItem)
       [id]/pdf/route.ts  # geschützter Route-Handler: Offerten-PDF (Session-Client/RLS, sonst 404) (v0.3.3)
     jobs/            # Aufträge: page.tsx (Liste, Status, Termin) + actions.ts (createJobFromOffer, updateJobStatus, updateJobSchedule; Ops-Domäne)
@@ -230,6 +237,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-job-from-offer-foundation.md # Auftrag aus angenommener Offerte: Ops-Domäne, Duplikat-Guard (Migration 005), /app-shell/jobs, Security (v0.3.4)
   clean24-job-workflow-calendar-foundation.md # Job-Status-Workflow + Termin (scheduled_for) + .ics-Download (ohne Sync), Security (v0.3.5)
   clean24-job-workflow-calendar-results.md # Ergebnis: Job-Workflow + Kalender auf Staging verifiziert (Status, Termin, .ics) (v0.3.5.1)
+  clean24-lead-hunter-foundation.md  # Lead Hunter / Opportunity Radar (manuell): Feld-Mapping auf prospects, Vokabulare, Security, kein Scraping (v0.3.6)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
   clean24-offer-draft-results.md     # Ergebnis: Offer Engine auf Staging verifiziert (Migration 004, Create/List/Item/Status) (v0.3.2.1)
@@ -441,6 +449,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-job-from-offer-results.md](docs/clean24-job-from-offer-results.md) | Ergebnis: Job-Erstellung auf Staging verifiziert — Migration 005 angewendet, angenommene Offerte → Job, Jobs-Liste, Duplikat verhindert, RLS-Schreibpfad bestätigt (2026-06-11, v0.3.4.1) |
 | [clean24-job-workflow-calendar-foundation.md](docs/clean24-job-workflow-calendar-foundation.md) | Job-Status-Workflow + Terminplanung (`scheduled_for`, browser→UTC) + `.ics`-Download (`/app-shell/jobs/[id]/ics`, RFC 5545, ohne Library/Sync), Ops-Domäne, Datenfluss, Security, Checkliste (v0.3.5) |
 | [clean24-job-workflow-calendar-results.md](docs/clean24-job-workflow-calendar-results.md) | Ergebnis: Job-Workflow & Kalender auf Staging verifiziert — Status-Update, Terminplanung, `.ics`-Download, RLS-Schreibpfad (Ops-Domäne) bestätigt (2026-06-11, v0.3.5.1) |
+| [clean24-lead-hunter-foundation.md](docs/clean24-lead-hunter-foundation.md) | Lead Hunter / Opportunity Radar (manuell): `/app-shell/lead-hunter`, Feld-Mapping auf `prospects` (Sales-Domäne `can_write_sales`), Typen/Service-Vokabulare, Radar-Übersicht, Security, **kein Scraping/externe Quelle**, Checkliste (v0.3.6) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -625,22 +634,32 @@ verifiziert** (manuell, 2026-06-11): Job-Status-Update, Terminplanung
 Schreibpfad (Ops-Domäne) bestätigt, keine echten Kundendaten. Festgehalten in
 `docs/clean24-job-workflow-calendar-results.md`. Nur Docs.
 
-**v0.3.6 (nächster Schritt)** – **Lead Hunter / Opportunity Radar-Fundament**
-(manuelle Opportunity-Erfassung, RLS-gescopt). Manuell, RLS-gescopt.
-*Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie anfordert.* Echte Daten
-erst nach dem Backup-/Trennungs-Gate.
+**v0.3.6 (erledigt)** – **Lead Hunter- / Opportunity-Radar-Fundament**: neue
+geschützte Route `/app-shell/lead-hunter` — Opportunities **manuell erfassen**
+(Felder auf bestehendes `prospects`-Schema gemappt: Typ/Region/Quelle/
+Service-Potenzial/Score/Grund/Nächste-Aktion/Status) + einfache Radar-Übersicht
+(Anzahl, Ø Score, aktiv verfolgt, Typ-Chips), Leerzustand. Server-Action +
+Session-Client (RLS, Sales-Domäne `can_write_sales`). **Kein Scraping, keine
+Auto-Suche, keine Google-/ZEFIX-/SIMAP-API, keine externen Quellen.** Keine neue
+Migration. Doku `docs/clean24-lead-hunter-foundation.md`.
+
+**v0.3.7 (nächster Schritt)** – **Lead-Hunter-Scoring / Service-Matching** (reicheres
+Scoring + strukturiertes Service-Match-Modell) **oder Source-Registry**
+(`lead_sources` als Katalog freigegebener, menschlich geprüfter Quellen). Manuell,
+RLS-gescopt. *Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie anfordert.*
+Echte Daten erst nach dem Backup-/Trennungs-Gate.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.4/.4.1
-(Auftrag-aus-Offerte-Fundament) und **v0.3.5/.5.1 (Job-Workflow- &
-Kalender-Fundament, .ics-Download, auf Staging verifiziert)** sind erledigt.
-Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich
-(Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.5/.5.1
+(Job-Workflow- & Kalender-Fundament) und **v0.3.6 (Lead Hunter- / Opportunity-
+Radar-Fundament, manuell)** sind erledigt. Parallel bleibt **A) Deploy / Visual
+Review** der Verkaufs-Demo möglich (Live-Deployment, echtes Postfach
+`info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.6 — Lead Hunter / Opportunity Radar-Fundament**
-(manuell, RLS-gescopt). **Offer-PDF-Politur ist aufgeschoben, bis angefordert.**
-**Voraussetzung vor echten Kundendaten:**
+**Empfehlung:** als Nächstes **v0.3.7 — Lead-Hunter-Scoring / Service-Matching
+oder Source-Registry** (manuell, RLS-gescopt). **Offer-PDF-Politur ist
+aufgeschoben, bis angefordert.** **Voraussetzung vor echten Kundendaten:**
 Backup/Restore eingerichtet und getestet, **Staging und Produktion strikt
 getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —
 **nie vor** diesem Gate.

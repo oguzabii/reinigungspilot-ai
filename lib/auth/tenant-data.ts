@@ -17,6 +17,7 @@ import type {
   SourceType,
   OfferStatus,
   JobStatus,
+  ProspectStatus,
 } from "@/lib/database-types";
 
 type CountTable =
@@ -455,6 +456,80 @@ export async function getJobById(
   }
   if (!data) return null;
   return mapJobRow(data as unknown as RawJobRow);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Opportunities (Lead Hunter / Opportunity Radar — manual prospects)          */
+/* -------------------------------------------------------------------------- */
+
+export interface OpportunityListItem {
+  id: string;
+  name: string;
+  /** Opportunity type (prospects.category). */
+  category: string | null;
+  region: string | null;
+  sourceType: SourceType;
+  /** Service potential (prospects.search_query, repurposed). */
+  servicePotential: string | null;
+  score: number | null;
+  reason: string | null;
+  /** Next action (prospects.suggested_message, repurposed). */
+  nextAction: string | null;
+  status: ProspectStatus;
+  createdAt: string;
+}
+
+/**
+ * The active company's opportunities (manual prospects), newest first, excluding
+ * soft-deleted. RLS-scoped via the session client (never service-role). Capped
+ * for safety. No external source — these are manually captured.
+ */
+export async function getProspects(
+  companyId: string,
+): Promise<OpportunityListItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("prospects")
+    .select(
+      "id, name, category, region, source_type, search_query, score, reason, suggested_message, status, created_at",
+    )
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    console.error("[tenant-data] getProspects failed:", error.message);
+    return [];
+  }
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    name: string;
+    category: string | null;
+    region: string | null;
+    source_type: SourceType;
+    search_query: string | null;
+    score: number | null;
+    reason: string | null;
+    suggested_message: string | null;
+    status: ProspectStatus;
+    created_at: string;
+  }>;
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    region: row.region,
+    sourceType: row.source_type,
+    servicePotential: row.search_query,
+    score: row.score,
+    reason: row.reason,
+    nextAction: row.suggested_message,
+    status: row.status,
+    createdAt: row.created_at,
+  }));
 }
 
 /** Active company's service labels (for the new-lead form datalist). RLS-scoped. */

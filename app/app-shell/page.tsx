@@ -164,7 +164,7 @@ const MODULES: Array<{
   href?: string;
 }> = [
   { name: "Lead Inbox", icon: Inbox, countKey: "leads", tier: "Alle Pakete", href: "/app-shell/leads" },
-  { name: "Lead Hunter", icon: Sparkles, countKey: "prospects", tier: "Ab Pro" },
+  { name: "Lead Hunter", icon: Sparkles, countKey: "prospects", tier: "Ab Pro", href: "/app-shell/lead-hunter" },
   { name: "Offer Engine", icon: FileText, countKey: "offers", tier: "Alle Pakete", href: "/app-shell/offers" },
   { name: "Follow-ups", icon: BellRing, countKey: "followupTasks", tier: "Alle Pakete" },
   { name: "Jobs", icon: Briefcase, countKey: "jobs", tier: "Ab Pro", href: "/app-shell/jobs" },

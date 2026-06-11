@@ -167,7 +167,7 @@ const MODULES: Array<{
   { name: "Lead Hunter", icon: Sparkles, countKey: "prospects", tier: "Ab Pro" },
   { name: "Offer Engine", icon: FileText, countKey: "offers", tier: "Alle Pakete", href: "/app-shell/offers" },
   { name: "Follow-ups", icon: BellRing, countKey: "followupTasks", tier: "Alle Pakete" },
-  { name: "Jobs", icon: Briefcase, countKey: "jobs", tier: "Ab Pro" },
+  { name: "Jobs", icon: Briefcase, countKey: "jobs", tier: "Ab Pro", href: "/app-shell/jobs" },
   { name: "bexio Übergabe", icon: PlugZap, countKey: "bexioHandoffs", tier: "Ab Pro" },
   { name: "Reports", icon: ChartColumn, countKey: null, tier: "Ab Pro" },
 ];

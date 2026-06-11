@@ -16,6 +16,7 @@ import type {
   LeadStatus,
   SourceType,
   OfferStatus,
+  JobStatus,
 } from "@/lib/database-types";
 
 type CountTable =
@@ -251,10 +252,12 @@ export interface OfferListItem {
   /** Linked lead's display name (embedded via the lead_id FK), or null. */
   leadName: string | null;
   items: OfferItemListItem[];
+  /** True if a non-deleted job already exists for this offer (duplicate guard). */
+  hasJob: boolean;
 }
 
 const OFFER_SELECT =
-  "id, reference, status, total_net_chf, vat_rate_pct, total_gross_chf, valid_until, created_at, lead_id, leads ( company_name ), offer_items ( id, label, detail, amount_chf, sort_order )";
+  "id, reference, status, total_net_chf, vat_rate_pct, total_gross_chf, valid_until, created_at, lead_id, leads ( company_name ), offer_items ( id, label, detail, amount_chf, sort_order ), jobs ( id, deleted_at )";
 
 // The untyped client infers the embedded lead as an array; PostgREST returns an
 // object for a to-one FK. We accept both shapes and coerce numerics (numeric
@@ -277,6 +280,7 @@ interface RawOfferRow {
     amount_chf: number | string;
     sort_order: number;
   }> | null;
+  jobs: Array<{ id: string; deleted_at: string | null }> | null;
 }
 
 function mapOfferRow(row: RawOfferRow): OfferListItem {
@@ -302,6 +306,7 @@ function mapOfferRow(row: RawOfferRow): OfferListItem {
     leadId: row.lead_id,
     leadName: lead?.company_name ?? null,
     items,
+    hasJob: (row.jobs ?? []).some((j) => j.deleted_at === null),
   };
 }
 
@@ -352,6 +357,73 @@ export async function getOfferById(
   }
   if (!data) return null;
   return mapOfferRow(data as unknown as RawOfferRow);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Jobs (from accepted offers)                                                 */
+/* -------------------------------------------------------------------------- */
+
+export interface JobListItem {
+  id: string;
+  title: string;
+  status: JobStatus;
+  valueChf: number | null;
+  scheduledFor: string | null;
+  createdAt: string;
+  /** Source offer reference (embedded via offer_id), or null. */
+  offerReference: string | null;
+  /** Customer/lead display name (embedded via lead_id), or null. */
+  customerName: string | null;
+}
+
+interface RawJobRow {
+  id: string;
+  title: string;
+  status: JobStatus;
+  value_chf: number | string | null;
+  scheduled_for: string | null;
+  created_at: string;
+  offers: { reference: string } | Array<{ reference: string }> | null;
+  leads: { company_name: string } | Array<{ company_name: string }> | null;
+}
+
+/**
+ * The active company's jobs, newest first, excluding soft-deleted. One embedded
+ * PostgREST query (no N+1): `offers(reference)` is the source offer and
+ * `leads(company_name)` the customer. RLS-scoped via the session client (never
+ * service-role). Capped for safety.
+ */
+export async function getJobs(companyId: string): Promise<JobListItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(
+      "id, title, status, value_chf, scheduled_for, created_at, offers ( reference ), leads ( company_name )",
+    )
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    console.error("[tenant-data] getJobs failed:", error.message);
+    return [];
+  }
+
+  return ((data ?? []) as unknown as RawJobRow[]).map((row) => {
+    const offer = Array.isArray(row.offers) ? row.offers[0] : row.offers;
+    const lead = Array.isArray(row.leads) ? row.leads[0] : row.leads;
+    return {
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      valueChf: row.value_chf === null ? null : Number(row.value_chf) || 0,
+      scheduledFor: row.scheduled_for,
+      createdAt: row.created_at,
+      offerReference: offer?.reference ?? null,
+      customerName: lead?.company_name ?? null,
+    };
+  });
 }
 
 /** Active company's service labels (for the new-lead form datalist). RLS-scoped. */

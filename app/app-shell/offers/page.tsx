@@ -15,6 +15,7 @@ import { NewOfferForm } from "@/components/offers/NewOfferForm";
 import { OfferStatusForm } from "@/components/offers/OfferStatusForm";
 import { AddOfferItemForm } from "@/components/offers/AddOfferItemForm";
 import { OfferSendDraft } from "@/components/offers/OfferSendDraft";
+import { CreateJobButton } from "@/components/offers/CreateJobButton";
 import { OFFER_STATUS_META, formatChf } from "@/components/offers/offer-status";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
@@ -234,6 +235,13 @@ function OfferRow({
           currentStatus={offer.status}
         />
       </div>
+
+      {/* Job creation only for accepted offers (jobs = ops domain via RLS). */}
+      {offer.status === "accepted" && (
+        <div className="mt-3">
+          <CreateJobButton offerId={offer.id} hasJob={offer.hasJob} />
+        </div>
+      )}
 
       <OfferSendDraft
         reference={offer.reference}

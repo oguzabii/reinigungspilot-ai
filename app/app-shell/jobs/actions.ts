@@ -20,6 +20,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import type { JobStatus } from "@/lib/database-types";
+import { JOB_STATUS_FLOW } from "@/components/jobs/job-status";
 
 export interface ActionState {
   status: "idle" | "success" | "error";
@@ -151,4 +152,136 @@ export async function createJobFromOffer(
   revalidatePath("/app-shell/offers");
   revalidatePath("/app-shell/jobs");
   return { status: "success", message: "Auftrag erstellt." };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Update job status (v0.3.5 workflow)                                         */
+/* -------------------------------------------------------------------------- */
+
+export async function updateJobStatus(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const context = await getCurrentCompanyContext();
+  if (!context || !context.activeCompanyId) {
+    return {
+      status: "error",
+      message: "Kein aktiver Mandant – bitte erneut anmelden.",
+    };
+  }
+
+  const jobId = field(formData, "job_id");
+  const statusRaw = field(formData, "status");
+  if (!jobId || !statusRaw || !(JOB_STATUS_FLOW as string[]).includes(statusRaw)) {
+    return { status: "error", message: "Ungültiger Status." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("jobs")
+    .update({ status: statusRaw as JobStatus, updated_by: context.user.id })
+    .eq("id", jobId)
+    .eq("company_id", context.activeCompanyId) // defense in depth
+    .is("deleted_at", null)
+    .select("id");
+
+  if (error) {
+    console.error("[jobs] updateJobStatus failed:", error.message);
+    return {
+      status: "error",
+      message: "Status konnte nicht gespeichert werden. Bitte erneut versuchen.",
+    };
+  }
+  if (!data || data.length === 0) {
+    return {
+      status: "error",
+      message:
+        "Status konnte nicht geändert werden. Prüfen Sie Ihre Berechtigung (erfordert Ops, Admin oder Owner).",
+    };
+  }
+
+  revalidatePath("/app-shell/jobs");
+  return { status: "success", message: "Status gespeichert." };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Update job schedule (v0.3.5 — manual scheduled_for)                         */
+/* -------------------------------------------------------------------------- */
+
+export async function updateJobSchedule(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const context = await getCurrentCompanyContext();
+  if (!context || !context.activeCompanyId) {
+    return {
+      status: "error",
+      message: "Kein aktiver Mandant – bitte erneut anmelden.",
+    };
+  }
+
+  const jobId = field(formData, "job_id");
+  if (!jobId) {
+    return { status: "error", message: "Kein Auftrag ausgewählt." };
+  }
+
+  const intent = field(formData, "intent"); // "set" | "clear"
+  let scheduledFor: string | null = null;
+
+  if (intent === "clear") {
+    scheduledFor = null;
+  } else {
+    // Prefer the browser-computed instant (so the server TZ can't reinterpret
+    // wall-clock input); fall back to a strictly shape-checked local value.
+    const isoRaw = field(formData, "scheduled_iso");
+    const localRaw = field(formData, "scheduled_local");
+    let due: Date | null = null;
+    if (isoRaw) {
+      const d = new Date(isoRaw);
+      if (!Number.isNaN(d.getTime())) due = d;
+    }
+    if (!due && localRaw && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(localRaw)) {
+      const d = new Date(localRaw);
+      if (!Number.isNaN(d.getTime())) due = d;
+    }
+    const min = Date.UTC(2020, 0, 1);
+    const max = Date.now() + 5 * 365 * 24 * 60 * 60 * 1000; // ~5 years out
+    if (!due || due.getTime() < min || due.getTime() > max) {
+      return {
+        status: "error",
+        message: "Bitte ein gültiges Datum/Zeit wählen (oder „Termin entfernen“).",
+      };
+    }
+    scheduledFor = due.toISOString();
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("jobs")
+    .update({ scheduled_for: scheduledFor, updated_by: context.user.id })
+    .eq("id", jobId)
+    .eq("company_id", context.activeCompanyId) // defense in depth
+    .is("deleted_at", null)
+    .select("id");
+
+  if (error) {
+    console.error("[jobs] updateJobSchedule failed:", error.message);
+    return {
+      status: "error",
+      message: "Termin konnte nicht gespeichert werden. Bitte erneut versuchen.",
+    };
+  }
+  if (!data || data.length === 0) {
+    return {
+      status: "error",
+      message:
+        "Termin konnte nicht gespeichert werden. Prüfen Sie Ihre Berechtigung (erfordert Ops, Admin oder Owner).",
+    };
+  }
+
+  revalidatePath("/app-shell/jobs");
+  return {
+    status: "success",
+    message: intent === "clear" ? "Termin entfernt." : "Termin gespeichert.",
+  };
 }

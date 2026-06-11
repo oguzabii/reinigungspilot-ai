@@ -8,9 +8,12 @@ import {
   Receipt,
   UserRound,
   CalendarClock,
+  CalendarPlus,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { JOB_STATUS_META } from "@/components/jobs/job-status";
+import { JobStatusForm } from "@/components/jobs/JobStatusForm";
+import { JobScheduleForm } from "@/components/jobs/JobScheduleForm";
 import { formatChf } from "@/components/offers/offer-status";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
@@ -26,9 +29,14 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Aufträge (intern) – Klarsa",
   description:
-    "Geschützte Auftragsliste: aus angenommenen Offerten erstellte Aufträge (Status, Kunde, Quell-Offerte). RLS-gefiltert, keine externen Integrationen.",
+    "Geschützte Auftragsliste: aus angenommenen Offerten erstellte Aufträge (Status, Termin, Kunde, Quell-Offerte). RLS-gefiltert, keine externen Integrationen.",
   robots: { index: false, follow: false },
 };
+
+/** Deterministic, SSR-safe "YYYY-MM-DD HH:mm" from an ISO string (UTC). */
+function formatDateTime(iso: string): string {
+  return `${iso.slice(0, 10)} ${iso.slice(11, 16)}`;
+}
 
 export default async function AppShellJobsPage() {
   if (!isSupabaseConfigured()) redirect("/app-shell");
@@ -75,10 +83,12 @@ export default async function AppShellJobsPage() {
           <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <p className="text-sm leading-relaxed text-amber-800">
             Aufträge werden manuell aus <strong className="font-semibold">angenommenen
-            Offerten</strong> erstellt – <strong className="font-semibold">kein
-            Kalender, keine E-Mail, keine bexio-Übergabe</strong> (noch). Alle
-            Daten werden über die <strong className="font-semibold">RLS</strong>{" "}
-            gefiltert und nur über den Session-Client geschrieben.
+            Offerten</strong> erstellt; Status &amp; Termin pflegen Sie hier. Termine
+            lassen sich als <strong className="font-semibold">.ics herunterladen</strong>{" "}
+            und selbst importieren – <strong className="font-semibold">kein
+            Kalender-Sync, keine E-Mail, keine bexio-Übergabe</strong>. Alle Daten
+            werden über die <strong className="font-semibold">RLS</strong> gefiltert
+            und nur über den Session-Client geschrieben.
           </p>
         </div>
 
@@ -138,16 +148,35 @@ function JobRow({ job }: { job: JobListItem }) {
             aus Offerte {job.offerReference}
           </span>
         )}
-        {job.scheduledFor && (
-          <span className="inline-flex items-center gap-1.5">
-            <CalendarClock className="h-3.5 w-3.5 text-slate-400" />
-            {job.scheduledFor.slice(0, 10)}
-          </span>
-        )}
+        <span className="inline-flex items-center gap-1.5">
+          <CalendarClock className="h-3.5 w-3.5 text-slate-400" />
+          {job.scheduledFor
+            ? `${formatDateTime(job.scheduledFor)} (UTC)`
+            : "Kein Termin"}
+        </span>
         {job.valueChf !== null && (
           <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 tabular-nums">
             CHF {formatChf(job.valueChf)}
           </span>
+        )}
+      </div>
+
+      {/* Workflow controls (ops domain via RLS) */}
+      <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+        {/* Keyed on status so the uncontrolled select resyncs after refresh. */}
+        <JobStatusForm
+          key={`${job.id}:${job.status}`}
+          jobId={job.id}
+          currentStatus={job.status}
+        />
+        <JobScheduleForm jobId={job.id} hasSchedule={job.scheduledFor !== null} />
+        {job.scheduledFor && (
+          <a
+            href={`/app-shell/jobs/${job.id}/ics`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" /> Termin (.ics)
+          </a>
         )}
       </div>
 

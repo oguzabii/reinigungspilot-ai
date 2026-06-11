@@ -369,6 +369,7 @@ export interface JobListItem {
   status: JobStatus;
   valueChf: number | null;
   scheduledFor: string | null;
+  location: string | null;
   createdAt: string;
   /** Source offer reference (embedded via offer_id), or null. */
   offerReference: string | null;
@@ -376,15 +377,35 @@ export interface JobListItem {
   customerName: string | null;
 }
 
+const JOB_SELECT =
+  "id, title, status, value_chf, scheduled_for, location, created_at, offers ( reference ), leads ( company_name )";
+
 interface RawJobRow {
   id: string;
   title: string;
   status: JobStatus;
   value_chf: number | string | null;
   scheduled_for: string | null;
+  location: string | null;
   created_at: string;
   offers: { reference: string } | Array<{ reference: string }> | null;
   leads: { company_name: string } | Array<{ company_name: string }> | null;
+}
+
+function mapJobRow(row: RawJobRow): JobListItem {
+  const offer = Array.isArray(row.offers) ? row.offers[0] : row.offers;
+  const lead = Array.isArray(row.leads) ? row.leads[0] : row.leads;
+  return {
+    id: row.id,
+    title: row.title,
+    status: row.status,
+    valueChf: row.value_chf === null ? null : Number(row.value_chf) || 0,
+    scheduledFor: row.scheduled_for,
+    location: row.location,
+    createdAt: row.created_at,
+    offerReference: offer?.reference ?? null,
+    customerName: lead?.company_name ?? null,
+  };
 }
 
 /**
@@ -397,9 +418,7 @@ export async function getJobs(companyId: string): Promise<JobListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("jobs")
-    .select(
-      "id, title, status, value_chf, scheduled_for, created_at, offers ( reference ), leads ( company_name )",
-    )
+    .select(JOB_SELECT)
     .eq("company_id", companyId)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
@@ -409,21 +428,33 @@ export async function getJobs(companyId: string): Promise<JobListItem[]> {
     console.error("[tenant-data] getJobs failed:", error.message);
     return [];
   }
+  return ((data ?? []) as unknown as RawJobRow[]).map(mapJobRow);
+}
 
-  return ((data ?? []) as unknown as RawJobRow[]).map((row) => {
-    const offer = Array.isArray(row.offers) ? row.offers[0] : row.offers;
-    const lead = Array.isArray(row.leads) ? row.leads[0] : row.leads;
-    return {
-      id: row.id,
-      title: row.title,
-      status: row.status,
-      valueChf: row.value_chf === null ? null : Number(row.value_chf) || 0,
-      scheduledFor: row.scheduled_for,
-      createdAt: row.created_at,
-      offerReference: offer?.reference ?? null,
-      customerName: lead?.company_name ?? null,
-    };
-  });
+/**
+ * A single job by id, scoped to the active company and not soft-deleted.
+ * RLS-scoped via the session client (never service-role). Returns null if the
+ * job does not exist for this tenant — used by the protected ICS route.
+ */
+export async function getJobById(
+  companyId: string,
+  jobId: string,
+): Promise<JobListItem | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(JOB_SELECT)
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[tenant-data] getJobById failed:", error.message);
+    return null;
+  }
+  if (!data) return null;
+  return mapJobRow(data as unknown as RawJobRow);
 }
 
 /** Active company's service labels (for the new-lead form datalist). RLS-scoped. */

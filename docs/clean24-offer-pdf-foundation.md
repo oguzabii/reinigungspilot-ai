@@ -1,10 +1,15 @@
 # Klarsa Core — Offer PDF & Sending Foundation (v0.3.3)
 
-> **Status: FOUNDATION (staging).** Adds a **protected PDF download** for an
-> offer and a **manual send draft** (subject + body to copy and send yourself).
-> The PDF loads via the **session client (RLS)**, never the service-role client,
-> and only ever renders **the active tenant's** offer. **No real email/SMTP/
-> Gmail/Resend, no bexio, no external assets, no real customer data.**
+> **Status: VERIFIED on staging (2026-06-11).** Adds a **protected PDF download**
+> for an offer and a **manual send draft** (subject + body to copy and send
+> yourself). The PDF loads via the **session client (RLS)**, never the
+> service-role client, and only ever renders **the active tenant's** offer. **No
+> real email/SMTP/Gmail/Resend, no bexio, no external assets, no real customer
+> data.** The PDF is foundation-level; visual polish is deferred.
+>
+> Staging verification (PDF route + offer data/items/totals rendered, send-draft
+> present, RLS read path, no real sending, no real data — user-reported manual
+> test): [`clean24-offer-pdf-results.md`](./clean24-offer-pdf-results.md).
 
 Related: [`clean24-offer-draft-foundation.md`](./clean24-offer-draft-foundation.md),
 [`clean24-offer-draft-results.md`](./clean24-offer-draft-results.md),

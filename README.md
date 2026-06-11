@@ -19,7 +19,11 @@ Bilddateien, Build bleibt env-frei). Pro Offerte ein **manueller Versand-Entwurf
 (`Versand-Entwurf (manuell)`): Betreff + Text zum Kopieren. **Kein echter Versand
 (kein SMTP/Gmail/Resend), keine bexio-Übergabe, keine externen Integrationen,
 keine echten Daten.** Keine neue Migration, kein Schema-Change (001–004
-unverändert). Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
+unverändert). **v0.3.3.1 (Patch):** auf Staging **verifiziert** (2026-06-11,
+manuell): PDF-Route nach Login erreichbar, Offerten-Daten/Positionen/Summen
+gerendert, Versand-Entwurf vorhanden (Kopiertext), kein echter Versand, keine
+echten Daten — `docs/clean24-offer-pdf-results.md` (PDF-Design ist
+Fundament-Niveau, Politur folgt). Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 
 > **v0.3.2/.2.1:** Offer Draft-Fundament — geschützte Route `/app-shell/offers`,
 > manuelle Offerten-Entwürfe (optional aus Lead) + `offer_items` mit
@@ -44,7 +48,7 @@ unverändert). Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 > verifiziert), v0.3.0/.0.1 (Lead Inbox, auf Staging verifiziert),
 > v0.3.1/.1.1 (Lead-Status & Follow-ups, auf Staging verifiziert),
 > v0.3.2/.2.1 (Offer Draft-Fundament + Migration 004, auf Staging verifiziert),
-> **v0.3.3 (Offer PDF- & Versand-Fundament)**.
+> **v0.3.3/.3.1 (Offer PDF- & Versand-Fundament, auf Staging verifiziert)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -197,6 +201,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-lead-status-followups-results.md # Ergebnis: Status-Update + Follow-ups auf Staging verifiziert (v0.3.1.1)
   clean24-offer-draft-foundation.md  # Offer Engine: manuelle Offerten-Entwürfe, Positionen, Status, Migration 004, Security (v0.3.2)
   clean24-offer-pdf-foundation.md    # Offer PDF-Download + manueller Versand-Entwurf: Generator ohne Assets, RLS/Tenant-Isolation, kein Versand (v0.3.3)
+  clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
   clean24-offer-draft-results.md     # Ergebnis: Offer Engine auf Staging verifiziert (Migration 004, Create/List/Item/Status) (v0.3.2.1)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
@@ -400,6 +405,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-lead-status-followups-results.md](docs/clean24-lead-status-followups-results.md) | Ergebnis: Status-Update + Follow-up Create/List auf Staging verifiziert — Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.1.1) |
 | [clean24-offer-draft-foundation.md](docs/clean24-offer-draft-foundation.md) | Offer Engine: manuelle Offerten-Entwürfe (optional aus Lead), Positionen + serverseitige Summen, Status-Flow, Datenfluss, Migration 004 (F6-Hardening), Security, Checkliste (v0.3.2) |
 | [clean24-offer-pdf-foundation.md](docs/clean24-offer-pdf-foundation.md) | Offer PDF-Download (`/app-shell/offers/[id]/pdf`, RLS/Tenant-Isolation, Generator ohne Library/Asset) + manueller Versand-Entwurf (Kopiertext, kein echter Versand), Datenfluss, Security, Checkliste (v0.3.3) |
+| [clean24-offer-pdf-results.md](docs/clean24-offer-pdf-results.md) | Ergebnis: Offer PDF auf Staging verifiziert — Route nach Login, Daten/Positionen/Summen gerendert, Versand-Entwurf vorhanden, kein echter Versand (2026-06-11, v0.3.3.1; PDF-Politur aufgeschoben) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -549,23 +555,30 @@ ein **manueller Versand-Entwurf** (Betreff/Text kopieren). Kein echter Versand
 (kein SMTP/Gmail/Resend), keine bexio-Übergabe, keine neue Migration. Doku
 `docs/clean24-offer-pdf-foundation.md`.
 
-**v0.3.4 (nächster Schritt)** – Entweder **Offer-Versand-Integration** (echter,
-gating-geschützter Versandpfad; weiterhin Staging-only) **oder** **Job-Erstellung
-aus angenommener Offerte** (`jobs`-Zeile aus Offerte bei Status *accepted*, Ops-
-Domäne). Echte Daten erst nach dem Backup-/Trennungs-Gate.
+**v0.3.3.1 (erledigt, Patch)** – **Offer PDF auf Staging verifiziert** (manuell,
+2026-06-11): PDF-Route nach Login erreichbar, Offerten-Daten/Positionen/Summen
+gerendert, manueller Versand-Entwurf vorhanden (Kopiertext), kein echter Versand,
+keine echten Kundendaten. Festgehalten in `docs/clean24-offer-pdf-results.md`
+(PDF-Design ist Fundament-Niveau, Politur aufgeschoben). Nur Docs.
+
+**v0.3.4 (nächster Schritt)** – **Job-Erstellung aus angenommener Offerte**
+(`jobs`-Zeile aus Offerte bei Status *accepted*, Ops-Domäne) **oder Offer-PDF-
+Politur** (Briefkopf, Typografie, Layout). Manuell, RLS-gescopt. Echte Daten erst
+nach dem Backup-/Trennungs-Gate.
 
 ## Empfohlener nächster Schritt
 
 Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.2/.2.1 (Offer
-Draft-Fundament) und **v0.3.3 (Offer PDF- & Versand-Fundament)** sind erledigt.
-Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich
-(Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
+Draft-Fundament) und **v0.3.3/.3.1 (Offer PDF- & Versand-Fundament, auf Staging
+verifiziert)** sind erledigt. Parallel bleibt **A) Deploy / Visual Review** der
+Verkaufs-Demo möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`,
+PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.4 — Offer-Versand-Integration oder
-Job-Erstellung aus angenommener Offerte** (manuell, RLS-gescopt). **Voraussetzung
-vor echten Kundendaten:** Backup/Restore eingerichtet und getestet, **Staging und
-Produktion strikt getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS
-und Security — **nie vor** diesem Gate.
+**Empfehlung:** als Nächstes **v0.3.4 — Job-Erstellung aus angenommener Offerte
+oder Offer-PDF-Politur** (manuell, RLS-gescopt). **Voraussetzung vor echten
+Kundendaten:** Backup/Restore eingerichtet und getestet, **Staging und Produktion
+strikt getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und
+Security — **nie vor** diesem Gate.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

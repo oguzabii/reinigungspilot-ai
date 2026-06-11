@@ -20,7 +20,12 @@ sind die **Ops-Domäne** (`can_write_ops`; Sales/readonly werden abgewiesen).
 **Kein Kalender-Sync (kein Google/Outlook/CalDAV), keine E-Mail, keine
 bexio-Übergabe, keine externen Integrationen, keine echten Daten. Keine neue
 Migration** (nutzt bestehende Spalten `status`/`scheduled_for`/`location`).
-001–005 unverändert. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
+001–005 unverändert. **v0.3.5.1 (Patch):** auf Staging **verifiziert**
+(2026-06-11, manuell): Job-Status-Update funktioniert, Termin (`scheduled_for`)
+setzen funktioniert, `.ics`-Download funktioniert, Session-Client/RLS-Schreibpfad
+(Ops-Domäne) bestätigt, keine echten Daten —
+`docs/clean24-job-workflow-calendar-results.md`. Die Verkaufs-Demo (v0.1.7)
+bleibt unverändert.
 
 > **v0.3.4/.4.1:** Auftrag-aus-Offerte-Fundament — aus einer angenommenen Offerte
 > per „Auftrag erstellen" manuell eine `jobs`-Zeile (Ops-Domäne `can_write_ops`),
@@ -60,7 +65,7 @@ Migration** (nutzt bestehende Spalten `status`/`scheduled_for`/`location`).
 > v0.3.2/.2.1 (Offer Draft-Fundament + Migration 004, auf Staging verifiziert),
 > v0.3.3/.3.1 (Offer PDF- & Versand-Fundament, auf Staging verifiziert),
 > v0.3.4/.4.1 (Auftrag-aus-Offerte-Fundament + Migration 005, auf Staging verifiziert),
-> **v0.3.5 (Job-Workflow- & Kalender-Fundament, .ics-Download)**.
+> **v0.3.5/.5.1 (Job-Workflow- & Kalender-Fundament, .ics-Download, auf Staging verifiziert)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -224,6 +229,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-offer-pdf-foundation.md    # Offer PDF-Download + manueller Versand-Entwurf: Generator ohne Assets, RLS/Tenant-Isolation, kein Versand (v0.3.3)
   clean24-job-from-offer-foundation.md # Auftrag aus angenommener Offerte: Ops-Domäne, Duplikat-Guard (Migration 005), /app-shell/jobs, Security (v0.3.4)
   clean24-job-workflow-calendar-foundation.md # Job-Status-Workflow + Termin (scheduled_for) + .ics-Download (ohne Sync), Security (v0.3.5)
+  clean24-job-workflow-calendar-results.md # Ergebnis: Job-Workflow + Kalender auf Staging verifiziert (Status, Termin, .ics) (v0.3.5.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
   clean24-offer-draft-results.md     # Ergebnis: Offer Engine auf Staging verifiziert (Migration 004, Create/List/Item/Status) (v0.3.2.1)
@@ -434,6 +440,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-job-from-offer-foundation.md](docs/clean24-job-from-offer-foundation.md) | Auftrag aus angenommener Offerte: „Auftrag erstellen", Ops-Domäne (`can_write_ops`), Duplikat-Guard (Vorprüfung + Migration 005), `/app-shell/jobs`-Liste, Datenfluss, Security, Checkliste (v0.3.4) |
 | [clean24-job-from-offer-results.md](docs/clean24-job-from-offer-results.md) | Ergebnis: Job-Erstellung auf Staging verifiziert — Migration 005 angewendet, angenommene Offerte → Job, Jobs-Liste, Duplikat verhindert, RLS-Schreibpfad bestätigt (2026-06-11, v0.3.4.1) |
 | [clean24-job-workflow-calendar-foundation.md](docs/clean24-job-workflow-calendar-foundation.md) | Job-Status-Workflow + Terminplanung (`scheduled_for`, browser→UTC) + `.ics`-Download (`/app-shell/jobs/[id]/ics`, RFC 5545, ohne Library/Sync), Ops-Domäne, Datenfluss, Security, Checkliste (v0.3.5) |
+| [clean24-job-workflow-calendar-results.md](docs/clean24-job-workflow-calendar-results.md) | Ergebnis: Job-Workflow & Kalender auf Staging verifiziert — Status-Update, Terminplanung, `.ics`-Download, RLS-Schreibpfad (Ops-Domäne) bestätigt (2026-06-11, v0.3.5.1) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -612,23 +619,28 @@ Library/Asset, `lib/ics/job-ics.ts`) zum manuellen Import. Server-Actions +
 Session-Client (RLS, Ops-Domäne). Kein Kalender-Sync/E-Mail/bexio, keine neue
 Migration. Doku `docs/clean24-job-workflow-calendar-foundation.md`.
 
+**v0.3.5.1 (erledigt, Patch)** – **Job-Workflow & Kalender auf Staging
+verifiziert** (manuell, 2026-06-11): Job-Status-Update, Terminplanung
+(`scheduled_for`) und `.ics`-Download funktionieren, Session-Client-/RLS-
+Schreibpfad (Ops-Domäne) bestätigt, keine echten Kundendaten. Festgehalten in
+`docs/clean24-job-workflow-calendar-results.md`. Nur Docs.
+
 **v0.3.6 (nächster Schritt)** – **Lead Hunter / Opportunity Radar-Fundament**
-(manuelle Opportunity-Erfassung, RLS-gescopt) **oder Kalender-Integration**
-(echter, gating-geschützter Sync-Pfad). Manuell, RLS-gescopt. *Offer-PDF-Politur
-ist aufgeschoben, bis der Nutzer sie anfordert.* Echte Daten erst nach dem
-Backup-/Trennungs-Gate.
+(manuelle Opportunity-Erfassung, RLS-gescopt). Manuell, RLS-gescopt.
+*Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie anfordert.* Echte Daten
+erst nach dem Backup-/Trennungs-Gate.
 
 ## Empfohlener nächster Schritt
 
 Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.4/.4.1
-(Auftrag-aus-Offerte-Fundament) und **v0.3.5 (Job-Workflow- & Kalender-Fundament,
-.ics-Download)** sind erledigt. Parallel bleibt **A) Deploy / Visual Review** der
-Verkaufs-Demo möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`,
-PDF-Export, Erklärvideo).
+(Auftrag-aus-Offerte-Fundament) und **v0.3.5/.5.1 (Job-Workflow- &
+Kalender-Fundament, .ics-Download, auf Staging verifiziert)** sind erledigt.
+Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich
+(Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.6 — Lead Hunter / Opportunity Radar-Fundament
-oder Kalender-Integration** (manuell, RLS-gescopt). **Offer-PDF-Politur ist
-aufgeschoben, bis angefordert.** **Voraussetzung vor echten Kundendaten:**
+**Empfehlung:** als Nächstes **v0.3.6 — Lead Hunter / Opportunity Radar-Fundament**
+(manuell, RLS-gescopt). **Offer-PDF-Politur ist aufgeschoben, bis angefordert.**
+**Voraussetzung vor echten Kundendaten:**
 Backup/Restore eingerichtet und getestet, **Staging und Produktion strikt
 getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —
 **nie vor** diesem Gate.

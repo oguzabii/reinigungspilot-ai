@@ -1,13 +1,17 @@
 # Klarsa Core — Job Workflow & Calendar Foundation (v0.3.5)
 
-> **Status: FOUNDATION (staging).** Extends **`/app-shell/jobs`** with a manual
-> **status workflow** and **scheduling** (`scheduled_for`), plus a protected
-> **`.ics` download** so a scheduled job can be imported into the user's own
-> calendar. All writes go through the **session client (RLS)** — jobs are the
-> **ops domain** (owner/admin/ops) — never the service-role client. **No
+> **Status: VERIFIED on staging (2026-06-11).** Extends **`/app-shell/jobs`**
+> with a manual **status workflow** and **scheduling** (`scheduled_for`), plus a
+> protected **`.ics` download** so a scheduled job can be imported into the
+> user's own calendar. All writes go through the **session client (RLS)** — jobs
+> are the **ops domain** (owner/admin/ops) — never the service-role client. **No
 > calendar sync, no Google/Outlook API, no email, no bexio, no external
 > integration, no real customer data. No new migration** (uses existing
 > columns).
+>
+> Staging verification (status update + scheduling + `.ics` download, RLS write
+> path, Clean24 tenant, no real data — user-reported manual test):
+> [`clean24-job-workflow-calendar-results.md`](./clean24-job-workflow-calendar-results.md).
 
 Related: [`clean24-job-from-offer-foundation.md`](./clean24-job-from-offer-foundation.md),
 [`clean24-offer-pdf-foundation.md`](./clean24-offer-pdf-foundation.md),

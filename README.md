@@ -7,24 +7,26 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.3.2** — **Offer Draft-Fundament.** Neue geschützte Route
-**`/app-shell/offers`** (Offer Engine): **manuelle Offerten-Entwürfe erstellen**
-(optional aus einem Lead; Referenz automatisch `OF-…` wenn leer; Gültig-bis;
-MwSt-Satz Standard 8.10%), **Positionen** (`offer_items`) hinzufügen mit
-serverseitig berechneten **Netto/MwSt/Brutto**-Summen, **Status pflegen**
-(draft → ready → sent → accepted/declined/expired → archived; nicht starr) und
-Offerten auflisten — mit Leerzustand. Alles über **Server-Actions +
-Session-Client (RLS)** (offers/offer_items = `can_write_sales`), Defense-in-Depth
-auf den aktiven Mandanten plus serverseitige Lead-/Offerten-Zugehörigkeitsprüfung.
-**Kein PDF, kein E-Mail-Versand, keine bexio-Übergabe, keine externen
-Integrationen.** Additive **Migration `004`** (idempotent) schliesst das
-aufgeschobene F6-Hardening: `unique (id, company_id)` auf `leads` + Composite FK
-`followup_tasks(lead_id, company_id) → leads(id, company_id)`. 001/002/003
-unverändert. **v0.3.2.1 (Patch):** auf Staging **verifiziert** (2026-06-10,
-manuell): Migration `004` angewendet, Offerten-Create/List + Positions-Add +
-Status-Update für den Clean24-Tenant funktionieren, Session-Client/RLS-Schreibpfad
-bestätigt, keine echten Daten — `docs/clean24-offer-draft-results.md`. Die
-Verkaufs-Demo (v0.1.7) bleibt unverändert.
+**v0.3.3** — **Offer PDF- & Versand-Fundament.** Neue geschützte Route
+**`GET /app-shell/offers/[id]/pdf`** (`force-dynamic`): lädt **eine** Offerte des
+aktiven Mandanten via **Session-Client (RLS)** + `company_id`/`id`-Scoping
+(fremde/unbekannte id → **404**) und liefert ein **PDF zum Download**. Sauberes
+Schweizerdeutsches A4-Layout (Klarsa-Wortmarke + Firmenname, Referenz, Datum,
+Status, Gültig-bis, Empfänger/Lead, Positionen, Netto/MwSt/Brutto). Das PDF wird
+**ohne Abhängigkeit/Asset** erzeugt (`lib/pdf/offer-pdf.ts` schreibt ein gültiges
+PDF 1.4 mit Standard-Helvetica + WinAnsi — keine PDF-Library, keine Schrift-/
+Bilddateien, Build bleibt env-frei). Pro Offerte ein **manueller Versand-Entwurf**
+(`Versand-Entwurf (manuell)`): Betreff + Text zum Kopieren. **Kein echter Versand
+(kein SMTP/Gmail/Resend), keine bexio-Übergabe, keine externen Integrationen,
+keine echten Daten.** Keine neue Migration, kein Schema-Change (001–004
+unverändert). Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
+
+> **v0.3.2/.2.1:** Offer Draft-Fundament — geschützte Route `/app-shell/offers`,
+> manuelle Offerten-Entwürfe (optional aus Lead) + `offer_items` mit
+> serverseitig berechneten Summen + Status-Flow, Server-Actions + Session-Client
+> (RLS, `can_write_sales`). Additive **Migration `004`** (F6-Hardening: `unique
+> leads(id,company_id)` + Composite FK). Auf Staging **verifiziert** (2026-06-10)
+> — `docs/clean24-offer-draft-results.md`.
 
 > **v0.3.1/.1.1:** Lead-Status-Workflow & Follow-up-Fundament — `/app-shell/leads`
 > mit Status-Select je Lead (9 Werte, kanonische Reihenfolge, Korrekturen
@@ -41,7 +43,8 @@ Verkaufs-Demo (v0.1.7) bleibt unverändert.
 > (App-Shell ↔ Staging), v0.2.8 (Clean24-Tenant-Setup), v0.2.9 (Tenant
 > verifiziert), v0.3.0/.0.1 (Lead Inbox, auf Staging verifiziert),
 > v0.3.1/.1.1 (Lead-Status & Follow-ups, auf Staging verifiziert),
-> **v0.3.2/.2.1 (Offer Draft-Fundament + Migration 004, auf Staging verifiziert)**.
+> v0.3.2/.2.1 (Offer Draft-Fundament + Migration 004, auf Staging verifiziert),
+> **v0.3.3 (Offer PDF- & Versand-Fundament)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -99,7 +102,8 @@ npm run start    # Produktionsserver (nach build)
 | `/login`        | **Intern** (noindex): Login-Skelett (Supabase Auth). Inaktiv ohne Staging-Env, keine echten Daten |
 | `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): authentifizierter Tenant-Arbeitsbereich – Redirect ohne Session, RLS-gefilterte Staging-Zähler, kein Service-Role-Lesen. Ohne Env: „Setup erforderlich" |
 | `/app-shell/leads` | **Intern** (noindex, **dynamisch/geschützt**): Lead Inbox – Tenant-Leads anzeigen, manuell erfassen, **Status pflegen** und **Follow-ups planen** (Server-Actions, Session-Client/RLS). Kein Versand, keine externen Integrationen |
-| `/app-shell/offers` | **Intern** (noindex, **dynamisch/geschützt**): Offer Engine – Offerten-Entwürfe manuell erstellen (optional aus Lead), Positionen + Netto/MwSt/Brutto, **Status pflegen** (Server-Actions, Session-Client/RLS). Kein PDF/E-Mail/bexio |
+| `/app-shell/offers` | **Intern** (noindex, **dynamisch/geschützt**): Offer Engine – Offerten-Entwürfe manuell erstellen (optional aus Lead), Positionen + Netto/MwSt/Brutto, **Status pflegen**, **PDF-Download** + manueller Versand-Entwurf (Server-Actions, Session-Client/RLS). Kein echter Versand/bexio |
+| `/app-shell/offers/[id]/pdf` | **Intern** (noindex, **dynamisch/geschützt**): Route-Handler – generiert das Offerten-PDF (Session-Client/RLS, nur eigene Offerte, sonst 404). Ohne Abhängigkeit/Asset, kein Versand |
 | `/auth/callback`| Route-Handler (dynamisch): OAuth/PKCE-Code-Tausch → Session-Cookie → Redirect |
 | `/logout`       | Route-Handler (dynamisch): Sign-out → Redirect auf `/login` |
 
@@ -133,7 +137,8 @@ lib/
   env.ts               # Lazy Env-Validierung (build-sicher; Service-Role nur Server)
   supabase/            # Clients: browser.ts (Anon), server.ts (Cookies), admin.ts (Service-Role, Server), middleware.ts
   auth/session.ts      # Server-Session-Helfer: getCurrentUser/Profile/Memberships/CompanyContext
-  auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Modul-Zähler, Leads-Liste, Service-Labels) via Session-Client
+  auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Modul-Zähler, Leads, Follow-ups, Offerten inkl. getOfferById) via Session-Client
+  pdf/offer-pdf.ts     # abhängigkeitsfreier PDF-1.4-Generator (Standard-Helvetica/WinAnsi, keine Assets) (v0.3.3)
 
 components/          # Wiederverwendbare UI-Bausteine
   PackageToggle, PackageCard, LockedFeature, DashboardMetricCard,
@@ -151,6 +156,8 @@ components/          # Wiederverwendbare UI-Bausteine
   offers/OfferStatusForm.tsx # Status-Select je Offerte (kanonische Reihenfolge, Server-Action) (v0.3.2)
   offers/AddOfferItemForm.tsx # Position zu Offerte hinzufügen (Server-Action, Summen-Neuberechnung) (v0.3.2)
   offers/offer-status.ts  # geteilte Offerten-Status-Metadaten + CHF-Formatter (v0.3.2)
+  offers/OfferSendDraft.tsx # manueller Versand-Entwurf (Betreff/Text kopieren, kein Versand) (v0.3.3)
+  offers/offer-send-draft.ts # reine Funktion: Schweizerdeutscher E-Mail-Entwurf aus Offerten-Daten (v0.3.3)
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
@@ -161,7 +168,8 @@ app/
   workspace/         # interne App-Foundation (noindex, statisch)
   app-shell/         # geschützter Tenant-Arbeitsbereich (noindex, force-dynamic, Session+RLS)
     leads/           # Lead Inbox: page.tsx (Liste, Status, Follow-ups) + actions.ts (createLead, updateLeadStatus, createFollowup)
-    offers/          # Offer Engine: page.tsx (Liste, Positionen, Summen, Status) + actions.ts (createOffer, updateOfferStatus, addOfferItem)
+    offers/          # Offer Engine: page.tsx (Liste, Positionen, Summen, Status, PDF, Versand-Entwurf) + actions.ts (createOffer, updateOfferStatus, addOfferItem)
+      [id]/pdf/route.ts  # geschützter Route-Handler: Offerten-PDF (Session-Client/RLS, sonst 404) (v0.3.3)
   login/             # Login-Seite (noindex, Skelett)
   auth/callback/  logout/                        # Auth-Route-Handler (force-dynamic)
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
@@ -188,6 +196,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-lead-status-followups.md # Lead-Status-Workflow + Follow-ups: Flow, Felder, Security, Checkliste (v0.3.1)
   clean24-lead-status-followups-results.md # Ergebnis: Status-Update + Follow-ups auf Staging verifiziert (v0.3.1.1)
   clean24-offer-draft-foundation.md  # Offer Engine: manuelle Offerten-Entwürfe, Positionen, Status, Migration 004, Security (v0.3.2)
+  clean24-offer-pdf-foundation.md    # Offer PDF-Download + manueller Versand-Entwurf: Generator ohne Assets, RLS/Tenant-Isolation, kein Versand (v0.3.3)
   clean24-offer-draft-results.md     # Ergebnis: Offer Engine auf Staging verifiziert (Migration 004, Create/List/Item/Status) (v0.3.2.1)
 
 supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/Daten)
@@ -390,6 +399,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-lead-status-followups.md](docs/clean24-lead-status-followups.md) | Lead-Status-Workflow (kanonischer Flow, nicht starr) + manuelle Follow-ups: Datenfluss, Defense-in-Depth, Verifikations-Checkliste (v0.3.1) |
 | [clean24-lead-status-followups-results.md](docs/clean24-lead-status-followups-results.md) | Ergebnis: Status-Update + Follow-up Create/List auf Staging verifiziert — Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.1.1) |
 | [clean24-offer-draft-foundation.md](docs/clean24-offer-draft-foundation.md) | Offer Engine: manuelle Offerten-Entwürfe (optional aus Lead), Positionen + serverseitige Summen, Status-Flow, Datenfluss, Migration 004 (F6-Hardening), Security, Checkliste (v0.3.2) |
+| [clean24-offer-pdf-foundation.md](docs/clean24-offer-pdf-foundation.md) | Offer PDF-Download (`/app-shell/offers/[id]/pdf`, RLS/Tenant-Isolation, Generator ohne Library/Asset) + manueller Versand-Entwurf (Kopiertext, kein echter Versand), Datenfluss, Security, Checkliste (v0.3.3) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -530,24 +540,32 @@ Positions-Add + Status-Update für den Clean24-Tenant funktionieren,
 Session-Client-/RLS-Schreibpfad bestätigt, keine echten Kundendaten.
 Festgehalten in `docs/clean24-offer-draft-results.md`. Nur Docs.
 
-**v0.3.3 (nächster Schritt)** – **Offer PDF / Offer-Versand-Fundament**:
-Offerte als PDF rendern + Versandpfad vorbereiten (manuell ausgelöst, keine
-echten Kundendaten). Echte Daten erst nach dem Backup-/Trennungs-Gate.
+**v0.3.3 (erledigt)** – **Offer PDF- & Versand-Fundament**: geschützter
+Route-Handler `/app-shell/offers/[id]/pdf` (Session-Client/RLS + `company_id`/
+`id`-Scoping, fremde id → 404) liefert ein Offerten-PDF zum Download —
+Schweizerdeutsches A4-Layout, erzeugt **ohne PDF-Library/Asset**
+(`lib/pdf/offer-pdf.ts`, Standard-Helvetica/WinAnsi, Build env-frei). Pro Offerte
+ein **manueller Versand-Entwurf** (Betreff/Text kopieren). Kein echter Versand
+(kein SMTP/Gmail/Resend), keine bexio-Übergabe, keine neue Migration. Doku
+`docs/clean24-offer-pdf-foundation.md`.
+
+**v0.3.4 (nächster Schritt)** – Entweder **Offer-Versand-Integration** (echter,
+gating-geschützter Versandpfad; weiterhin Staging-only) **oder** **Job-Erstellung
+aus angenommener Offerte** (`jobs`-Zeile aus Offerte bei Status *accepted*, Ops-
+Domäne). Echte Daten erst nach dem Backup-/Trennungs-Gate.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.1/.1.1
-(Lead-Status & Follow-ups) und **v0.3.2/.2.1 (Offer Draft-Fundament + Migration
-004, auf Staging verifiziert)** sind erledigt. Parallel bleibt
-**A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment,
-echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.2/.2.1 (Offer
+Draft-Fundament) und **v0.3.3 (Offer PDF- & Versand-Fundament)** sind erledigt.
+Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo möglich
+(Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.3 — Offer PDF / Versand-Fundament**
-(PDF-Rendering + Versandpfad; manuell, RLS-gescopt). **Voraussetzung vor echten
-Kundendaten:** Backup/Restore eingerichtet und getestet, **Staging und Produktion
-strikt
-getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —
-**nie vor** diesem Gate.
+**Empfehlung:** als Nächstes **v0.3.4 — Offer-Versand-Integration oder
+Job-Erstellung aus angenommener Offerte** (manuell, RLS-gescopt). **Voraussetzung
+vor echten Kundendaten:** Backup/Restore eingerichtet und getestet, **Staging und
+Produktion strikt getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS
+und Security — **nie vor** diesem Gate.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

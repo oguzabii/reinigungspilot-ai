@@ -253,6 +253,58 @@ export interface OfferListItem {
   items: OfferItemListItem[];
 }
 
+const OFFER_SELECT =
+  "id, reference, status, total_net_chf, vat_rate_pct, total_gross_chf, valid_until, created_at, lead_id, leads ( company_name ), offer_items ( id, label, detail, amount_chf, sort_order )";
+
+// The untyped client infers the embedded lead as an array; PostgREST returns an
+// object for a to-one FK. We accept both shapes and coerce numerics (numeric
+// columns can arrive as strings).
+interface RawOfferRow {
+  id: string;
+  reference: string;
+  status: OfferStatus;
+  total_net_chf: number | string;
+  vat_rate_pct: number | string;
+  total_gross_chf: number | string;
+  valid_until: string | null;
+  created_at: string;
+  lead_id: string | null;
+  leads: { company_name: string } | Array<{ company_name: string }> | null;
+  offer_items: Array<{
+    id: string;
+    label: string;
+    detail: string | null;
+    amount_chf: number | string;
+    sort_order: number;
+  }> | null;
+}
+
+function mapOfferRow(row: RawOfferRow): OfferListItem {
+  const lead = Array.isArray(row.leads) ? row.leads[0] : row.leads;
+  const items = (row.offer_items ?? [])
+    .map((it) => ({
+      id: it.id,
+      label: it.label,
+      detail: it.detail,
+      amountChf: Number(it.amount_chf) || 0,
+      sortOrder: it.sort_order,
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  return {
+    id: row.id,
+    reference: row.reference,
+    status: row.status,
+    totalNetChf: Number(row.total_net_chf) || 0,
+    vatRatePct: Number(row.vat_rate_pct) || 0,
+    totalGrossChf: Number(row.total_gross_chf) || 0,
+    validUntil: row.valid_until,
+    createdAt: row.created_at,
+    leadId: row.lead_id,
+    leadName: lead?.company_name ?? null,
+    items,
+  };
+}
+
 /**
  * The active company's offers, newest first, excluding soft-deleted. One
  * embedded PostgREST query (no N+1): `leads(company_name)` joins the source
@@ -263,9 +315,7 @@ export async function getOffers(companyId: string): Promise<OfferListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("offers")
-    .select(
-      "id, reference, status, total_net_chf, vat_rate_pct, total_gross_chf, valid_until, created_at, lead_id, leads ( company_name ), offer_items ( id, label, detail, amount_chf, sort_order )",
-    )
+    .select(OFFER_SELECT)
     .eq("company_id", companyId)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
@@ -275,54 +325,33 @@ export async function getOffers(companyId: string): Promise<OfferListItem[]> {
     console.error("[tenant-data] getOffers failed:", error.message);
     return [];
   }
+  return ((data ?? []) as unknown as RawOfferRow[]).map(mapOfferRow);
+}
 
-  // The untyped client infers the embedded lead as an array; PostgREST returns
-  // an object for a to-one FK. Cast via unknown and handle both shapes.
-  const rows = (data ?? []) as unknown as Array<{
-    id: string;
-    reference: string;
-    status: OfferStatus;
-    total_net_chf: number | string;
-    vat_rate_pct: number | string;
-    total_gross_chf: number | string;
-    valid_until: string | null;
-    created_at: string;
-    lead_id: string | null;
-    leads: { company_name: string } | Array<{ company_name: string }> | null;
-    offer_items: Array<{
-      id: string;
-      label: string;
-      detail: string | null;
-      amount_chf: number | string;
-      sort_order: number;
-    }> | null;
-  }>;
+/**
+ * A single offer by id, scoped to the active company and not soft-deleted.
+ * RLS-scoped via the session client (never service-role). Returns null if the
+ * offer does not exist for this tenant — used by the protected PDF route.
+ */
+export async function getOfferById(
+  companyId: string,
+  offerId: string,
+): Promise<OfferListItem | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("offers")
+    .select(OFFER_SELECT)
+    .eq("company_id", companyId)
+    .eq("id", offerId)
+    .is("deleted_at", null)
+    .maybeSingle();
 
-  return rows.map((row) => {
-    const lead = Array.isArray(row.leads) ? row.leads[0] : row.leads;
-    const items = (row.offer_items ?? [])
-      .map((it) => ({
-        id: it.id,
-        label: it.label,
-        detail: it.detail,
-        amountChf: Number(it.amount_chf) || 0,
-        sortOrder: it.sort_order,
-      }))
-      .sort((a, b) => a.sortOrder - b.sortOrder);
-    return {
-      id: row.id,
-      reference: row.reference,
-      status: row.status,
-      totalNetChf: Number(row.total_net_chf) || 0,
-      vatRatePct: Number(row.vat_rate_pct) || 0,
-      totalGrossChf: Number(row.total_gross_chf) || 0,
-      validUntil: row.valid_until,
-      createdAt: row.created_at,
-      leadId: row.lead_id,
-      leadName: lead?.company_name ?? null,
-      items,
-    };
-  });
+  if (error) {
+    console.error("[tenant-data] getOfferById failed:", error.message);
+    return null;
+  }
+  if (!data) return null;
+  return mapOfferRow(data as unknown as RawOfferRow);
 }
 
 /** Active company's service labels (for the new-lead form datalist). RLS-scoped. */

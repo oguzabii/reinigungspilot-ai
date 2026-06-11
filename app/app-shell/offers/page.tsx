@@ -8,11 +8,13 @@ import {
   Inbox,
   CalendarClock,
   Receipt,
+  Download,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { NewOfferForm } from "@/components/offers/NewOfferForm";
 import { OfferStatusForm } from "@/components/offers/OfferStatusForm";
 import { AddOfferItemForm } from "@/components/offers/AddOfferItemForm";
+import { OfferSendDraft } from "@/components/offers/OfferSendDraft";
 import { OFFER_STATUS_META, formatChf } from "@/components/offers/offer-status";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
@@ -121,7 +123,11 @@ export default async function AppShellOffersPage() {
           ) : (
             <ul className="mt-3 space-y-3">
               {offers.map((offer) => (
-                <OfferRow key={offer.id} offer={offer} />
+                <OfferRow
+                  key={offer.id}
+                  offer={offer}
+                  companyName={summary?.name ?? "Mandant"}
+                />
               ))}
             </ul>
           )}
@@ -131,7 +137,13 @@ export default async function AppShellOffersPage() {
   );
 }
 
-function OfferRow({ offer }: { offer: OfferListItem }) {
+function OfferRow({
+  offer,
+  companyName,
+}: {
+  offer: OfferListItem;
+  companyName: string;
+}) {
   const status = OFFER_STATUS_META[offer.status] ?? OFFER_STATUS_META.draft;
   const vatAmount = offer.totalGrossChf - offer.totalNetChf;
   return (
@@ -206,7 +218,15 @@ function OfferRow({ offer }: { offer: OfferListItem }) {
 
       <AddOfferItemForm offerId={offer.id} />
 
-      <div className="mt-3 border-t border-slate-100 pt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-3">
+        <a
+          href={`/app-shell/offers/${offer.id}/pdf`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
+        >
+          <Download className="h-3.5 w-3.5" /> PDF
+        </a>
         {/* Keyed on status so the uncontrolled select resyncs after refresh. */}
         <OfferStatusForm
           key={`${offer.id}:${offer.status}`}
@@ -214,6 +234,14 @@ function OfferRow({ offer }: { offer: OfferListItem }) {
           currentStatus={offer.status}
         />
       </div>
+
+      <OfferSendDraft
+        reference={offer.reference}
+        leadName={offer.leadName}
+        validUntil={offer.validUntil}
+        totalGrossChf={offer.totalGrossChf}
+        companyName={companyName}
+      />
 
       <p className="mt-2 text-xs text-slate-400">
         erstellt {offer.createdAt.slice(0, 10)}

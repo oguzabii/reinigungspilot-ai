@@ -19,7 +19,12 @@ Duplikate:** App-Vorprüfung **plus** additive, idempotente **Migration `005`**
 zu „Auftrag erstellt". Neue geschützte Route **`/app-shell/jobs`** listet die
 Aufträge (Status, Kunde, Quell-Offerte, Wert). **Kein Kalender, keine E-Mail,
 keine bexio-Übergabe, keine externen Integrationen, keine echten Daten.** 001–004
-unverändert. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
+unverändert. **v0.3.4.1 (Patch):** auf Staging **verifiziert** (2026-06-11,
+manuell): Migration `005` angewendet, angenommene Offerte → „Auftrag erstellen"
+funktioniert, Job erscheint unter `/app-shell/jobs`, Duplikat verhindert,
+Session-Client/RLS-Schreibpfad bestätigt, keine echten Daten —
+`docs/clean24-job-from-offer-results.md`. Die Verkaufs-Demo (v0.1.7) bleibt
+unverändert.
 
 > **v0.3.3/.3.1:** Offer PDF- & Versand-Fundament — geschützte Route
 > `GET /app-shell/offers/[id]/pdf` (Session-Client/RLS + `company_id`/`id`-Scoping,
@@ -52,7 +57,7 @@ unverändert. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 > v0.3.1/.1.1 (Lead-Status & Follow-ups, auf Staging verifiziert),
 > v0.3.2/.2.1 (Offer Draft-Fundament + Migration 004, auf Staging verifiziert),
 > v0.3.3/.3.1 (Offer PDF- & Versand-Fundament, auf Staging verifiziert),
-> **v0.3.4 (Auftrag-aus-Offerte-Fundament + Migration 005)**.
+> **v0.3.4/.4.1 (Auftrag-aus-Offerte-Fundament + Migration 005, auf Staging verifiziert)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -210,6 +215,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-offer-draft-foundation.md  # Offer Engine: manuelle Offerten-Entwürfe, Positionen, Status, Migration 004, Security (v0.3.2)
   clean24-offer-pdf-foundation.md    # Offer PDF-Download + manueller Versand-Entwurf: Generator ohne Assets, RLS/Tenant-Isolation, kein Versand (v0.3.3)
   clean24-job-from-offer-foundation.md # Auftrag aus angenommener Offerte: Ops-Domäne, Duplikat-Guard (Migration 005), /app-shell/jobs, Security (v0.3.4)
+  clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
   clean24-offer-draft-results.md     # Ergebnis: Offer Engine auf Staging verifiziert (Migration 004, Create/List/Item/Status) (v0.3.2.1)
 
@@ -417,6 +423,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-offer-pdf-foundation.md](docs/clean24-offer-pdf-foundation.md) | Offer PDF-Download (`/app-shell/offers/[id]/pdf`, RLS/Tenant-Isolation, Generator ohne Library/Asset) + manueller Versand-Entwurf (Kopiertext, kein echter Versand), Datenfluss, Security, Checkliste (v0.3.3) |
 | [clean24-offer-pdf-results.md](docs/clean24-offer-pdf-results.md) | Ergebnis: Offer PDF auf Staging verifiziert — Route nach Login, Daten/Positionen/Summen gerendert, Versand-Entwurf vorhanden, kein echter Versand (2026-06-11, v0.3.3.1; PDF-Politur aufgeschoben) |
 | [clean24-job-from-offer-foundation.md](docs/clean24-job-from-offer-foundation.md) | Auftrag aus angenommener Offerte: „Auftrag erstellen", Ops-Domäne (`can_write_ops`), Duplikat-Guard (Vorprüfung + Migration 005), `/app-shell/jobs`-Liste, Datenfluss, Security, Checkliste (v0.3.4) |
+| [clean24-job-from-offer-results.md](docs/clean24-job-from-offer-results.md) | Ergebnis: Job-Erstellung auf Staging verifiziert — Migration 005 angewendet, angenommene Offerte → Job, Jobs-Liste, Duplikat verhindert, RLS-Schreibpfad bestätigt (2026-06-11, v0.3.4.1) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -581,24 +588,30 @@ Unique-Index: ein lebender Job pro Offerte). Neue Route `/app-shell/jobs` listet
 Aufträge (Status, Kunde, Quell-Offerte, Wert). Kein Kalender/E-Mail/bexio. Doku
 `docs/clean24-job-from-offer-foundation.md`.
 
+**v0.3.4.1 (erledigt, Patch)** – **Job-Erstellung auf Staging verifiziert**
+(manuell, 2026-06-11): Migration `005` angewendet, angenommene Offerte →
+„Auftrag erstellen" funktioniert, Job erscheint unter `/app-shell/jobs`, Duplikat
+verhindert, Session-Client-/RLS-Schreibpfad bestätigt, keine echten Kundendaten.
+Festgehalten in `docs/clean24-job-from-offer-results.md`. Nur Docs.
+
 **v0.3.5 (nächster Schritt)** – **Job-Workflow / Kalender-Fundament**
-(Job-Statusübergänge, Terminplanung `scheduled_for`) **oder Offer-PDF-Politur**
-(Briefkopf, Typografie, Layout). Manuell, RLS-gescopt. Echte Daten erst nach dem
-Backup-/Trennungs-Gate.
+(Job-Statusübergänge, Terminplanung `scheduled_for`). Manuell, RLS-gescopt.
+*Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie anfordert.* Echte Daten
+erst nach dem Backup-/Trennungs-Gate.
 
 ## Empfohlener nächster Schritt
 
 Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.3/.3.1 (Offer
-PDF- & Versand-Fundament) und **v0.3.4 (Auftrag-aus-Offerte-Fundament + Migration
-005)** sind erledigt. Parallel bleibt **A) Deploy / Visual Review** der
-Verkaufs-Demo möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`,
-PDF-Export, Erklärvideo).
+PDF- & Versand-Fundament) und **v0.3.4/.4.1 (Auftrag-aus-Offerte-Fundament +
+Migration 005, auf Staging verifiziert)** sind erledigt. Parallel bleibt
+**A) Deploy / Visual Review** der Verkaufs-Demo möglich (Live-Deployment, echtes
+Postfach `info@klarsa.ch`, PDF-Export, Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.5 — Job-Workflow / Kalender-Fundament oder
-Offer-PDF-Politur** (manuell, RLS-gescopt). **Voraussetzung vor echten
-Kundendaten:** Backup/Restore eingerichtet und getestet, **Staging und Produktion
-strikt getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und
-Security — **nie vor** diesem Gate.
+**Empfehlung:** als Nächstes **v0.3.5 — Job-Workflow / Kalender-Fundament**
+(manuell, RLS-gescopt). **Offer-PDF-Politur ist aufgeschoben, bis angefordert.**
+**Voraussetzung vor echten Kundendaten:** Backup/Restore eingerichtet und
+getestet, **Staging und Produktion strikt getrennt** (eigene Projekte/Keys),
+sowie validiertes Auth, RLS und Security — **nie vor** diesem Gate.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

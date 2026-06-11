@@ -1,11 +1,16 @@
 # Klarsa Core — Job from Accepted Offer (v0.3.4)
 
-> **Status: FOUNDATION (staging).** Lets a user **manually create a job from an
-> accepted offer** and adds a protected **`/app-shell/jobs`** list. Writes go
-> through the **session client (RLS)** — jobs are the **ops domain**
+> **Status: VERIFIED on staging (2026-06-11).** Lets a user **manually create a
+> job from an accepted offer** and adds a protected **`/app-shell/jobs`** list.
+> Writes go through the **session client (RLS)** — jobs are the **ops domain**
 > (owner/admin/ops) — never the service-role client. **No calendar, no email,
 > no bexio, no external integration, no real customer data.** One additive,
 > idempotent migration (`005`) prevents duplicate jobs per offer.
+>
+> Staging verification (migration 005 applied, accepted offer → job created,
+> `/app-shell/jobs` shows it, duplicate prevented, RLS write path, Clean24
+> tenant, no real data — user-reported manual test):
+> [`clean24-job-from-offer-results.md`](./clean24-job-from-offer-results.md).
 
 Related: [`clean24-offer-draft-foundation.md`](./clean24-offer-draft-foundation.md),
 [`clean24-offer-pdf-foundation.md`](./clean24-offer-pdf-foundation.md),

@@ -18,6 +18,7 @@ import type {
   OfferStatus,
   JobStatus,
   ProspectStatus,
+  HandoffStatus,
 } from "@/lib/database-types";
 
 type CountTable =
@@ -456,6 +457,144 @@ export async function getJobById(
   }
   if (!data) return null;
   return mapJobRow(data as unknown as RawJobRow);
+}
+
+/* -------------------------------------------------------------------------- */
+/* bexio handoffs (manual invoice-handoff queue)                               */
+/* -------------------------------------------------------------------------- */
+
+export interface HandoffInfo {
+  id: string;
+  status: HandoffStatus;
+  netChf: number;
+  vatRatePct: number;
+  grossChf: number;
+  invoiceDraftRef: string | null;
+  createdAt: string;
+}
+
+export interface HandoffJobItem {
+  id: string;
+  title: string;
+  status: JobStatus;
+  valueChf: number | null;
+  scheduledFor: string | null;
+  location: string | null;
+  createdAt: string;
+  offerReference: string | null;
+  offerNetChf: number | null;
+  offerVatRatePct: number | null;
+  offerGrossChf: number | null;
+  customerName: string | null;
+  customerContact: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  customerRegion: string | null;
+  serviceInterest: string | null;
+  /** Existing handoff for this job (most recent), or null. */
+  handoff: HandoffInfo | null;
+}
+
+const HANDOFF_JOB_SELECT =
+  "id, title, status, value_chf, scheduled_for, location, created_at, offers ( reference, total_net_chf, vat_rate_pct, total_gross_chf ), leads ( company_name, contact_name, email, phone, region, service_interest ), bexio_handoffs ( id, status, net_chf, vat_rate_pct, gross_chf, invoice_draft_ref, created_at )";
+
+interface RawHandoffOffer {
+  reference: string;
+  total_net_chf: number | string;
+  vat_rate_pct: number | string;
+  total_gross_chf: number | string;
+}
+interface RawHandoffLead {
+  company_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  region: string | null;
+  service_interest: string | null;
+}
+interface RawHandoffRow {
+  id: string;
+  title: string;
+  status: JobStatus;
+  value_chf: number | string | null;
+  scheduled_for: string | null;
+  location: string | null;
+  created_at: string;
+  offers: RawHandoffOffer | RawHandoffOffer[] | null;
+  leads: RawHandoffLead | RawHandoffLead[] | null;
+  bexio_handoffs: Array<{
+    id: string;
+    status: HandoffStatus;
+    net_chf: number | string;
+    vat_rate_pct: number | string;
+    gross_chf: number | string;
+    invoice_draft_ref: string | null;
+    created_at: string;
+  }> | null;
+}
+
+/**
+ * Jobs joined with their source offer + customer lead + any existing bexio
+ * handoff, for the manual invoice-handoff queue. One embedded PostgREST query
+ * (no N+1). RLS-scoped via the session client (never service-role). Capped for
+ * safety. The page splits these into ready / prepared / invoiced.
+ */
+export async function getInvoiceHandoffJobs(
+  companyId: string,
+): Promise<HandoffJobItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(HANDOFF_JOB_SELECT)
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    console.error("[tenant-data] getInvoiceHandoffJobs failed:", error.message);
+    return [];
+  }
+
+  return ((data ?? []) as unknown as RawHandoffRow[]).map((row) => {
+    const offer = Array.isArray(row.offers) ? row.offers[0] : row.offers;
+    const lead = Array.isArray(row.leads) ? row.leads[0] : row.leads;
+    // One handoff per job is the norm; pick the most recent defensively.
+    const handoffs = (row.bexio_handoffs ?? [])
+      .slice()
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+    const h = handoffs[0];
+    return {
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      valueChf: row.value_chf === null ? null : Number(row.value_chf) || 0,
+      scheduledFor: row.scheduled_for,
+      location: row.location,
+      createdAt: row.created_at,
+      offerReference: offer?.reference ?? null,
+      offerNetChf: offer ? Number(offer.total_net_chf) || 0 : null,
+      offerVatRatePct: offer ? Number(offer.vat_rate_pct) || 0 : null,
+      offerGrossChf: offer ? Number(offer.total_gross_chf) || 0 : null,
+      customerName: lead?.company_name ?? null,
+      customerContact: lead?.contact_name ?? null,
+      customerEmail: lead?.email ?? null,
+      customerPhone: lead?.phone ?? null,
+      customerRegion: lead?.region ?? null,
+      serviceInterest: lead?.service_interest ?? null,
+      handoff: h
+        ? {
+            id: h.id,
+            status: h.status,
+            netChf: Number(h.net_chf) || 0,
+            vatRatePct: Number(h.vat_rate_pct) || 0,
+            grossChf: Number(h.gross_chf) || 0,
+            invoiceDraftRef: h.invoice_draft_ref,
+            createdAt: h.created_at,
+          }
+        : null,
+    };
+  });
 }
 
 /* -------------------------------------------------------------------------- */

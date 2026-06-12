@@ -171,6 +171,8 @@ export interface FollowupListItem {
   status: string;
   note: string | null;
   createdAt: string;
+  /** The linked lead's id (followup_tasks.lead_id, NOT NULL). */
+  leadId: string;
   /** Linked lead's display name (embedded via the lead_id FK), or null. */
   leadName: string | null;
 }
@@ -187,7 +189,7 @@ export async function getFollowups(
   const { data, error } = await supabase
     .from("followup_tasks")
     .select(
-      "id, stage, due_at, channel, status, note, created_at, leads ( company_name )",
+      "id, stage, due_at, channel, status, note, created_at, lead_id, leads ( company_name )",
     )
     .eq("company_id", companyId)
     .order("due_at", { ascending: true })
@@ -208,6 +210,7 @@ export async function getFollowups(
     status: string;
     note: string | null;
     created_at: string;
+    lead_id: string;
     leads:
       | { company_name: string }
       | Array<{ company_name: string }>
@@ -224,6 +227,7 @@ export async function getFollowups(
       status: row.status,
       note: row.note,
       createdAt: row.created_at,
+      leadId: row.lead_id,
       leadName: lead?.company_name ?? null,
     };
   });

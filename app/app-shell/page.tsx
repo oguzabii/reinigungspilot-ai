@@ -14,6 +14,8 @@ import {
   PlugZap,
   ChartColumn,
   UserRound,
+  Crown,
+  ChevronRight,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -231,6 +233,24 @@ function TenantShell({
           {" "}gefiltert und zeigen ausschliesslich Ihren Mandanten.
         </p>
       </div>
+
+      {/* CEO Briefing — read-only KPI overview across the whole chain */}
+      <Link
+        href="/app-shell/ceo"
+        className="mt-6 flex items-center gap-3 rounded-2xl border border-navy-900 bg-navy-900 p-4 text-white shadow-sm transition-colors hover:bg-navy-800"
+      >
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-inset ring-white/20">
+          <Crown className="h-4 w-4" strokeWidth={2} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">CEO-Briefing öffnen</span>
+          <span className="block text-sm text-blue-100">
+            KPI-Überblick über die ganze Kette: Opportunities → Leads → Offerten →
+            Aufträge → bexio. Read-only, keine externen Quellen.
+          </span>
+        </span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-blue-200" />
+      </Link>
 
       {/* Modules with RLS-scoped counts */}
       <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

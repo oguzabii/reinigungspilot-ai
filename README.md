@@ -7,7 +7,8 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.3.13** — **CEO-/KPI-Dashboard-Fundament.** Eine geschützte, **read-only**
+**v0.3.13.1** — **CEO-/KPI-Dashboard-Fundament (auf Staging verifiziert).** Eine
+geschützte, **read-only**
 Route `/app-shell/ceo` („CEO-Briefing") verdichtet die gesamte Klarsa-Kette eines
 Mandanten zu einem owner-freundlichen Überblick – ausschliesslich aus vorhandenen,
 RLS-gefilterten Daten. Gezeigt werden **Geld-Wirkung (CHF)** (offene Pipeline aus
@@ -22,7 +23,12 @@ deterministischen** Helper (`components/ceo/kpi.ts`, `nowIso` vom Aufrufer).
 **Read-only, keine Schreibvorgänge, keine KI, keine externe API, kein Scraping,
 keine bexio-API, kein E-Mail, keine echten Daten. Keine neue Migration** (001–006
 unverändert; `getFollowups` liefert zusätzlich `leadId`). Verlinkt über eine
-prominente CEO-Briefing-Karte auf `/app-shell`. Die Verkaufs-Demo (v0.1.7) bleibt
+prominente CEO-Briefing-Karte auf `/app-shell`. Auf Staging **verifiziert**
+(2026-06-12, manueller Nutzertest): Login → `/app-shell/ceo`, Geld-Wirkungs-Karten
++ KPI-Kacheln + Trichter + „Letzte 7 Tage" + Achtung-Karten gerendert und korrekt
+verlinkt, Read-only-/RLS-Pfad bestätigt, keine Schreibvorgänge/keine KI/keine
+externe API/keine bexio-API, keine echten Daten —
+`docs/clean24-ceo-kpi-dashboard-results.md`. Die Verkaufs-Demo (v0.1.7) bleibt
 unverändert.
 
 > **v0.3.12/.12.1:** bexio-Übergabe-Fundament — `/app-shell/bexio`, manuelle
@@ -123,7 +129,7 @@ unverändert.
 > v0.3.10/.10.1 (Source → Opportunity-Workflow, manuell, Migration 006, auf Staging verifiziert),
 > v0.3.11/.11.1 (Swiss Opportunity Radar Map-Fundament, statisch/manuell, keine neue Migration, auf Staging verifiziert),
 > v0.3.12/.12.1 (bexio-Übergabe-Fundament, manuell, keine echte bexio-API, keine neue Migration, auf Staging verifiziert),
-> **v0.3.13 (CEO-/KPI-Dashboard-Fundament, read-only, keine neue Migration)**.
+> **v0.3.13/.13.1 (CEO-/KPI-Dashboard-Fundament, read-only, keine neue Migration, auf Staging verifiziert)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -324,6 +330,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-bexio-handoff-foundation.md # bexio-Übergabe: manuelle Rechnungs-Übergabe-Warteschlange (bexio_handoffs), „vorbereiten"/„verrechnet", kopierbare Zusammenfassung, Manage-Domäne, KEINE echte bexio-API/Token, keine neue Migration (v0.3.12)
   clean24-bexio-handoff-results.md # Ergebnis: bexio-Übergabe auf Staging verifiziert (abgeschlossener Job → vorbereiten/Zusammenfassung/verrechnen, owner/admin-Manage-RLS, keine echte bexio-API) (v0.3.12.1)
   clean24-ceo-kpi-dashboard-foundation.md # CEO-/KPI-Dashboard: read-only Owner-Überblick (/app-shell/ceo), Geld-Wirkung/KPI/Trichter/Achtung aus vorhandenen RLS-Daten, reiner kpi.ts-Helper, keine KI/externe API/Schreibvorgänge, keine neue Migration (v0.3.13)
+  clean24-ceo-kpi-dashboard-results.md # Ergebnis: CEO-Briefing auf Staging verifiziert (Money/KPI/Trichter/Achtung gerendert + verlinkt, CEO-Karte auf /app-shell, Read-only-RLS, keine KI/externe API) (v0.3.13.1)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
@@ -551,6 +558,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-bexio-handoff-foundation.md](docs/clean24-bexio-handoff-foundation.md) | bexio-Übergabe-Fundament: geschützte `/app-shell/bexio`, **manuelle** Rechnungs-Übergabe-Warteschlange für abgeschlossene Aufträge (`bexio_handoffs`), „Für bexio vorbereiten" (Status `queued`) + „Als verrechnet markieren" (`completed`) + kopierbare Zusammenfassung, Manage-Domäne (`can_manage_company` = owner/admin), **keine echte bexio-API/Token/Netzwerkaufruf/automatische Rechnung**, keine neue Migration, Security, Checkliste (v0.3.12) |
 | [clean24-bexio-handoff-results.md](docs/clean24-bexio-handoff-results.md) | Ergebnis: bexio-Übergabe auf Staging verifiziert — `/app-shell/bexio` nach Login erreichbar, abgeschlossener Job in der Warteschlange, „Für bexio vorbereiten" legt `bexio_handoffs` an, kopierbare Zusammenfassung, „Als verrechnet markieren" funktioniert, owner/admin-Manage-/RLS-Pfad bestätigt, keine echte bexio-API/kein Token/Netzwerkaufruf, keine echten Daten (2026-06-12, v0.3.12.1) |
 | [clean24-ceo-kpi-dashboard-foundation.md](docs/clean24-ceo-kpi-dashboard-foundation.md) | CEO-/KPI-Dashboard-Fundament: geschützte, **read-only** `/app-shell/ceo` (CEO-Briefing) – Geld-Wirkung (CHF), KPI-Kacheln, Trichter Opportunity→Lead→Offerte→Auftrag→bexio + Conversions, Letzte-7-Tage, Achtung-Karten aus vorhandenen RLS-Daten; reiner deterministischer `kpi.ts`-Helper, **keine KI/externe API/bexio-API/Schreibvorgänge**, keine neue Migration, Security, Checkliste (v0.3.13) |
+| [clean24-ceo-kpi-dashboard-results.md](docs/clean24-ceo-kpi-dashboard-results.md) | Ergebnis: CEO-Briefing auf Staging verifiziert — `/app-shell/ceo` nach Login erreichbar (CEO-Karte auf `/app-shell`), Geld-Wirkung + KPI-Kacheln + Trichter + Letzte-7-Tage + Achtung-Karten gerendert und korrekt verlinkt, Read-only-/RLS-Pfad bestätigt, keine Schreibvorgänge/KI/externe API/bexio-API, keine echten Daten (2026-06-12, v0.3.13.1) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -883,26 +891,34 @@ auf `/app-shell`. **Read-only, keine Schreibvorgänge, keine KI, keine externe
 API/bexio-API/Scraping/E-Mail. Keine neue Migration** (001–006 unverändert). Doku
 `docs/clean24-ceo-kpi-dashboard-foundation.md`.
 
-**v0.3.13.1 / v0.4.0 (nächster Schritt)** – **CEO-/KPI-Dashboard-Staging-
-Verifikation** (v0.3.13.1) und danach **v0.4.0 – Clean24 Live-Production-Readiness**
-(das Security-/Backup-Gate: verifiziertes Backup/Restore, strikte Staging-/
-Produktions-Trennung, validiertes Auth/RLS/Security – vor jeglichen echten
-Kundendaten). Manuell, RLS-gescopt. *Offer-PDF-Politur ist aufgeschoben, bis der
-Nutzer sie anfordert.* Echte Daten erst nach dem Backup-/Trennungs-Gate.
+**v0.3.13.1 (erledigt, Patch)** – **CEO-/KPI-Dashboard auf Staging verifiziert**
+(manuell, 2026-06-12): `/app-shell/ceo` nach Login erreichbar, die
+CEO-Briefing-Karte auf `/app-shell` verlinkt dorthin, Geld-Wirkungs-Karten +
+KPI-Kacheln + Trichter (Opportunity→Lead→Offerte→Auftrag→bexio) + „Letzte 7 Tage"
++ Achtung-Karten gerendert und korrekt verlinkt, Read-only-/Session-Client-/
+RLS-Pfad bestätigt, keine Schreibvorgänge/keine KI/keine externe API/keine
+bexio-API/kein E-Mail, keine echten Kundendaten. Festgehalten in
+`docs/clean24-ceo-kpi-dashboard-results.md`. Nur Docs.
+
+**v0.4.0 (nächster Schritt)** – **Clean24 Live-Production-Readiness** (das
+Security-/Backup-Gate: verifiziertes Backup/Restore, strikte Staging-/
+Produktions-Trennung, validiertes Auth/RLS/Security – **vor jeglichen echten
+Kundendaten**). *Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie
+anfordert.* Echte Daten erst nach diesem Gate.
 
 ## Empfohlener nächster Schritt
 
 Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.12/.12.1
-(bexio-Übergabe, auf Staging verifiziert) und **v0.3.13 (CEO-/KPI-Dashboard-
-Fundament, read-only)** sind erledigt. Parallel bleibt **A) Deploy / Visual
+(bexio-Übergabe) und **v0.3.13/.13.1 (CEO-/KPI-Dashboard-Fundament, read-only, auf
+Staging verifiziert)** sind erledigt. Parallel bleibt **A) Deploy / Visual
 Review** der Verkaufs-Demo
 möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export,
 Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.13.1 — CEO-/KPI-Dashboard-Staging-Verifikation**,
-danach **v0.4.0 — Clean24 Live-Production-Readiness** (Security-/Backup-Gate).
-**Offer-PDF-Politur ist aufgeschoben, bis angefordert.** **Voraussetzung vor echten
-Kundendaten:**
+**Empfehlung:** als Nächstes **v0.4.0 — Clean24 Live-Production-Readiness**
+(Security-/Backup-Gate – verifiziertes Backup/Restore, strikte Staging-/
+Produktions-Trennung, validiertes Auth/RLS/Security). **Offer-PDF-Politur ist
+aufgeschoben, bis angefordert.** **Voraussetzung vor echten Kundendaten:**
 Backup/Restore eingerichtet und getestet, **Staging und Produktion strikt
 getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —
 **nie vor** diesem Gate.

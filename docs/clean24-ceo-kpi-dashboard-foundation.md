@@ -1,5 +1,13 @@
 # Klarsa Core — CEO / KPI Dashboard Foundation (v0.3.13)
 
+> **Status: VERIFIED on staging (2026-06-12).** A logged-in Clean24 user opened
+> `/app-shell/ceo` (via the CEO-Briefing card on `/app-shell`); the money-impact
+> cards, KPI tiles, the funnel, the "Letzte 7 Tage" row and the attention cards
+> all rendered from the existing data and linked to the right screens —
+> read-only, through the **session client (RLS)**. No writes, no AI, no external
+> API, no real bexio API, no real data. Staging result:
+> [`clean24-ceo-kpi-dashboard-results.md`](./clean24-ceo-kpi-dashboard-results.md).
+
 > A **read-only** owner overview across the whole Klarsa chain — a protected
 > **`/app-shell/ceo`** route ("CEO-Briefing") that aggregates the tenant's
 > existing data into money-impact cards, KPI tiles, a funnel

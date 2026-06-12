@@ -13,6 +13,7 @@ import {
   Library,
   ChevronRight,
   X,
+  Map as MapIcon,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import {
@@ -158,6 +159,26 @@ export default async function AppShellLeadHunterPage({
             <span className="block text-sm text-slate-500">
               Kontrollierte, von Menschen freigegebene Lead-Quellen verwalten –
               kein Scraping, keine externen Abfragen.
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+        </Link>
+
+        {/* Swiss Radar Map link */}
+        <Link
+          href="/app-shell/lead-hunter/radar"
+          className="mt-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+        >
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
+            <MapIcon className="h-4 w-4" strokeWidth={2} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-navy-900">
+              Schweiz-Radar
+            </span>
+            <span className="block text-sm text-slate-500">
+              Opportunities nach Region/Kanton visualisieren – manuelle Ansicht,
+              kein Kartenanbieter, keine externe Abfrage.
             </span>
           </span>
           <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />

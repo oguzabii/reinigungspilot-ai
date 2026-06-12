@@ -7,29 +7,34 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.3.13.1** — **CEO-/KPI-Dashboard-Fundament (auf Staging verifiziert).** Eine
-geschützte, **read-only**
-Route `/app-shell/ceo` („CEO-Briefing") verdichtet die gesamte Klarsa-Kette eines
-Mandanten zu einem owner-freundlichen Überblick – ausschliesslich aus vorhandenen,
-RLS-gefilterten Daten. Gezeigt werden **Geld-Wirkung (CHF)** (offene Pipeline aus
-`draft/ready/sent`-Offerten, angenommene Offerten, abgeschlossene Aufträge),
-**KPI-Kacheln** (Opportunities/übernommen, Leads/offen, Offerten/angenommen,
-Aufträge/abgeschlossen, bexio-Übergaben vorbereitet/verrechnet), ein **Trichter**
-Opportunity→Lead→Offerte→Auftrag→bexio mit Übergangsquoten, eine **„Letzte 7
-Tage"**-Zeile und **Achtung-Karten** (Offerten ohne Antwort, abgeschlossene
-Aufträge ohne bexio-Übergabe, High-Score-Opportunities nicht übernommen, offene
-Leads ohne Follow-up – je verlinkt). Die Mathematik liegt in einem **reinen,
-deterministischen** Helper (`components/ceo/kpi.ts`, `nowIso` vom Aufrufer).
-**Read-only, keine Schreibvorgänge, keine KI, keine externe API, kein Scraping,
-keine bexio-API, kein E-Mail, keine echten Daten. Keine neue Migration** (001–006
-unverändert; `getFollowups` liefert zusätzlich `leadId`). Verlinkt über eine
-prominente CEO-Briefing-Karte auf `/app-shell`. Auf Staging **verifiziert**
-(2026-06-12, manueller Nutzertest): Login → `/app-shell/ceo`, Geld-Wirkungs-Karten
-+ KPI-Kacheln + Trichter + „Letzte 7 Tage" + Achtung-Karten gerendert und korrekt
-verlinkt, Read-only-/RLS-Pfad bestätigt, keine Schreibvorgänge/keine KI/keine
-externe API/keine bexio-API, keine echten Daten —
-`docs/clean24-ceo-kpi-dashboard-results.md`. Die Verkaufs-Demo (v0.1.7) bleibt
-unverändert.
+**v0.4.0** — **Clean24 Production-Readiness-Gate.** Bevor echte
+Clean24-Kundendaten ins System dürfen, definiert v0.4.0 das **Security-/Backup-
+Gate** – **nur Policy + Runbooks + read-only Checks, keine neuen Features, keine
+echten Daten, keine Secrets**. Neu in `docs/`: ein **Hub**
+`production-readiness-gate.md` (Master-Checkliste + GO/NO-GO-Entscheid; aktueller
+Stand **NO-GO**) plus `security-rls-verification-checklist.md` (Mandantentrennung,
+Rollen-/Domänen-Matrix owner/admin/sales/ops/readonly/superadmin, **kein
+Service-Role-Client in App-Routen/Actions** – per grep verifiziert),
+`backup-restore-runbook.md` (Backups, PITR, externer Export, **Schritt-für-Schritt-
+Restore + Restore-Test**), `staging-production-separation.md` (zwei getrennte
+Supabase-Projekte/Secrets, Fake-Daten nur Staging), `real-data-gate-policy.md`
+(was vor echten Daten erfüllt sein muss; Entscheidungs-Record),
+`incident-recovery-runbook.md` (Secret-Leak, Datenverlust, Bad-Deploy/Migration,
+RLS-Regression) und `clean24-data-handling-policy.md` (Zugriff/Export/Löschung/
+Audit/Aufbewahrung). Dazu ein **read-only** Skript
+`supabase/verification/006_production_readiness_checks.sql` (RLS auf allen
+Tabellen, 8 Helper-Funktionen, Policies vorhanden, `audit_logs` append-only –
+sicher auf Staging **oder** Produktion, keine Datenzeilen-Lesung). **Migrationen
+001–006 unverändert; `004`-Verifikationsskript unangetastet.** Harte Regel
+bekräftigt: **„No Security = No Customer Data"** – Produktion bleibt **gesperrt**,
+bis alle Pflichtpunkte manuell verifiziert und vom Inhaber freigegeben sind. Die
+Verkaufs-Demo (v0.1.7) bleibt unverändert.
+
+> **v0.3.13/.13.1:** CEO-/KPI-Dashboard-Fundament — `/app-shell/ceo`
+> („CEO-Briefing"), read-only Owner-Überblick (Geld-Wirkung/KPI/Trichter/
+> Letzte-7-Tage/Achtung) aus vorhandenen RLS-Daten, reiner `components/ceo/kpi.ts`-
+> Helper, keine KI/externe API/Schreibvorgänge, keine neue Migration. Auf Staging
+> **verifiziert** (2026-06-12) — `docs/clean24-ceo-kpi-dashboard-results.md`.
 
 > **v0.3.12/.12.1:** bexio-Übergabe-Fundament — `/app-shell/bexio`, manuelle
 > Rechnungs-Übergabe-Warteschlange für abgeschlossene Aufträge (`bexio_handoffs`),
@@ -129,7 +134,8 @@ unverändert.
 > v0.3.10/.10.1 (Source → Opportunity-Workflow, manuell, Migration 006, auf Staging verifiziert),
 > v0.3.11/.11.1 (Swiss Opportunity Radar Map-Fundament, statisch/manuell, keine neue Migration, auf Staging verifiziert),
 > v0.3.12/.12.1 (bexio-Übergabe-Fundament, manuell, keine echte bexio-API, keine neue Migration, auf Staging verifiziert),
-> **v0.3.13/.13.1 (CEO-/KPI-Dashboard-Fundament, read-only, keine neue Migration, auf Staging verifiziert)**.
+> v0.3.13/.13.1 (CEO-/KPI-Dashboard-Fundament, read-only, keine neue Migration, auf Staging verifiziert),
+> **v0.4.0 (Clean24 Production-Readiness-Gate — Policy/Runbooks/Checks, keine Features, Produktion gesperrt bis Freigabe)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -331,6 +337,14 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-bexio-handoff-results.md # Ergebnis: bexio-Übergabe auf Staging verifiziert (abgeschlossener Job → vorbereiten/Zusammenfassung/verrechnen, owner/admin-Manage-RLS, keine echte bexio-API) (v0.3.12.1)
   clean24-ceo-kpi-dashboard-foundation.md # CEO-/KPI-Dashboard: read-only Owner-Überblick (/app-shell/ceo), Geld-Wirkung/KPI/Trichter/Achtung aus vorhandenen RLS-Daten, reiner kpi.ts-Helper, keine KI/externe API/Schreibvorgänge, keine neue Migration (v0.3.13)
   clean24-ceo-kpi-dashboard-results.md # Ergebnis: CEO-Briefing auf Staging verifiziert (Money/KPI/Trichter/Achtung gerendert + verlinkt, CEO-Karte auf /app-shell, Read-only-RLS, keine KI/externe API) (v0.3.13.1)
+  # v0.4.0 Production-Readiness-Gate (Policy/Runbooks, keine Features):
+  production-readiness-gate.md       # Hub: Master-Checkliste + GO/NO-GO (aktuell NO-GO) (v0.4.0)
+  security-rls-verification-checklist.md # Mandantentrennung, Rollen-/Domänen-Matrix, kein Service-Role in App, How-to-verify (v0.4.0)
+  backup-restore-runbook.md          # Backups, PITR, externer Export, Schritt-für-Schritt-Restore + Restore-Test (v0.4.0)
+  staging-production-separation.md   # zwei getrennte Projekte/Secrets, Fake-Daten nur Staging, Migrationsfluss (v0.4.0)
+  real-data-gate-policy.md           # was vor echten Daten erfüllt sein muss; Entscheidungs-Record (v0.4.0)
+  incident-recovery-runbook.md       # Secret-Leak/Datenverlust/Bad-Deploy/Migration/RLS-Regression (v0.4.0)
+  clean24-data-handling-policy.md    # Zugriff/Export/Löschung/Audit/Aufbewahrung für Clean24 (v0.4.0)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
@@ -350,6 +364,7 @@ supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/
     003_rls_test_queries.sql         # RLS-Tests (jede Zeile = PASS)
     004_bind_auth_user_to_fake_tenant.sql # Dashboard-Auth-User an Fake-Tenant binden (Login-Tests, v0.2.7.1)
     005_create_clean24_staging_tenant.sql # Clean24-Founder-Tenant-Setup, keine Kundendaten (v0.2.8)
+    006_production_readiness_checks.sql # read-only: RLS/Helfer/Policies/audit-append-only-Gate-Checks; sicher auf Staging ODER Produktion (v0.4.0)
   README.md          # Anwenden (Staging zuerst), keine Secrets, Security-Gate
 
 .env.local.example   # Env-Template (nur Platzhalter) — echtes .env.local ist ignoriert
@@ -559,6 +574,13 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-bexio-handoff-results.md](docs/clean24-bexio-handoff-results.md) | Ergebnis: bexio-Übergabe auf Staging verifiziert — `/app-shell/bexio` nach Login erreichbar, abgeschlossener Job in der Warteschlange, „Für bexio vorbereiten" legt `bexio_handoffs` an, kopierbare Zusammenfassung, „Als verrechnet markieren" funktioniert, owner/admin-Manage-/RLS-Pfad bestätigt, keine echte bexio-API/kein Token/Netzwerkaufruf, keine echten Daten (2026-06-12, v0.3.12.1) |
 | [clean24-ceo-kpi-dashboard-foundation.md](docs/clean24-ceo-kpi-dashboard-foundation.md) | CEO-/KPI-Dashboard-Fundament: geschützte, **read-only** `/app-shell/ceo` (CEO-Briefing) – Geld-Wirkung (CHF), KPI-Kacheln, Trichter Opportunity→Lead→Offerte→Auftrag→bexio + Conversions, Letzte-7-Tage, Achtung-Karten aus vorhandenen RLS-Daten; reiner deterministischer `kpi.ts`-Helper, **keine KI/externe API/bexio-API/Schreibvorgänge**, keine neue Migration, Security, Checkliste (v0.3.13) |
 | [clean24-ceo-kpi-dashboard-results.md](docs/clean24-ceo-kpi-dashboard-results.md) | Ergebnis: CEO-Briefing auf Staging verifiziert — `/app-shell/ceo` nach Login erreichbar (CEO-Karte auf `/app-shell`), Geld-Wirkung + KPI-Kacheln + Trichter + Letzte-7-Tage + Achtung-Karten gerendert und korrekt verlinkt, Read-only-/RLS-Pfad bestätigt, keine Schreibvorgänge/KI/externe API/bexio-API, keine echten Daten (2026-06-12, v0.3.13.1) |
+| [production-readiness-gate.md](docs/production-readiness-gate.md) | **v0.4.0 Gate-Hub:** Master-Readiness-Checkliste (Environment/Auth-RLS/Backup-Restore/Data-Handling) + **GO/NO-GO-Entscheid** (aktuell **NO-GO**); harte Regel „No Security = No Customer Data"; Links auf alle Gate-Docs (v0.4.0) |
+| [security-rls-verification-checklist.md](docs/security-rls-verification-checklist.md) | Security-/RLS-Verifikation: Mandantentrennung (cross-tenant blockiert), Rollen-/Domänen-Matrix (owner/admin/sales/ops/readonly/superadmin), **kein Service-Role-Client in App-Routen/Actions** (grep-verifiziert), RLS-Posture via `verification/006`, How-to-verify + Sign-off (v0.4.0) |
+| [backup-restore-runbook.md](docs/backup-restore-runbook.md) | Backup & Restore: Supabase-Backups, **PITR**, täglicher externer Export, **Schritt-für-Schritt-Restore** (in frisches Projekt) + verpflichtender **Restore-Test**, Vercel-Rollback, Sign-off (v0.4.0) |
+| [staging-production-separation.md](docs/staging-production-separation.md) | Staging vs. Produktion: zwei getrennte Supabase-Projekte/Secrets, `.env.local`=nur Staging, Vercel-Env-Trennung, Fake-Seed nie auf Produktion, Migrationsfluss Staging→Produktion (v0.4.0) |
+| [real-data-gate-policy.md](docs/real-data-gate-policy.md) | Real-Data-Gate-Policy: was „echte Daten" sind, die 10 Pflichtpunkte vor Produktion, wer freigibt (Inhaber), Decision-Record (aktuell **NO-GO**) (v0.4.0) |
+| [incident-recovery-runbook.md](docs/incident-recovery-runbook.md) | Incident-/Recovery-Runbook: Severity, Playbooks für Secret-Leak/Datenverlust/unbefugten Zugriff/Bad-Deploy/Bad-Migration/RLS-Regression, Post-Incident-Review, Drills (v0.4.0) |
+| [clean24-data-handling-policy.md](docs/clean24-data-handling-policy.md) | Clean24-Datenrichtlinie: Zugriff (least privilege, kein Service-Role in App), Export (owner/admin, auditiert), Löschung (soft→kontrolliert hart), Audit-Erwartungen (append-only), Aufbewahrung, Betroffenenrechte (v0.4.0) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -900,28 +922,47 @@ RLS-Pfad bestätigt, keine Schreibvorgänge/keine KI/keine externe API/keine
 bexio-API/kein E-Mail, keine echten Kundendaten. Festgehalten in
 `docs/clean24-ceo-kpi-dashboard-results.md`. Nur Docs.
 
-**v0.4.0 (nächster Schritt)** – **Clean24 Live-Production-Readiness** (das
-Security-/Backup-Gate: verifiziertes Backup/Restore, strikte Staging-/
-Produktions-Trennung, validiertes Auth/RLS/Security – **vor jeglichen echten
-Kundendaten**). *Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie
+**v0.4.0 (erledigt)** – **Clean24 Production-Readiness-Gate** (Policy + Runbooks +
+read-only Checks; **keine neuen Features, keine echten Daten, keine Secrets**).
+Neu in `docs/`: Hub `production-readiness-gate.md` (Master-Checkliste + GO/NO-GO,
+aktuell **NO-GO**), `security-rls-verification-checklist.md` (Mandantentrennung,
+Rollen-/Domänen-Matrix, **kein Service-Role-Client in App** – grep-verifiziert,
+nur in `lib/supabase/admin.ts` definiert), `backup-restore-runbook.md` (Backups/
+PITR/externer Export/**Restore-Test**), `staging-production-separation.md`,
+`real-data-gate-policy.md` (10 Pflichtpunkte + Decision-Record),
+`incident-recovery-runbook.md`, `clean24-data-handling-policy.md`. Dazu read-only
+`supabase/verification/006_production_readiness_checks.sql` (RLS/Helfer/Policies/
+`audit_logs`-append-only; sicher auf Staging **oder** Produktion). 001–006
+unverändert, `004`-Verifikationsskript unangetastet. **Produktion bleibt gesperrt,
+bis alle Pflichtpunkte manuell verifiziert + vom Inhaber freigegeben sind.** Doku
+`docs/production-readiness-gate.md`.
+
+**Nach v0.4.0 (operativ, durch den Nutzer)** – Pflicht-Checkliste abarbeiten:
+Produktions-Supabase-Projekt anlegen (getrennte Secrets), Backups + PITR
+aktivieren, **Restore-Test bestehen**, `verification/006` auf Produktion grün,
+`verification/003` (RLS) auf Staging grün – dann Inhaber-Freigabe **GO** und erst
+danach Clean24-Onboarding. *Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie
 anfordert.* Echte Daten erst nach diesem Gate.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.12/.12.1
-(bexio-Übergabe) und **v0.3.13/.13.1 (CEO-/KPI-Dashboard-Fundament, read-only, auf
-Staging verifiziert)** sind erledigt. Parallel bleibt **A) Deploy / Visual
-Review** der Verkaufs-Demo
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.13/.13.1
+(CEO-/KPI-Dashboard, auf Staging verifiziert) und **v0.4.0 (Clean24
+Production-Readiness-Gate — Policy/Runbooks/Checks, Produktion gesperrt bis
+Freigabe)** sind erledigt. Parallel bleibt **A) Deploy / Visual Review** der
+Verkaufs-Demo
 möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export,
 Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.4.0 — Clean24 Live-Production-Readiness**
-(Security-/Backup-Gate – verifiziertes Backup/Restore, strikte Staging-/
-Produktions-Trennung, validiertes Auth/RLS/Security). **Offer-PDF-Politur ist
-aufgeschoben, bis angefordert.** **Voraussetzung vor echten Kundendaten:**
-Backup/Restore eingerichtet und getestet, **Staging und Produktion strikt
-getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —
-**nie vor** diesem Gate.
+**Empfehlung:** als Nächstes die **Gate-Pflichtcheckliste** aus
+`docs/production-readiness-gate.md` operativ abarbeiten (Produktions-Projekt mit
+getrennten Secrets, Backups + PITR, **Restore-Test**, `verification/006` auf
+Produktion grün, `verification/003` auf Staging grün) bis zur **Inhaber-Freigabe
+(GO)** – erst danach Clean24-Onboarding. **Offer-PDF-Politur ist aufgeschoben, bis
+angefordert.** **Voraussetzung vor echten Kundendaten:** Backup/Restore
+eingerichtet und getestet, **Staging und Produktion strikt getrennt** (eigene
+Projekte/Keys), sowie validiertes Auth, RLS und Security — **nie vor** diesem
+Gate.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

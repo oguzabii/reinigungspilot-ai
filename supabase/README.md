@@ -28,6 +28,7 @@ supabase/
     003_rls_test_queries.sql         # RLS test cases (every line should print PASS)
     004_bind_auth_user_to_fake_tenant.sql # bind a Dashboard auth user -> fake tenant (login tests)
     005_create_clean24_staging_tenant.sql # Clean24 founder-tenant setup (no customer data) (v0.2.8)
+    006_production_readiness_checks.sql # READ-ONLY structural gate checks (RLS on, helpers, audit append-only); safe on staging OR production (v0.4.0)
   README.md                          # this file
 ```
 
@@ -128,6 +129,19 @@ After applying, verify:
 3. **Backups** — enable backups + PITR, run a **restore test**.
 4. **Production** — only then create the production project and onboard the
    first real tenant (Clean24).
+
+## Production readiness gate (v0.4.0)
+
+Before real Clean24 data, work the **production readiness gate** — a signed-off
+checklist + runbooks: [`../docs/production-readiness-gate.md`](../docs/production-readiness-gate.md)
+(hub), with the [security/RLS verification checklist](../docs/security-rls-verification-checklist.md),
+[backup/restore runbook](../docs/backup-restore-runbook.md),
+[staging/production separation](../docs/staging-production-separation.md),
+[real-data gate policy](../docs/real-data-gate-policy.md),
+[incident/recovery runbook](../docs/incident-recovery-runbook.md) and the
+[Clean24 data handling policy](../docs/clean24-data-handling-policy.md). Run the
+read-only `verification/006_production_readiness_checks.sql` on the project to
+confirm RLS/helpers/audit posture.
 
 ## Hard rule: "No Security = No Customer Data."
 

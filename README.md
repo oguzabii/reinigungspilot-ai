@@ -7,28 +7,29 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.4.0** — **Clean24 Production-Readiness-Gate.** Bevor echte
-Clean24-Kundendaten ins System dürfen, definiert v0.4.0 das **Security-/Backup-
-Gate** – **nur Policy + Runbooks + read-only Checks, keine neuen Features, keine
-echten Daten, keine Secrets**. Neu in `docs/`: ein **Hub**
-`production-readiness-gate.md` (Master-Checkliste + GO/NO-GO-Entscheid; aktueller
-Stand **NO-GO**) plus `security-rls-verification-checklist.md` (Mandantentrennung,
-Rollen-/Domänen-Matrix owner/admin/sales/ops/readonly/superadmin, **kein
-Service-Role-Client in App-Routen/Actions** – per grep verifiziert),
-`backup-restore-runbook.md` (Backups, PITR, externer Export, **Schritt-für-Schritt-
-Restore + Restore-Test**), `staging-production-separation.md` (zwei getrennte
-Supabase-Projekte/Secrets, Fake-Daten nur Staging), `real-data-gate-policy.md`
-(was vor echten Daten erfüllt sein muss; Entscheidungs-Record),
-`incident-recovery-runbook.md` (Secret-Leak, Datenverlust, Bad-Deploy/Migration,
-RLS-Regression) und `clean24-data-handling-policy.md` (Zugriff/Export/Löschung/
-Audit/Aufbewahrung). Dazu ein **read-only** Skript
-`supabase/verification/006_production_readiness_checks.sql` (RLS auf allen
-Tabellen, 8 Helper-Funktionen, Policies vorhanden, `audit_logs` append-only –
-sicher auf Staging **oder** Produktion, keine Datenzeilen-Lesung). **Migrationen
-001–006 unverändert; `004`-Verifikationsskript unangetastet.** Harte Regel
-bekräftigt: **„No Security = No Customer Data"** – Produktion bleibt **gesperrt**,
-bis alle Pflichtpunkte manuell verifiziert und vom Inhaber freigegeben sind. Die
-Verkaufs-Demo (v0.1.7) bleibt unverändert.
+**v0.4.1** — **Clean24 Production-Tenant-Bootstrap (Gate-Ausführung).** Produktion
+läuft an: Supabase **Pro**, Projekt `klarsa-production` mit Migrationen 001–006,
+`verification/006` **PASS**, tägliche Backups aktiv. Neu: ein **produktionssicheres,
+idempotentes** Bootstrap-Skript
+`supabase/production/001_create_clean24_production_tenant.sql` legt den realen
+Tenant **Clean24 Memis GmbH** an (Premium, `billing_status=internal_founder`,
+`access_status=full`, Status `active`, 26 Kantone) + Einstellungen + eigener
+Service-/Quellen-**Konfig**-Baseline und bindet den **Inhaber** als `owner`
+(upsert `user_profiles` + `company_members`). Der Owner-UID steht **nur als
+Platzhalter** `CLEAN24_OWNER_AUTH_USER_ID` (einmalig, im `DO`-Block; ohne Ersetzen
+bricht das Skript sauber ab) – **kein echter UID, keine Secrets im Repo**; die
+E-Mail wird aus `auth.users` gelesen, nicht hartcodiert. **Keine Kunden-Leads/
+-Offerten/-Aufträge/-Prospects, keine Fake-/Demo-/Staging-Daten.** Doku
+`docs/clean24-production-tenant-bootstrap.md`. **001–006 unverändert; die Staging-/
+Fake-Skripte (`verification/002–005`) laufen nie in Produktion; `004`
+unangetastet.** **Echte Kundendaten bleiben NO-GO**, bis Vercel-Produktions-Login
+und Inhaber-Freigabe (GO) vorliegen. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
+
+> **v0.4.0:** Clean24 Production-Readiness-Gate — Policy/Runbooks + read-only
+> Checks (Hub `production-readiness-gate.md` + RLS-Verifikation, Backup/Restore,
+> Staging-/Produktions-Trennung, Real-Data-Gate, Incident-Runbook, Datenrichtlinie
+> + `verification/006`). Harte Regel „No Security = No Customer Data"; Produktion
+> gesperrt bis Inhaber-Freigabe. Keine Features/echten Daten/Secrets.
 
 > **v0.3.13/.13.1:** CEO-/KPI-Dashboard-Fundament — `/app-shell/ceo`
 > („CEO-Briefing"), read-only Owner-Überblick (Geld-Wirkung/KPI/Trichter/
@@ -135,7 +136,8 @@ Verkaufs-Demo (v0.1.7) bleibt unverändert.
 > v0.3.11/.11.1 (Swiss Opportunity Radar Map-Fundament, statisch/manuell, keine neue Migration, auf Staging verifiziert),
 > v0.3.12/.12.1 (bexio-Übergabe-Fundament, manuell, keine echte bexio-API, keine neue Migration, auf Staging verifiziert),
 > v0.3.13/.13.1 (CEO-/KPI-Dashboard-Fundament, read-only, keine neue Migration, auf Staging verifiziert),
-> **v0.4.0 (Clean24 Production-Readiness-Gate — Policy/Runbooks/Checks, keine Features, Produktion gesperrt bis Freigabe)**.
+> v0.4.0 (Clean24 Production-Readiness-Gate — Policy/Runbooks/Checks, keine Features, Produktion gesperrt bis Freigabe),
+> **v0.4.1 (Clean24 Production-Tenant-Bootstrap-Skript — produktionssicher, idempotent, Platzhalter-UID, keine Kundendaten; real-data weiter NO-GO)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -345,6 +347,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   real-data-gate-policy.md           # was vor echten Daten erfüllt sein muss; Entscheidungs-Record (v0.4.0)
   incident-recovery-runbook.md       # Secret-Leak/Datenverlust/Bad-Deploy/Migration/RLS-Regression (v0.4.0)
   clean24-data-handling-policy.md    # Zugriff/Export/Löschung/Audit/Aufbewahrung für Clean24 (v0.4.0)
+  clean24-production-tenant-bootstrap.md # Produktions-Tenant-Bootstrap: Platzhalter-UID ersetzen, nur in klarsa-production, keine Fake-/Kundendaten, Verifikation, real-data weiter NO-GO (v0.4.1)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
@@ -365,6 +368,8 @@ supabase/            # DB-Fundament (nur Migrationen/Skripte, keine Credentials/
     004_bind_auth_user_to_fake_tenant.sql # Dashboard-Auth-User an Fake-Tenant binden (Login-Tests, v0.2.7.1)
     005_create_clean24_staging_tenant.sql # Clean24-Founder-Tenant-Setup, keine Kundendaten (v0.2.8)
     006_production_readiness_checks.sql # read-only: RLS/Helfer/Policies/audit-append-only-Gate-Checks; sicher auf Staging ODER Produktion (v0.4.0)
+  production/        # NUR Produktion (klarsa-production):
+    001_create_clean24_production_tenant.sql # idempotenter Clean24-Tenant-Bootstrap (Company/Owner/Konfig), Platzhalter-UID, KEINE Kundendaten/Secrets (v0.4.1)
   README.md          # Anwenden (Staging zuerst), keine Secrets, Security-Gate
 
 .env.local.example   # Env-Template (nur Platzhalter) — echtes .env.local ist ignoriert
@@ -581,6 +586,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [real-data-gate-policy.md](docs/real-data-gate-policy.md) | Real-Data-Gate-Policy: was „echte Daten" sind, die 10 Pflichtpunkte vor Produktion, wer freigibt (Inhaber), Decision-Record (aktuell **NO-GO**) (v0.4.0) |
 | [incident-recovery-runbook.md](docs/incident-recovery-runbook.md) | Incident-/Recovery-Runbook: Severity, Playbooks für Secret-Leak/Datenverlust/unbefugten Zugriff/Bad-Deploy/Bad-Migration/RLS-Regression, Post-Incident-Review, Drills (v0.4.0) |
 | [clean24-data-handling-policy.md](docs/clean24-data-handling-policy.md) | Clean24-Datenrichtlinie: Zugriff (least privilege, kein Service-Role in App), Export (owner/admin, auditiert), Löschung (soft→kontrolliert hart), Audit-Erwartungen (append-only), Aufbewahrung, Betroffenenrechte (v0.4.0) |
+| [clean24-production-tenant-bootstrap.md](docs/clean24-production-tenant-bootstrap.md) | Clean24 Produktions-Tenant-Bootstrap: produktionssicheres, idempotentes Skript (`supabase/production/001…`) für Company/Settings/Owner/Service-/Quellen-Konfig; **Platzhalter `CLEAN24_OWNER_AUTH_USER_ID` vor dem Lauf ersetzen, echten UID nie committen**, nur in `klarsa-production`, keine Fake-/Kundendaten, Verifikation, real-data weiter **NO-GO** (v0.4.1) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -937,7 +943,20 @@ unverändert, `004`-Verifikationsskript unangetastet. **Produktion bleibt gesper
 bis alle Pflichtpunkte manuell verifiziert + vom Inhaber freigegeben sind.** Doku
 `docs/production-readiness-gate.md`.
 
-**Nach v0.4.0 (operativ, durch den Nutzer)** – Pflicht-Checkliste abarbeiten:
+**v0.4.1 (erledigt)** – **Clean24 Production-Tenant-Bootstrap-Skript**:
+`supabase/production/001_create_clean24_production_tenant.sql` (idempotent) legt
+auf `klarsa-production` den realen Tenant **Clean24 Memis GmbH** an (Premium /
+`internal_founder` / Status `active`, 26 Kantone) + Einstellungen + Service-/
+Quellen-**Konfig** und bindet den Inhaber als `owner` (upsert `user_profiles` +
+`company_members`). Owner-UID nur als Platzhalter `CLEAN24_OWNER_AUTH_USER_ID`
+(einmalig, im `DO`-Block; ohne Ersetzen klarer Abbruch), E-Mail aus `auth.users`,
+**kein echter UID/keine Secrets im Repo**. **Keine Kunden-Leads/-Offerten/
+-Aufträge/-Prospects, keine Fake-/Demo-Daten; `verification/002–005` laufen nie in
+Produktion; `004` unangetastet; 001–006 unverändert.** Doku
+`docs/clean24-production-tenant-bootstrap.md`. Echte Daten weiter **NO-GO** bis
+Vercel-Produktions-Login + Inhaber-Freigabe.
+
+**Nach v0.4.1 (operativ, durch den Nutzer)** – Pflicht-Checkliste abarbeiten:
 Produktions-Supabase-Projekt anlegen (getrennte Secrets), Backups + PITR
 aktivieren, **Restore-Test bestehen**, `verification/006` auf Produktion grün,
 `verification/003` (RLS) auf Staging grün – dann Inhaber-Freigabe **GO** und erst

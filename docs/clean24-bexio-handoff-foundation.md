@@ -1,5 +1,13 @@
 # Klarsa Core — bexio Handoff Foundation (v0.3.12)
 
+> **Status: VERIFIED on staging (2026-06-12).** A logged-in Clean24 owner/admin
+> opened `/app-shell/bexio`; a completed job appeared in the queue, **"Für bexio
+> vorbereiten"** created a manual `bexio_handoffs` row, the copyable summary
+> rendered, and **"Als verrechnet markieren"** completed it — all through the
+> **session client (RLS, manage domain)**. No real bexio API, no token, no
+> network call, no real data. Staging result:
+> [`clean24-bexio-handoff-results.md`](./clean24-bexio-handoff-results.md).
+
 > A **manual** invoice/bexio handoff queue for completed jobs: a protected
 > **`/app-shell/bexio`** route lists completed jobs with their customer + offer
 > data, lets owner/admin **prepare** a handoff and later mark it **invoiced**,

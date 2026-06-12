@@ -7,7 +7,8 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.3.12** — **bexio-Übergabe-Fundament.** Eine geschützte Route
+**v0.3.12.1** — **bexio-Übergabe-Fundament (auf Staging verifiziert).** Eine
+geschützte Route
 `/app-shell/bexio` ist eine **manuelle Rechnungs-/bexio-Übergabe-Warteschlange**
 für **abgeschlossene Aufträge**: sie listet `completed`-Jobs mit Kunden- (Lead)
 und Offerten-Daten; owner/admin legen per **„Für bexio vorbereiten"** eine
@@ -21,8 +22,13 @@ owner/admin)** mit App-Rollenprüfung; andere Rollen sehen eine Read-only-Ansich
 **Keine echte bexio-API, kein Token, kein Netzwerkaufruf, keine automatische
 Rechnungserstellung, keine E-Mail, keine echten Daten. Keine neue Migration**
 (bestehende `bexio_handoffs`-Tabelle aus 001; 001–006 unverändert). Verlinkt über
-die bexio-Übergabe-Karte auf `/app-shell`. Die Verkaufs-Demo (v0.1.7) bleibt
-unverändert.
+die bexio-Übergabe-Karte auf `/app-shell`. Auf Staging **verifiziert** (2026-06-12,
+manueller Nutzertest): Login → `/app-shell/bexio`, abgeschlossener Auftrag in der
+Warteschlange, „Für bexio vorbereiten" legt eine `bexio_handoffs`-Zeile an,
+kopierbare Zusammenfassung gerendert, „Als verrechnet markieren" funktioniert,
+owner/admin-Manage-/RLS-Pfad bestätigt, keine echte bexio-API/kein Token/kein
+Netzwerkaufruf, keine echten Daten — `docs/clean24-bexio-handoff-results.md`. Die
+Verkaufs-Demo (v0.1.7) bleibt unverändert.
 
 > **v0.3.11/.11.1:** Swiss Opportunity Radar Map-Fundament —
 > `/app-shell/lead-hunter/radar`, statische/stilisierte Kanton-Radar-SVG +
@@ -114,7 +120,7 @@ unverändert.
 > v0.3.9/.9.1 (Lead-Hunter-Quellen-Registry-Fundament, manuell, auf Staging verifiziert),
 > v0.3.10/.10.1 (Source → Opportunity-Workflow, manuell, Migration 006, auf Staging verifiziert),
 > v0.3.11/.11.1 (Swiss Opportunity Radar Map-Fundament, statisch/manuell, keine neue Migration, auf Staging verifiziert),
-> **v0.3.12 (bexio-Übergabe-Fundament, manuell, keine echte bexio-API, keine neue Migration)**.
+> **v0.3.12/.12.1 (bexio-Übergabe-Fundament, manuell, keine echte bexio-API, keine neue Migration, auf Staging verifiziert)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -310,6 +316,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-swiss-opportunity-radar-map.md # Swiss Opportunity Radar Map: statische Kanton-Radar-Ansicht aus prospects-Daten, Region→Kanton offline, kein Kartenanbieter/API, keine neue Migration (v0.3.11)
   clean24-swiss-opportunity-radar-map-results.md # Ergebnis: Schweiz-Radar auf Staging verifiziert (Stat-Karten/SVG/Regionen/Chips gerendert, Quellen-Labels, Read-only-RLS, kein Karten-API/Geokodierung) (v0.3.11.1)
   clean24-bexio-handoff-foundation.md # bexio-Übergabe: manuelle Rechnungs-Übergabe-Warteschlange (bexio_handoffs), „vorbereiten"/„verrechnet", kopierbare Zusammenfassung, Manage-Domäne, KEINE echte bexio-API/Token, keine neue Migration (v0.3.12)
+  clean24-bexio-handoff-results.md # Ergebnis: bexio-Übergabe auf Staging verifiziert (abgeschlossener Job → vorbereiten/Zusammenfassung/verrechnen, owner/admin-Manage-RLS, keine echte bexio-API) (v0.3.12.1)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
@@ -535,6 +542,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-swiss-opportunity-radar-map.md](docs/clean24-swiss-opportunity-radar-map.md) | Swiss Opportunity Radar Map-Fundament: geschützte `/app-shell/lead-hunter/radar`, statische/stilisierte Kanton-Radar-SVG + Stat-Karten + Top-Regionen + Service-/Quellen-/Typ-Chips aus vorhandenen `prospects`-Daten, deterministisches Region→Kanton-Offline-Mapping (`swiss-radar.ts`), nur Lesen (Session-Client/RLS), **kein Kartenanbieter/Tiles/Google/ZEFIX/SIMAP/Geokodierung**, keine neue Migration, Security, Checkliste (v0.3.11) |
 | [clean24-swiss-opportunity-radar-map-results.md](docs/clean24-swiss-opportunity-radar-map-results.md) | Ergebnis: Schweiz-Radar auf Staging verifiziert — Radar-Route nach Login erreichbar, Stat-Karten + Kanton-Radar-SVG + Top-Regionen + Service-/Quellen-/Typ-Chips gerendert (Quellen-Labels via `prospects.source_id`), Read-only-/RLS-Pfad bestätigt, kein Karten-API/keine Tiles/keine Geokodierung/kein Scraping, keine echten Daten (2026-06-12, v0.3.11.1) |
 | [clean24-bexio-handoff-foundation.md](docs/clean24-bexio-handoff-foundation.md) | bexio-Übergabe-Fundament: geschützte `/app-shell/bexio`, **manuelle** Rechnungs-Übergabe-Warteschlange für abgeschlossene Aufträge (`bexio_handoffs`), „Für bexio vorbereiten" (Status `queued`) + „Als verrechnet markieren" (`completed`) + kopierbare Zusammenfassung, Manage-Domäne (`can_manage_company` = owner/admin), **keine echte bexio-API/Token/Netzwerkaufruf/automatische Rechnung**, keine neue Migration, Security, Checkliste (v0.3.12) |
+| [clean24-bexio-handoff-results.md](docs/clean24-bexio-handoff-results.md) | Ergebnis: bexio-Übergabe auf Staging verifiziert — `/app-shell/bexio` nach Login erreichbar, abgeschlossener Job in der Warteschlange, „Für bexio vorbereiten" legt `bexio_handoffs` an, kopierbare Zusammenfassung, „Als verrechnet markieren" funktioniert, owner/admin-Manage-/RLS-Pfad bestätigt, keine echte bexio-API/kein Token/Netzwerkaufruf, keine echten Daten (2026-06-12, v0.3.12.1) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -841,6 +849,16 @@ bexio-API/Token/Netzwerkaufruf/automatische Rechnung/E-Mail. Keine neue Migratio
 (bestehende `bexio_handoffs`-Tabelle; 001–006 unverändert). Doku
 `docs/clean24-bexio-handoff-foundation.md`.
 
+**v0.3.12.1 (erledigt, Patch)** – **bexio-Übergabe auf Staging verifiziert**
+(manuell, 2026-06-12): `/app-shell/bexio` nach Login erreichbar, die
+`/app-shell`-bexio-Karte verlinkt dorthin, ein abgeschlossener Auftrag erscheint
+in der Warteschlange, „Für bexio vorbereiten" legt eine `bexio_handoffs`-Zeile an
+(Status `queued`), die kopierbare Schweizerdeutsche Zusammenfassung wird
+gerendert, „Als verrechnet markieren" setzt `completed`, owner/admin-Manage-/
+Session-Client-/RLS-Pfad (`can_manage_company`) bestätigt, keine echte
+bexio-API/kein Token/Netzwerkaufruf/automatische Rechnung, keine echten
+Kundendaten. Festgehalten in `docs/clean24-bexio-handoff-results.md`. Nur Docs.
+
 **v0.3.13 (nächster Schritt)** – **CEO-/KPI-Dashboard** (Read-only-Überblick über
 die Kette: Leads, Opportunities, Offerten, Aufträge, Übergaben) **oder
 bexio-Handoff-Staging-Verifikation**. Manuell, RLS-gescopt. *Offer-PDF-Politur ist
@@ -850,14 +868,14 @@ Backup-/Trennungs-Gate.
 ## Empfohlener nächster Schritt
 
 Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.11/.11.1 (Swiss
-Opportunity Radar Map, auf Staging verifiziert) und **v0.3.12 (bexio-Übergabe-
-Fundament, manuell, keine echte bexio-API)** sind erledigt. Parallel bleibt **A)
-Deploy / Visual Review** der Verkaufs-Demo
+Opportunity Radar Map) und **v0.3.12/.12.1 (bexio-Übergabe-Fundament, manuell,
+keine echte bexio-API, auf Staging verifiziert)** sind erledigt. Parallel bleibt
+**A) Deploy / Visual Review** der Verkaufs-Demo
 möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export,
 Erklärvideo).
 
-**Empfehlung:** als Nächstes **v0.3.13 — CEO-/KPI-Dashboard oder
-bexio-Handoff-Staging-Verifikation** (manuell, RLS-gescopt). **Offer-PDF-Politur
+**Empfehlung:** als Nächstes **v0.3.13 — CEO-/KPI-Dashboard-Fundament**
+(Read-only-Überblick über die Kette, manuell, RLS-gescopt). **Offer-PDF-Politur
 ist aufgeschoben, bis angefordert.** **Voraussetzung vor echten Kundendaten:**
 Backup/Restore eingerichtet und getestet, **Staging und Produktion strikt
 getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS und Security —

@@ -1,5 +1,13 @@
 # Klarsa Core — Source → Opportunity Workflow Foundation (v0.3.10)
 
+> **Status: VERIFIED on staging (2026-06-11).** Migration `006` was applied (+
+> PostgREST schema reload); a logged-in Clean24 user clicked **"Opportunity
+> vorbereiten"** on a registered source, the seeded Lead Hunter form opened with
+> the source context, the opportunity saved, and the list showed the **source
+> label** — all through the **session client (RLS)**. No scraping, no API, no
+> real data. Staging result:
+> [`clean24-source-to-opportunity-results.md`](./clean24-source-to-opportunity-results.md).
+
 > Connects the **Source Registry** to the **Opportunity Radar**: from a
 > registered, human-approved `lead_sources` row, a person clicks **"Opportunity
 > vorbereiten"** and lands on a **pre-filled** capture form at

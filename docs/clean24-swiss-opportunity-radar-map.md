@@ -1,5 +1,12 @@
 # Klarsa Core — Swiss Opportunity Radar Map Foundation (v0.3.11)
 
+> **Status: VERIFIED on staging (2026-06-12).** A logged-in Clean24 user opened
+> `/app-shell/lead-hunter/radar`; the stat cards, the stylised canton radar SVG,
+> the top-region cards and the service/source/type chips all rendered from the
+> existing opportunities — read-only, through the **session client (RLS)**. No
+> map provider, no tiles, no geocoding, no API, no real data. Staging result:
+> [`clean24-swiss-opportunity-radar-map-results.md`](./clean24-swiss-opportunity-radar-map-results.md).
+
 > A **manual, static** visualisation of the tenant's opportunities on a stylised
 > Swiss canton radar: a protected **`/app-shell/lead-hunter/radar`** route that
 > aggregates the existing `prospects` data (region, score, source, type, service

@@ -7,7 +7,22 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.5.0** — **Revenue Autopilot-Fundament.** Neue geschützte Route
+**v0.5.0.1** — **Revenue Autopilot in Produktion verifiziert.** Der Inhaber hat
+sich in der Produktion (`https://klarsa.vercel.app`) angemeldet und
+`/app-shell/revenue-autopilot` erfolgreich geöffnet: Route lädt nach Login,
+**Autopilot** in der Navigation aktiv, Clean24-Mandantenkontext sichtbar, Seite
+rendert „Revenue Autopilot" / „Heute Geld holen" / „Klarsa zeigt Ihnen, was heute
+Umsatz bringt." + den Guarded-Automation-Hinweis (kein Scraping, keine automatische
+Suche, kein Auto-E-Mail-/WhatsApp-Versand, keine Auto-Terminbuchung, keine
+bexio-API) + die Karte „Autopilot – Nächste Schritte für Umsatz". **Keine echten
+Kundendaten erfasst.** **Docs-only** (neu `docs/clean24-revenue-autopilot-results.md`;
+`clean24-revenue-autopilot-foundation.md` mit **VERIFIED**-Abschnitt). Ehrlicher
+Scope: kontrolliertes **Vorbereitungs-Fundament** – noch **keine** automatische
+Discovery/Versand/Buchung. **LIMITED GO bleibt**: echte Daten nur über die App-UI,
+Restore-Test weiter aufgeschoben, kein breiter Rollout. **001–006 unverändert;
+`004` unangetastet.**
+
+**Fundament (v0.5.0):** Neue geschützte Route
 `/app-shell/revenue-autopilot` als Command Center „Heute Geld holen": priorisierte
 **Umsatz-Aktionen**, eine **Source Execution Queue** (pro aktiver
 `lead_sources`-Quelle ein konkreter, menschen­grosser Recherche-Schritt mit Link

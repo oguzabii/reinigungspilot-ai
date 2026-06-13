@@ -1,8 +1,27 @@
 # Clean24 Revenue Autopilot — Foundation (v0.5.0)
 
-> Status: **shipped foundation** (v0.5.0). Builds on the roadmap in
-> `docs/clean24-revenue-autopilot-roadmap.md`.
+> Status: **shipped foundation** (v0.5.0) · **VERIFIED in production** (v0.5.0.1).
+> Builds on the roadmap in `docs/clean24-revenue-autopilot-roadmap.md`.
 > Guardrail level: **high** — this is an *assistant*, not an autonomous agent.
+
+## 0. VERIFIED in production (v0.5.0.1, 2026-06-13)
+
+The Clean24 owner logged in to production (`https://klarsa.vercel.app`) and
+opened `/app-shell/revenue-autopilot`. Confirmed:
+
+- ✅ The route opens after login (protected); **Autopilot** appears in
+  `AppShellNav` and the Autopilot nav item is **active**.
+- ✅ Clean24 tenant context is visible.
+- ✅ The page renders **"Revenue Autopilot"**, the **"Heute Geld holen"** hero,
+  the line **"Klarsa zeigt Ihnen, was heute Umsatz bringt."**, the
+  **guarded-automation notice** (no scraping, no automatic search, no automatic
+  email/WhatsApp sending, no automatic booking, no bexio API) and the
+  **"Autopilot – Nächste Schritte für Umsatz"** card.
+- ✅ Production route live and usable; **no real customer data** was entered.
+
+Full record: [`clean24-revenue-autopilot-results.md`](./clean24-revenue-autopilot-results.md).
+This reaffirms the LIMITED GO: real Clean24 data only via the app UI, restore
+test still deferred, broad rollout still blocked.
 
 ## 1. What v0.5.0 adds
 

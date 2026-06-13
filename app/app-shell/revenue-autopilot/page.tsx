@@ -18,10 +18,13 @@ import {
   Target,
   Tag,
   BellRing,
+  Globe,
+  SlidersHorizontal,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
 import { EmptyState } from "@/components/app-shell/EmptyState";
+import { SafeModeBanner } from "@/components/revenue-autopilot/SafeModeBanner";
 import { DraftChannels } from "@/components/revenue-autopilot/DraftChannels";
 import {
   buildOutreachDrafts,
@@ -37,11 +40,13 @@ import { scoreBadgeClass } from "@/components/lead-hunter/opportunity-meta";
 import { LEAD_STATUS_META } from "@/components/leads/lead-status";
 import { formatChf } from "@/components/offers/offer-status";
 import { computeCeoKpis } from "@/components/ceo/kpi";
+import { isDiscoveryConfigured } from "@/lib/discovery/google-places";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
   getCompanySummary,
   getCompanySettings,
+  getAutopilotPolicy,
   getProspects,
   getLeads,
   getOffers,
@@ -136,6 +141,7 @@ export default async function RevenueAutopilotPage() {
   const [
     summary,
     settings,
+    toggles,
     prospects,
     leads,
     offers,
@@ -146,6 +152,7 @@ export default async function RevenueAutopilotPage() {
   ] = await Promise.all([
     getCompanySummary(companyId),
     getCompanySettings(companyId),
+    getAutopilotPolicy(companyId),
     getProspects(companyId),
     getLeads(companyId),
     getOffers(companyId),
@@ -157,6 +164,8 @@ export default async function RevenueAutopilotPage() {
 
   const senderCompany = summary?.name ?? "Ihr Betrieb";
   const senderPerson = settings.senderName;
+  const discoveryConfigured = isDiscoveryConfigured();
+  const discoveredCount = prospects.filter((p) => p.sourceType === "google").length;
 
   const now = new Date();
   const kpis = computeCeoKpis({
@@ -243,6 +252,65 @@ export default async function RevenueAutopilotPage() {
         {/* Prioritised next actions */}
         <div className="mt-6">
           <AutopilotCard kpis={kpis} hasData={hasData} />
+        </div>
+
+        {/* Automatik — Discovery + Rules engine (v0.5.2) */}
+        <SectionHeader
+          icon={Globe}
+          title="Automatik"
+          subtitle="Automatische Discovery und Richtlinien – sicher, per Policy kontrolliert."
+        />
+        <div className="mt-3">
+          <SafeModeBanner />
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/app-shell/revenue-autopilot/discovery"
+            className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+          >
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
+              <Globe className="h-4 w-4 text-blue-600" strokeWidth={2} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-navy-900">
+                  Automatische Discovery
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${
+                    discoveryConfigured
+                      ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                      : "bg-slate-100 text-slate-500 ring-slate-200"
+                  }`}
+                >
+                  {discoveryConfigured ? "API konfiguriert" : "API nicht konfiguriert"}
+                </span>
+              </span>
+              <span className="mt-0.5 block text-sm text-slate-500">
+                {discoveredCount} kalte Kandidaten · Auto-Erstellung{" "}
+                {toggles.autoCreateColdCandidates ? "EIN" : "AUS"} · kein Scraping.
+              </span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+          </Link>
+          <Link
+            href="/app-shell/revenue-autopilot/policy"
+            className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+          >
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
+              <SlidersHorizontal className="h-4 w-4 text-blue-600" strokeWidth={2} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-navy-900">
+                Autopilot-Richtlinien
+              </span>
+              <span className="mt-0.5 block text-sm text-slate-500">
+                Was automatisch erlaubt ist – Cold-Outreach gesperrt, keine stille
+                Buchung.
+              </span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+          </Link>
         </div>
 
         {/* A — Source execution queue */}

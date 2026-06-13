@@ -6,6 +6,15 @@
 > order, and the hard rules that gate every step. Nothing here ships without an
 > explicit, separate GO.
 
+> **Progress update (v0.5.2):** the **Autopilot Rules Engine** and the first
+> **Automatic Discovery** adapter (official Google Places, env-gated) have shipped
+> as a safe-by-default foundation — see
+> `docs/clean24-automatic-discovery-autopilot-rules.md`. Cold outreach, auto-calls
+> and silent booking remain **hard-blocked**; auto-messaging for safe categories
+> still awaits a compliant send provider (separate GO). The Outreach/Follow-up/
+> Appointment **assistants** (§3.3–§3.5) remain copy-only until that provider
+> phase.
+
 ## 1. Why this document exists
 
 Today Klarsa is a **manual, human-driven** sales & ops chain:

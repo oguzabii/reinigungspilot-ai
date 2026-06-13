@@ -7,21 +7,43 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.5.1.1** — **Controlled Source Execution in Produktion verifiziert.** Der Inhaber
-hat sich in der Produktion (`https://klarsa.vercel.app`) angemeldet, eine Quelle über
-**„Quelle abarbeiten"** geöffnet und das geführte Cockpit
-(`/app-shell/lead-hunter/sources/[id]/execute`) durchgearbeitet: die
-5-Schritte-Worklist (**Ziel → Recherchieren → Qualifizieren → Erfassen → Kontakt
-vorbereiten**) rendert, die Recherche-Links öffnen die **eigene Browser-Suche** des
-Nutzers (kein Scraping/`fetch`/Server-Sammeln), der Capture-Flow trägt
-**nicht-PII**-Kontext (`?source=&service=&region=`) ins Formular und der **Lead Hunter
-zeigt „Quelle aktiv"**. **Kein Auto-Versand, keine Auto-Buchung, keine echten
-Kundendaten erfasst.** **Docs-only** (neu
-`docs/clean24-controlled-source-execution-results.md`;
-`clean24-controlled-source-execution.md` mit **VERIFIED**-Abschnitt). Ehrlicher Scope:
-geführter realer Lead-Hunting-Workflow – **Discovery, Versand und Buchung bleiben
-manuell**. **LIMITED GO bleibt**: echte Daten nur über die App-UI, Restore-Test weiter
-aufgeschoben, kein breiter Rollout. **001–006 unverändert; `004` unangetastet.**
+**v0.5.2** — **Automatic Discovery + Safe Autopilot Rules (Fundament).** Klarsa wird
+automatischer – **kontrolliert per Richtlinie**, keine Spam-Maschine. Neu: (1) eine
+**Autopilot Rules Engine** (`components/revenue-autopilot/policy.ts`, rein/
+deterministisch) entscheidet pro **Kontakt-Kategorie** (Inbound/Opt-in, Bestandskunde,
+freigegebener Kontakt, **kalt entdeckt**), was automatisch erlaubt ist; (2)
+**Automatische Discovery** über die **offizielle** Google-Places-API
+(`lib/discovery/google-places.ts`, env-gated `GOOGLE_PLACES_API_KEY`,
+owner-initiiert, **kein Cron**, hartes Trefferlimit 10, **kein Scraping**); (3)
+**Autopilot Control Center** – `/app-shell/revenue-autopilot/discovery` (Lauf,
+Kandidaten, Audit) und `/app-shell/revenue-autopilot/policy` (Policy-Matrix +
+Hard-Blocked-Liste + Owner-Toggles), plus Automatik-Sektion + Safe-Mode-Banner auf
+`/app-shell/revenue-autopilot`. Kalt entdeckte Betriebe werden – **nur wenn der Owner
+den Toggle aktiviert** (Default AUS) – automatisch als **kalte Prospects** erstellt
+(`source_type='google'`, nicht kontaktiert, **Cold-Outreach gesperrt**). **Voll
+automatischer Cold-Outreach, Auto-Anrufe und stille Buchung sind hart gesperrt**;
+Auto-Nachrichten nur für sichere Kategorien **und** nur mit konfiguriertem,
+konformem Versand-Provider (keiner aktiv → nur Entwurf). **KEINE neue Migration**
+(Discovery → `prospects`, Toggles → `company_settings.settings` jsonb, Audit →
+`audit_logs`/`discovery_run`), kein Service-Role, fehlender Key → „nicht
+konfiguriert" (App läuft weiter), **kein Key im Repo**. Neu:
+`docs/clean24-automatic-discovery-autopilot-rules.md`. **LIMITED GO bleibt**: echte
+Daten nur über die App-UI (owner-getriggert), Restore-Test weiter aufgeschoben.
+**001–006 unverändert; `004` unangetastet.** lint/build grün.
+
+> **v0.5.1.1:** Controlled Source Execution in Produktion verifiziert — Inhaber
+> öffnete `/app-shell/lead-hunter/sources/[id]/execute`, die 5-Schritte-Worklist
+> rendert, Recherche-Links öffnen die eigene Browser-Suche (kein Scraping), Capture
+> trägt nicht-PII-Kontext, „Quelle aktiv" sichtbar, keine echten Kundendaten erfasst
+> — `docs/clean24-controlled-source-execution-results.md`.
+
+> **v0.5.1 Fundament:** Neue geschützte, dynamische Route
+> `/app-shell/lead-hunter/sources/[id]/execute` – ein geführtes Quellen-
+> Abarbeitungs-Cockpit, integriert in Revenue Autopilot, Quellen-Registry und Lead
+> Hunter („Quelle abarbeiten"-CTAs, „Quelle aktiv"-Banner). Reine Helper
+> (`source-queue.ts` erweitert um `sourceTaskFor`, neue `ResearchTools.tsx`), keine
+> neue Migration, kein Service-Role/Scraping/Versand/Buchung —
+> `docs/clean24-controlled-source-execution.md`.
 
 > **v0.5.1 Fundament:** Neue geschützte, dynamische Route
 > `/app-shell/lead-hunter/sources/[id]/execute` – ein geführtes Quellen-
@@ -215,14 +237,15 @@ App-UI. **001–006 unverändert; `004` unangetastet.** lint/build grün.
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** **kontrollierte Produktionsnutzung** – die geführte
-> Quellen-Abarbeitung (v0.5.1) mit echten Clean24-Leads über die App-UI testen,
-> dann **v0.5.1.1** (Produktionsverifikation der Source Execution). Danach,
-> **nur bei expliziter Freigabe, v0.5.2**: Planung der ersten **konformen/
-> freigegebenen Discovery-Integration** (z. B. SIMAP-Ausschreibungen, „Kandidaten
-> zur menschlichen Prüfung") sowie eine gated Gmail/Calendar-Anbindung. Bis dahin
-> bleibt alles **recherchieren → qualifizieren → erfassen → selbst senden** (kein
-> Auto-Versand/keine Buchung/kein Scraping).
+> **Nächster Schritt:** **kontrollierte Produktionsnutzung** der Automatik (v0.5.2)
+> – der Inhaber setzt (optional) `GOOGLE_PLACES_API_KEY` in der Umgebung, testet
+> einen Discovery-Lauf und die Richtlinien-Toggles über die App-UI; danach
+> **v0.5.2.1** (Produktionsverifikation). Erst **nach expliziter Freigabe**:
+> konformer **Versand-Provider** (Gmail/SMTP/Resend mit Absender-Identität +
+> Opt-out + menschlicher Freigabe), **Kalender**-Anbindung (Vorschläge, Buchung nur
+> nach Bestätigung) und ein **Inbound-Kanal** (Website-Formular → Inbound-Lead).
+> Bis dahin: **Cold-Outreach/Auto-Anrufe/stille Buchung gesperrt**, Auto-Nachrichten
+> nur als Entwurf.
 
 ### Strategie
 
@@ -268,7 +291,9 @@ npm run start    # Produktionsserver (nach build)
 | `/workspace`    | **Intern** (noindex): Klarsa App Foundation – Architektur-Plan, Clean24 als erster Tenant, geplante Module, Auth-Fundament-Hinweis |
 | `/login`        | **Intern** (noindex): Login-Skelett (Supabase Auth). Inaktiv ohne Staging-Env, keine echten Daten |
 | `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): authentifizierter Tenant-Cockpit – Redirect ohne Session, RLS-gefilterte Zähler, kein Service-Role-Lesen, **Autopilot-Nächste-Aktionen + Umsatz-Kette + CEO-Briefing-Karte**, Link zum Revenue Autopilot. Ohne Env: „Setup erforderlich" |
-| `/app-shell/revenue-autopilot` | **Intern** (noindex, **dynamisch/geschützt**): **Revenue Autopilot** – Command Center „Heute Geld holen": priorisierte Umsatz-Aktionen, **Source Execution Queue** (Recherche-Schritte je aktiver Quelle, Link ins vorausgefüllte Formular), **heisse Chancen** mit **Erstkontakt-Entwürfen** (E-Mail/WhatsApp/Telefon-Skript/Follow-up), **Leads** mit **Nachricht + Terminvorschlag**, **Offerten-Nachfass**. Reine Kopier-Entwürfe (Schweizerdeutsch), nur Lesen (Session-Client/RLS). **Kein Scraping/Suche/Versand/Buchung/externe API**, keine neue Migration |
+| `/app-shell/revenue-autopilot` | **Intern** (noindex, **dynamisch/geschützt**): **Revenue Autopilot** – Command Center „Heute Geld holen": priorisierte Umsatz-Aktionen, **Automatik-Sektion** (Discovery/Richtlinien + Safe-Mode-Banner), **Source Execution Queue**, **heisse Chancen** mit **Erstkontakt-Entwürfen**, **Leads** mit **Nachricht + Terminvorschlag**, **Offerten-Nachfass**. Reine Kopier-Entwürfe (Schweizerdeutsch), nur Lesen (Session-Client/RLS). **Kein Auto-Versand/Buchung**, keine neue Migration |
+| `/app-shell/revenue-autopilot/discovery` | **Intern** (noindex, **dynamisch/geschützt**): **Automatische Discovery** – owner/admin-initiierter Lauf über die **offizielle** Google-Places-API (env-gated `GOOGLE_PLACES_API_KEY`, **kein Cron**, Trefferlimit 10, **kein Scraping**), Dedupe, optional Auto-Erstellung **kalter** Prospects (`source_type='google'`, Outreach gesperrt), entdeckte Kandidaten, Lauf-Audit. Fehlender Key → „nicht konfiguriert". Session-Client/RLS, kein Service-Role |
+| `/app-shell/revenue-autopilot/policy` | **Intern** (noindex, **dynamisch/geschützt**): **Autopilot-Richtlinien** – Policy-Matrix je Kontakt-Kategorie (was automatisch erlaubt/gesperrt + warum), Hard-Blocked-Liste (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), Provider-Status, **Owner-Toggles** für sichere Modi (in `company_settings.settings` jsonb, `can_write_settings` = owner/admin). Session-Client/RLS, kein Service-Role |
 | `/app-shell/ceo` | **Intern** (noindex, **dynamisch/geschützt**): **CEO-Briefing** – **read-only** KPI-Überblick über die Kette (Geld-Wirkung CHF, KPI-Kacheln, Trichter Opportunity→Lead→Offerte→Auftrag→bexio, Letzte 7 Tage, Achtung-Karten) aus vorhandenen RLS-Daten. Keine Schreibvorgänge/KI/externe API/bexio-API/Scraping |
 | `/app-shell/leads` | **Intern** (noindex, **dynamisch/geschützt**): Lead Inbox – Tenant-Leads anzeigen, manuell erfassen, **Status pflegen** und **Follow-ups planen** (Server-Actions, Session-Client/RLS). Kein Versand, keine externen Integrationen |
 | `/app-shell/lead-hunter` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter / Opportunity Radar – Opportunities **manuell erfassen** + Radar-Übersicht + **deterministisches Service-Matching/Scoring** (live) + **„In Lead Inbox übernehmen"** (Promotion zu `leads`) + **„Opportunity aus Quelle"** (vorausgefülltes Formular via `?source=<id>`, verknüpft `prospects.source_id`) + Links zur **Quellen-Registry** und zum **Schweiz-Radar** (Server-Actions, Session-Client/RLS). Kein Scraping/Auto-Suche/KI/externe Quellen |
@@ -313,7 +338,8 @@ lib/
   env.ts               # Lazy Env-Validierung (build-sicher; Service-Role nur Server)
   supabase/            # Clients: browser.ts (Anon), server.ts (Cookies), admin.ts (Service-Role, Server), middleware.ts
   auth/session.ts      # Server-Session-Helfer: getCurrentUser/Profile/Memberships/CompanyContext
-  auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Zähler, Leads, Follow-ups [inkl. leadId], Offerten, Jobs, Opportunities/getProspects, Quellen/getLeadSources + getLeadSourceById, bexio-Übergaben/getInvoiceHandoffJobs) via Session-Client
+  auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Zähler, Leads, Follow-ups [inkl. leadId], Offerten, Jobs, Opportunities/getProspects, Quellen/getLeadSources + getLeadSourceById, bexio-Übergaben/getInvoiceHandoffJobs, getCompanySettings, getAutopilotPolicy, getDiscoveryRuns) via Session-Client
+  discovery/google-places.ts # SERVER-ONLY: offizielle Google-Places-Text-Search (env-gated GOOGLE_PLACES_API_KEY, lazy/Build-sicher, Timeout, Trefferlimit, kein Scraping, Key nie geloggt/im Client) (v0.5.2)
   pdf/offer-pdf.ts     # abhängigkeitsfreier PDF-1.4-Generator (Standard-Helvetica/WinAnsi, keine Assets) (v0.3.3)
   ics/job-ics.ts       # abhängigkeitsfreier iCalendar-(.ics)-Generator (RFC 5545 VEVENT, keine Assets/Sync) (v0.3.5)
 
@@ -362,6 +388,8 @@ components/          # Wiederverwendbare UI-Bausteine
   revenue-autopilot/appointment.ts # reine Funktion: Termin-Entwürfe (Vorschlag/Bestätigung, Platzhalter-Zeitfenster), kein Kalender/keine Buchung (v0.5.0)
   revenue-autopilot/DraftChannels.tsx # Client: Kopier-Only Mehrkanal-Entwurfsansicht (Kanalwechsel + „Kopieren"; nur Clipboard, kein Netzwerk) (v0.5.0)
   revenue-autopilot/ResearchTools.tsx # Client: Suchbegriff/Region-Inputs → vom Nutzer geöffnete Such-Links (Google/Maps/ZEFIX/Website) + Capture-CTA (nicht-PII source/service/region); kein fetch/Scraping/API/Server-Sammeln (v0.5.1)
+  revenue-autopilot/policy.ts # reine Autopilot Rules Engine: Lead-Kategorien + Safe-Mode-Toggles + Provider-Status → Policy-Verdikte (Cold-Outreach/Auto-Buchung hart gesperrt); keine Aktion, nur Entscheidung (v0.5.2)
+  revenue-autopilot/SafeModeBanner.tsx # „Autopilot Safe-Mode aktiv"-Banner (Cold-Outreach/Anrufe/stille Buchung/Scraping gesperrt) (v0.5.2)
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
@@ -382,7 +410,9 @@ app/
       [id]/ics/route.ts  # geschützter Route-Handler: Termin-.ics (Session-Client/RLS, sonst 404) (v0.3.5)
     bexio/           # bexio-Übergabe: page.tsx (Bereit/Vorbereitet/Verrechnet, kopierbare Zusammenfassung) + actions.ts (prepareHandoff, markHandoffInvoiced; Manage-Domäne, keine echte bexio-API) (v0.3.12)
     ceo/             # CEO-Briefing: page.tsx (read-only KPI-Überblick, Geld-Wirkung, Trichter, Achtung-Karten; Autopilot-Nächste-Aktionen + Link) (v0.3.13/v0.5.0)
-    revenue-autopilot/ # Revenue Autopilot: page.tsx (Command Center – Umsatz-Aktionen, Source Execution Queue, heisse Chancen + Outreach-Entwürfe, Leads + Termin-Entwürfe, Offerten-Nachfass; nur Lesen/Session-Client/RLS, kein Versand/keine Buchung/kein Scraping) (v0.5.0)
+    revenue-autopilot/ # Revenue Autopilot: page.tsx (Command Center – Umsatz-Aktionen, Automatik-Sektion, Source Execution Queue, heisse Chancen + Outreach-Entwürfe, Leads + Termin-Entwürfe, Offerten-Nachfass; nur Lesen/Session-Client/RLS, kein Versand/keine Buchung/kein Scraping) (v0.5.0)
+      discovery/ # Automatische Discovery: page.tsx (Lauf/Kandidaten/Audit) + RunDiscoveryForm.tsx (Client) + actions.ts (runDiscovery; owner/admin, offizielle Places-API, Dedupe, optional kalte Prospects, audit_logs) (v0.5.2)
+      policy/    # Autopilot-Richtlinien: page.tsx (Policy-Matrix/Hard-Blocked/Provider/Toggles) + PolicyToggles.tsx (Client) + actions.ts (updateAutopilotPolicy; owner/admin, company_settings.settings jsonb) (v0.5.2)
   login/             # Login-Seite (noindex, Skelett)
   auth/callback/  logout/                        # Auth-Route-Handler (force-dynamic)
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
@@ -442,7 +472,9 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-revenue-autopilot-roadmap.md # Revenue-Autopilot-Roadmap: Source Execution Queue, Discovery/Outreach/Follow-up/Termin-Assistenten, Human-Approval-Regeln, Legal-Guardrails, freigegebene Quellen, gated Gmail/Calendar/Google/ZEFIX/SIMAP-Pfade (v0.4.3)
   clean24-revenue-autopilot-foundation.md # Revenue-Autopilot-Fundament: was v0.5.0 hinzufügt, was manuell bleibt, Human-Approval-Durchsetzung, Guardrails, tägliche Clean24-Nutzung, gated nächste Phase (v0.5.0; VERIFIED-Abschnitt v0.5.0.1)
   clean24-revenue-autopilot-results.md # Ergebnis: Revenue Autopilot in Produktion verifiziert (Route lädt, Autopilot-Nav aktiv, Seite/Guarded-Hinweis/Karte gerendert, keine echten Kundendaten) (v0.5.0.1)
-  clean24-controlled-source-execution.md # Controlled Source Execution: geführtes Cockpit (/sources/[id]/execute), Ziel/Recherche-Links (vom Nutzer geöffnet, kein fetch/Scraping)/Qualifizierung/Erfassen (nicht-PII)/Kontakt-Entwürfe, warum kein Scraping/Versand, real-data nur über UI, gated nächste Phase (v0.5.1)
+  clean24-controlled-source-execution.md # Controlled Source Execution: geführtes Cockpit (/sources/[id]/execute), Ziel/Recherche-Links (vom Nutzer geöffnet, kein fetch/Scraping)/Qualifizierung/Erfassen (nicht-PII)/Kontakt-Entwürfe, warum kein Scraping/Versand, real-data nur über UI, gated nächste Phase (v0.5.1; VERIFIED v0.5.1.1)
+  clean24-controlled-source-execution-results.md # Ergebnis: Controlled Source Execution in Produktion verifiziert (Cockpit/Worklist, Recherche-Links = eigene Suche, Capture nicht-PII, „Quelle aktiv", kein Auto-Versand/Buchung, keine echten Kundendaten) (v0.5.1.1)
+  clean24-automatic-discovery-autopilot-rules.md # Automatic Discovery + Autopilot Rules: Lead-Kategorien, Policy-Matrix, Hard-Blocks (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), offizielle Places-API (env-gated/owner-initiiert/kein Cron), Auto-Erstellung kalter Kandidaten, Message-/Termin-Architektur (kein Versand/Buchung), Audit, gated Provider-Phase (v0.5.2)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)

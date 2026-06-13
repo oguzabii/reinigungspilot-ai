@@ -20,6 +20,10 @@ import type {
   ProspectStatus,
   HandoffStatus,
 } from "@/lib/database-types";
+import {
+  DEFAULT_AUTOPILOT_TOGGLES,
+  type AutopilotToggles,
+} from "@/components/revenue-autopilot/policy";
 
 type CountTable =
   | "prospects"
@@ -100,6 +104,93 @@ export async function getCompanySettings(
     senderName: row?.sender_name ?? null,
     senderEmail: row?.sender_email ?? null,
   };
+}
+
+/**
+ * The active company's Autopilot safe-mode toggles, read from the
+ * `company_settings.settings` jsonb (key `autopilot`). RLS-scoped via the
+ * session client (never service-role). Missing/invalid values fall back to the
+ * SAFE defaults (everything OFF). No schema change — reuses the existing jsonb.
+ */
+export async function getAutopilotPolicy(
+  companyId: string,
+): Promise<AutopilotToggles> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("company_settings")
+    .select("settings")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  if (error) {
+    console.error("[tenant-data] getAutopilotPolicy failed:", error.message);
+    return { ...DEFAULT_AUTOPILOT_TOGGLES };
+  }
+  const settings = (data?.settings ?? {}) as Record<string, unknown>;
+  const a = (settings.autopilot ?? {}) as Partial<AutopilotToggles>;
+  return {
+    autoCreateColdCandidates: Boolean(a.autoCreateColdCandidates),
+    autoReplyInbound: Boolean(a.autoReplyInbound),
+    autoFollowupExistingApproved: Boolean(a.autoFollowupExistingApproved),
+    autoAppointmentProposal: Boolean(a.autoAppointmentProposal),
+  };
+}
+
+export interface DiscoveryRunLog {
+  id: string;
+  createdAt: string;
+  query: string | null;
+  region: string | null;
+  found: number | null;
+  created: number | null;
+  deduped: number | null;
+  autoCreate: boolean | null;
+  status: string | null;
+}
+
+/**
+ * Recent automatic-discovery runs, read from `audit_logs`
+ * (`entity_type = 'discovery_run'`). Append-only transparency — no silent
+ * actions. RLS-scoped via the session client (never service-role).
+ */
+export async function getDiscoveryRuns(
+  companyId: string,
+  limit = 10,
+): Promise<DiscoveryRunLog[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("audit_logs")
+    .select("id, created_at, metadata")
+    .eq("company_id", companyId)
+    .eq("entity_type", "discovery_run")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.error("[tenant-data] getDiscoveryRuns failed:", error.message);
+    return [];
+  }
+  const rows = (data ?? []) as Array<{
+    id: string;
+    created_at: string;
+    metadata: Record<string, unknown> | null;
+  }>;
+  const num = (v: unknown): number | null =>
+    typeof v === "number" ? v : null;
+  const str = (v: unknown): string | null =>
+    typeof v === "string" ? v : null;
+  return rows.map((r) => {
+    const m = r.metadata ?? {};
+    return {
+      id: r.id,
+      createdAt: r.created_at,
+      query: str(m.query),
+      region: str(m.region),
+      found: num(m.found),
+      created: num(m.created),
+      deduped: num(m.deduped),
+      autoCreate: typeof m.autoCreate === "boolean" ? m.autoCreate : null,
+      status: str(m.status),
+    };
+  });
 }
 
 /** Row counts per module for the active company. Each value is RLS-scoped. */

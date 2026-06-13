@@ -56,10 +56,29 @@ recorded**:
 - The decision is recorded below and in
   [`production-readiness-gate.md`](./production-readiness-gate.md).
 
+## Controlled-start exception (v0.4.2 — LIMITED GO)
+
+The owner has authorised a **LIMITED GO** for controlled use ahead of the full
+gate, **accepting** the deferred-restore-test risk — see
+[`clean24-controlled-production-start.md`](./clean24-controlled-production-start.md).
+Under this exception:
+
+- **Allowed:** the **owner** entering **their own** Clean24 production data
+  **through the production app UI** (authenticated session, RLS).
+- **Not allowed:** SQL imports, bulk imports, any DB-side insert of customer
+  rows, service-role data entry, or **customer data in commits, docs, or
+  prompts**.
+- **Scope:** controlled **owner** use only — **no broad rollout, no external
+  customer onboarding**.
+- The **restore test remains required before scaling**; a future full **GO**
+  supersedes this exception.
+
 ## Until the gate is GO
 
-- The system runs on **staging** with **fake `@example.test`** data only.
-- No real Clean24 data is imported, typed, or connected.
+- **Outside** the controlled-start exception above, the system runs on
+  **staging** with **fake `@example.test`** data only.
+- No real Clean24 data is **imported** (SQL/bulk) or connected — the only real
+  data permitted is **owner UI entry** under the v0.4.2 exception.
 - The public sales demo (v0.1.7) stays fictional (`Muster Service GmbH`).
 - The old standalone **Clean24 Lead Autopilot** stays separate — no migration,
   import, or coupling.
@@ -69,6 +88,9 @@ recorded**:
 | Date | Version | Decision | Mandatory items complete | Restore test | Signed by |
 | --- | --- | --- | --- | --- | --- |
 | 2026-06-12 | v0.4.0 | **NO-GO** | No | Not run | _(owner — pending)_ |
+| 2026-06-13 | v0.4.2 | **LIMITED GO** (controlled owner use, UI only) | A + B (C/D deferred) | **Deferred** (risk accepted) | Owner |
 
 > Add a new row (never edit a prior one) each time the decision is re-evaluated.
-> Real customer data may enter **only** on a row that records **GO**.
+> Real customer data may enter on a row that records **GO**, or — **via the app
+> UI only** — under a **LIMITED GO** controlled-start row. Never via SQL/import
+> while a LIMITED GO exception is in effect.

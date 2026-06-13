@@ -41,9 +41,12 @@
 - ❌ Several plan controls not yet implemented (audit-log writes wired in,
   rate-limiting, CSP, MFA). Tracked below.
 
-**Therefore: real customer data stays BLOCKED** until the **restore test passes**
-and the **owner signs GO** — even though the production tenant + owner login now
-work. No real customer data has been added.
+**Therefore: LIMITED GO (2026-06-13)** — the **owner** may now enter their **own**
+Clean24 data via the production **app UI only**, with the deferred-restore-test
+risk explicitly accepted. **Broad rollout / external customer onboarding stays
+BLOCKED** until the restore test passes and the owner signs full GO. **No
+SQL/bulk import, no service-role, no customer PII in repo/docs.** See
+[`clean24-controlled-production-start.md`](./clean24-controlled-production-start.md).
 
 ## Companion documents (read these)
 
@@ -100,7 +103,8 @@ Each item is **manually verified** and dated by the **owner** before go-live.
 - [ ] **Daily external export** (off-Supabase) configured. → doc 3
 - [ ] **Restore test PASSED** (restore to a fresh project, verify data + RLS +
       login) and recorded — not just "a backup exists". → doc 3
-      *(GitHub Actions workflow prepared 2026-06-13 — run & record to pass)*
+      *(DEFERRED 2026-06-13: workflow prepared, risk accepted for LIMITED GO;
+      still REQUIRED before broad rollout / full GO)*
 - [ ] Code/deploy **rollback** path (Vercel) confirmed. → doc 3
 - [ ] [Incident/recovery runbook](./incident-recovery-runbook.md) reviewed. → doc 6
 
@@ -126,23 +130,27 @@ Each item is **manually verified** and dated by the **owner** before go-live.
 
 ## GO / NO-GO decision
 
-Production onboarding of the first real tenant (**Clean24 Memis GmbH**) is
-**GO** only when **all mandatory items (A–D)** are checked, dated and signed by
-the owner, **and** the restore test passed.
+**Full** production onboarding (broad rollout / external customers) is **GO**
+only when **all mandatory items (A–D)** are checked, dated and signed by the
+owner, **and** the restore test passed. A narrower **LIMITED GO** (below) lets
+the **owner** begin controlled use of their **own** Clean24 data via the UI
+before that, with the backup/restore risk explicitly accepted.
 
 | Field | Value |
 | --- | --- |
-| Decision | **NO-GO (current)** |
-| Reason | Production tenant + owner login work (2026-06-13); the restore-test **workflow is prepared but not yet run/passed** (PITR / daily external export also pending) |
-| Mandatory items complete | No — A + B done; **C/D pending**, restore test is the blocker |
-| Restore test passed | No |
-| Decided by | _(owner)_ |
-| Date | _(pending)_ |
+| Decision | **LIMITED GO — controlled Clean24 owner use** (UI only), 2026-06-13 |
+| Full GO | **NOT yet** — broad rollout / external onboarding still blocked |
+| Reason | Production tenant + owner login work; owner **accepts** the deferred-restore-test risk for limited use of their own data |
+| Mandatory items complete | A + B done; **C/D pending** (restore test deferred) |
+| Restore test passed | **No — deferred** (workflow prepared; risk accepted) |
+| Decided by | Owner (Clean24 Memis GmbH) |
+| Date | 2026-06-13 |
 
-Until this records **GO**, **no real customer data is entered** — the
-`klarsa-production` tenant holds **config only** (company, owner, services,
-sources). See the binding policy in
-[`real-data-gate-policy.md`](./real-data-gate-policy.md).
+Under **LIMITED GO**, real Clean24 data may enter **only through the production
+app UI** — **no SQL/bulk import, no service-role, no customer PII in repo/docs**.
+**No broad rollout / no external customer onboarding until the restore test
+passes.** See [`clean24-controlled-production-start.md`](./clean24-controlled-production-start.md)
+and the binding policy in [`real-data-gate-policy.md`](./real-data-gate-policy.md).
 
 ## NOT in scope (v0.4.0)
 

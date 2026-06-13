@@ -275,13 +275,22 @@ function SourceRow({ src }: { src: LeadSourceListItem }) {
       )}
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
-        <Link
-          href={`/app-shell/lead-hunter?source=${src.id}`}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-50"
-        >
-          <Crosshair className="h-3.5 w-3.5" />
-          Opportunity vorbereiten
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/app-shell/lead-hunter/sources/${src.id}/execute`}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-navy-900 px-2.5 py-1 text-xs font-semibold text-white transition-colors hover:bg-navy-800"
+          >
+            <ListChecks className="h-3.5 w-3.5" />
+            Quelle abarbeiten
+          </Link>
+          <Link
+            href={`/app-shell/lead-hunter?source=${src.id}`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-50"
+          >
+            <Crosshair className="h-3.5 w-3.5" />
+            Opportunity vorbereiten
+          </Link>
+        </div>
         <span className="text-xs text-slate-400">
           registriert {src.createdAt.slice(0, 10)}
         </span>

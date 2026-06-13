@@ -7,20 +7,31 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.5.0.1** — **Revenue Autopilot in Produktion verifiziert.** Der Inhaber hat
-sich in der Produktion (`https://klarsa.vercel.app`) angemeldet und
-`/app-shell/revenue-autopilot` erfolgreich geöffnet: Route lädt nach Login,
-**Autopilot** in der Navigation aktiv, Clean24-Mandantenkontext sichtbar, Seite
-rendert „Revenue Autopilot" / „Heute Geld holen" / „Klarsa zeigt Ihnen, was heute
-Umsatz bringt." + den Guarded-Automation-Hinweis (kein Scraping, keine automatische
-Suche, kein Auto-E-Mail-/WhatsApp-Versand, keine Auto-Terminbuchung, keine
-bexio-API) + die Karte „Autopilot – Nächste Schritte für Umsatz". **Keine echten
-Kundendaten erfasst.** **Docs-only** (neu `docs/clean24-revenue-autopilot-results.md`;
-`clean24-revenue-autopilot-foundation.md` mit **VERIFIED**-Abschnitt). Ehrlicher
-Scope: kontrolliertes **Vorbereitungs-Fundament** – noch **keine** automatische
-Discovery/Versand/Buchung. **LIMITED GO bleibt**: echte Daten nur über die App-UI,
-Restore-Test weiter aufgeschoben, kein breiter Rollout. **001–006 unverändert;
-`004` unangetastet.**
+**v0.5.1** — **Controlled Source Execution (geführte reale Lead-Recherche).** Neue
+geschützte, dynamische Route `/app-shell/lead-hunter/sources/[id]/execute`: ein
+geführtes Quellen-Abarbeitungs-Cockpit als 5-Schritte-Worklist — **Ziel** (z. B.
+„Heute ≈5 Liegenschaftsverwaltungen recherchieren"), **Recherchieren** über
+**vom Nutzer geöffnete** Such-Links (Google / Google Maps / ZEFIX / Website – reine
+`<a href>`-Links, **kein `fetch`/Scraping/API/Server-Sammeln**, Klarsa liest keine
+Ergebnisse aus), **Qualifizieren** (Checkliste, lokale Merkhilfe, nichts
+gespeichert), **Erfassen** (Button → vorausgefülltes „Opportunity aus
+Quelle"-Formular mit **nicht-PII**-Kontext source/service/region; erstellt nichts
+automatisch) und **Kontakt vorbereiten** (generische Kopier-Entwürfe E-Mail /
+WhatsApp / Telefon / Termin). **Revenue Autopilot**, **Quellen-Registry** und
+**Lead Hunter** sind integriert („Quelle abarbeiten"-CTAs, „Quelle aktiv"-Banner).
+Reine Helper (`source-queue.ts` erweitert um `sourceTaskFor`, neue
+`ResearchTools.tsx`), **keine neue Migration**, kein Service-Role, keine externe
+API/KI, kein Scraping, kein Versand/keine Buchung. Menschliche Freigabe ist
+erzwungen: jeder Schritt = **recherchieren → qualifizieren → erfassen → selbst
+senden**. Neu: `docs/clean24-controlled-source-execution.md`. **Kontrollierter
+Clean24-Produktionsstart bleibt LIMITED GO** – echte Daten ausschliesslich über die
+App-UI. **001–006 unverändert; `004` unangetastet.** lint/build grün.
+
+> **v0.5.0.1:** Revenue Autopilot in Produktion verifiziert — Inhaber-Login auf
+> `https://klarsa.vercel.app`, `/app-shell/revenue-autopilot` lädt nach Login,
+> **Autopilot** in der Navigation aktiv, Clean24-Kontext sichtbar, Seite +
+> Guarded-Automation-Hinweis + „Nächste Schritte für Umsatz"-Karte gerendert,
+> **keine echten Kundendaten erfasst** — `docs/clean24-revenue-autopilot-results.md`.
 
 **Fundament (v0.5.0):** Neue geschützte Route
 `/app-shell/revenue-autopilot` als Command Center „Heute Geld holen": priorisierte
@@ -181,12 +192,14 @@ App-UI. **001–006 unverändert; `004` unangetastet.** lint/build grün.
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** erste **kontrollierte Produktionsnutzung mit echten
-> Clean24-Leads über die App-UI** (Revenue Autopilot täglich nutzen) – danach
-> **v0.5.1**: Source-Execution-Status (optional „erledigt/zurückgestellt") und,
-> nur bei expliziter Freigabe, **konforme/freigegebene Discovery-Integration**
-> (z. B. SIMAP-Ausschreibungen) sowie Gmail/Calendar-Anbindung. Bis dahin bleibt
-> alles **vorbereiten → kopieren → selbst senden** (kein Auto-Versand/keine Buchung).
+> **Nächster Schritt:** **kontrollierte Produktionsnutzung** – die geführte
+> Quellen-Abarbeitung (v0.5.1) mit echten Clean24-Leads über die App-UI testen,
+> dann **v0.5.1.1** (Produktionsverifikation der Source Execution). Danach,
+> **nur bei expliziter Freigabe, v0.5.2**: Planung der ersten **konformen/
+> freigegebenen Discovery-Integration** (z. B. SIMAP-Ausschreibungen, „Kandidaten
+> zur menschlichen Prüfung") sowie eine gated Gmail/Calendar-Anbindung. Bis dahin
+> bleibt alles **recherchieren → qualifizieren → erfassen → selbst senden** (kein
+> Auto-Versand/keine Buchung/kein Scraping).
 
 ### Strategie
 
@@ -237,7 +250,8 @@ npm run start    # Produktionsserver (nach build)
 | `/app-shell/leads` | **Intern** (noindex, **dynamisch/geschützt**): Lead Inbox – Tenant-Leads anzeigen, manuell erfassen, **Status pflegen** und **Follow-ups planen** (Server-Actions, Session-Client/RLS). Kein Versand, keine externen Integrationen |
 | `/app-shell/lead-hunter` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter / Opportunity Radar – Opportunities **manuell erfassen** + Radar-Übersicht + **deterministisches Service-Matching/Scoring** (live) + **„In Lead Inbox übernehmen"** (Promotion zu `leads`) + **„Opportunity aus Quelle"** (vorausgefülltes Formular via `?source=<id>`, verknüpft `prospects.source_id`) + Links zur **Quellen-Registry** und zum **Schweiz-Radar** (Server-Actions, Session-Client/RLS). Kein Scraping/Auto-Suche/KI/externe Quellen |
 | `/app-shell/lead-hunter/radar` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter **Schweiz-Radar** – statische, stilisierte Kanton-Radar-Karte aus erfassten Opportunities (Stat-Karten, Kanton-SVG-Pins, Top-Regionen, Service-/Quellen-/Typ-Chips), nur Lesen (Session-Client/RLS). Kein Kartenanbieter/Google/ZEFIX/SIMAP/Geokodierung/externe Abfrage |
-| `/app-shell/lead-hunter/sources` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter **Quellen-Registry** – kontrollierte, von Menschen freigegebene Lead-Quellen **manuell registrieren** + Liste mit Badges (Aktiv/Inaktiv + Phase) + **„Opportunity vorbereiten"** je Quelle (Server-Action, Session-Client/RLS, Settings-Domäne `can_write_settings` = owner/admin). Kein Scraping/Google/ZEFIX/SIMAP/Auto-Abfrage |
+| `/app-shell/lead-hunter/sources` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter **Quellen-Registry** – kontrollierte, von Menschen freigegebene Lead-Quellen **manuell registrieren** + Liste mit Badges (Aktiv/Inaktiv + Phase) + **„Quelle abarbeiten"** (Execution-Cockpit) + **„Opportunity vorbereiten"** je Quelle (Server-Action, Session-Client/RLS, Settings-Domäne `can_write_settings` = owner/admin). Kein Scraping/Google/ZEFIX/SIMAP/Auto-Abfrage |
+| `/app-shell/lead-hunter/sources/[id]/execute` | **Intern** (noindex, **dynamisch/geschützt**): **Controlled Source Execution** – geführtes Quellen-Abarbeitungs-Cockpit (Ziel → Recherchieren → Qualifizieren → Erfassen → Kontakt vorbereiten). Recherche-Links sind **vom Nutzer geöffnete** `<a href>`-Links (Google/Maps/ZEFIX/Website), Capture-Button → vorausgefülltes Formular (nicht-PII source/service/region), generische Kopier-Entwürfe. Nur Lesen (Session-Client/RLS). **Kein `fetch`/Scraping/API/Versand/Buchung**, keine neue Migration |
 | `/app-shell/offers` | **Intern** (noindex, **dynamisch/geschützt**): Offer Engine – Offerten-Entwürfe manuell erstellen (optional aus Lead), Positionen + Netto/MwSt/Brutto, **Status pflegen**, **PDF-Download** + manueller Versand-Entwurf (Server-Actions, Session-Client/RLS). Kein echter Versand/bexio |
 | `/app-shell/offers/[id]/pdf` | **Intern** (noindex, **dynamisch/geschützt**): Route-Handler – generiert das Offerten-PDF (Session-Client/RLS, nur eigene Offerte, sonst 404). Ohne Abhängigkeit/Asset, kein Versand |
 | `/app-shell/jobs` | **Intern** (noindex, **dynamisch/geschützt**): Auftragsliste – aus angenommenen Offerten erstellte Jobs, **Status & Termin pflegen**, .ics-Download (Status, Termin, Kunde, Quell-Offerte, Wert). Session-Client/RLS. Kein Kalender-Sync/E-Mail/bexio |
@@ -320,10 +334,11 @@ components/          # Wiederverwendbare UI-Bausteine
   app-shell/autopilot.ts  # reiner Helper: priorisierte Umsatz-Aktionen aus CeoKpis (keine externe API/Versand/Scraping/Buchung) (v0.4.3)
   app-shell/ChainStepper.tsx # Umsatz-Kette als geordnete Stationen über die RLS-Zähler (v0.4.3)
   app-shell/EmptyState.tsx # geteilter Premium-Empty-State (Icon/Titel/Beschreibung/CTA) (v0.4.3)
-  revenue-autopilot/source-queue.ts # reine Funktion: Source Execution Queue (aktive lead_sources → Recherche-Schritt + Link), kein Lookup/Scraping/API (v0.5.0)
+  revenue-autopilot/source-queue.ts # reine Funktion: Source Execution Queue + sourceTaskFor (aktive lead_sources → Ziel/Recherche-Keyword/Service/Links), kein Lookup/Scraping/API (v0.5.0, erweitert v0.5.1)
   revenue-autopilot/outreach.ts # reine Funktion: Schweizerdeutsche Outreach-Entwürfe (E-Mail/WhatsApp/Telefon-Skript/Follow-up), nur Text, kein Versand (v0.5.0)
   revenue-autopilot/appointment.ts # reine Funktion: Termin-Entwürfe (Vorschlag/Bestätigung, Platzhalter-Zeitfenster), kein Kalender/keine Buchung (v0.5.0)
   revenue-autopilot/DraftChannels.tsx # Client: Kopier-Only Mehrkanal-Entwurfsansicht (Kanalwechsel + „Kopieren"; nur Clipboard, kein Netzwerk) (v0.5.0)
+  revenue-autopilot/ResearchTools.tsx # Client: Suchbegriff/Region-Inputs → vom Nutzer geöffnete Such-Links (Google/Maps/ZEFIX/Website) + Capture-CTA (nicht-PII source/service/region); kein fetch/Scraping/API/Server-Sammeln (v0.5.1)
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
@@ -335,7 +350,8 @@ app/
   app-shell/         # geschützter Tenant-Arbeitsbereich (noindex, force-dynamic, Session+RLS)
     leads/           # Lead Inbox: page.tsx (Liste, Status, Follow-ups) + actions.ts (createLead, updateLeadStatus, createFollowup)
     lead-hunter/     # Lead Hunter / Opportunity Radar: page.tsx (Radar-Übersicht, Liste, Promotion, Registry-/Radar-Links, Seed aus Quelle via ?source=) + actions.ts (createOpportunity [+ source_id], promoteOpportunity)
-      sources/       # Quellen-Registry: page.tsx (Liste, Badges, Übersicht, owner/admin-Formular, „Opportunity vorbereiten") + actions.ts (createLeadSource; Settings-Domäne) (v0.3.9)
+      sources/       # Quellen-Registry: page.tsx (Liste, Badges, Übersicht, owner/admin-Formular, „Quelle abarbeiten" + „Opportunity vorbereiten") + actions.ts (createLeadSource; Settings-Domäne) (v0.3.9)
+        [id]/execute/ # Controlled Source Execution: page.tsx (geführtes Cockpit – Ziel/Recherche-Links/Qualifizierung/Erfassen/Kontakt-Entwürfe; nur Lesen, kein fetch/Scraping/Versand/Buchung) (v0.5.1)
       radar/         # Schweiz-Radar: page.tsx (Stat-Karten, Kanton-Radar-SVG, Top-Regionen, Service-/Quellen-/Typ-Chips; nur Lesen, kein Kartenanbieter) (v0.3.11)
     offers/          # Offer Engine: page.tsx (Liste, Positionen, Summen, Status, PDF, Versand-Entwurf, Auftrag erstellen) + actions.ts (createOffer, updateOfferStatus, addOfferItem)
       [id]/pdf/route.ts  # geschützter Route-Handler: Offerten-PDF (Session-Client/RLS, sonst 404) (v0.3.3)
@@ -401,7 +417,9 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   production-restore-test-github-actions.md # Low-Cost-Restore-Test via manuellem GitHub-Actions-Workflow (.github/workflows/production-restore-test.yml): Dump→throwaway-Postgres→Verify, kein neues Projekt/keine lokalen Tools/kein Prod-Overwrite/kein Artefakt/keine Secrets; nur public-Schema (Limitation dokumentiert) (v0.4.2-prep)
   clean24-controlled-production-start.md # Kontrollierter Produktionsstart: LIMITED GO (nur Inhaber-Nutzung via UI), Restore-Test aufgeschoben/Risiko akzeptiert, kein SQL-Import/kein breiter Rollout/keine Kunden-PII, Entscheidungs-Record (v0.4.2)
   clean24-revenue-autopilot-roadmap.md # Revenue-Autopilot-Roadmap: Source Execution Queue, Discovery/Outreach/Follow-up/Termin-Assistenten, Human-Approval-Regeln, Legal-Guardrails, freigegebene Quellen, gated Gmail/Calendar/Google/ZEFIX/SIMAP-Pfade (v0.4.3)
-  clean24-revenue-autopilot-foundation.md # Revenue-Autopilot-Fundament: was v0.5.0 hinzufügt, was manuell bleibt, Human-Approval-Durchsetzung, Guardrails, tägliche Clean24-Nutzung, gated nächste Phase (v0.5.0)
+  clean24-revenue-autopilot-foundation.md # Revenue-Autopilot-Fundament: was v0.5.0 hinzufügt, was manuell bleibt, Human-Approval-Durchsetzung, Guardrails, tägliche Clean24-Nutzung, gated nächste Phase (v0.5.0; VERIFIED-Abschnitt v0.5.0.1)
+  clean24-revenue-autopilot-results.md # Ergebnis: Revenue Autopilot in Produktion verifiziert (Route lädt, Autopilot-Nav aktiv, Seite/Guarded-Hinweis/Karte gerendert, keine echten Kundendaten) (v0.5.0.1)
+  clean24-controlled-source-execution.md # Controlled Source Execution: geführtes Cockpit (/sources/[id]/execute), Ziel/Recherche-Links (vom Nutzer geöffnet, kein fetch/Scraping)/Qualifizierung/Erfassen (nicht-PII)/Kontakt-Entwürfe, warum kein Scraping/Versand, real-data nur über UI, gated nächste Phase (v0.5.1)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)

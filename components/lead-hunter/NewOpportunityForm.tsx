@@ -38,6 +38,10 @@ export interface OpportunitySeed {
   sourceType?: string;
   /** Pre-filled "why interesting" context derived from the source. */
   reason?: string;
+  /** Optional non-PII region context (e.g. "Zürich") from source execution. */
+  region?: string;
+  /** Optional non-PII suggested service (e.g. "Büroreinigung"). */
+  service?: string;
 }
 
 /**
@@ -81,8 +85,8 @@ function OpportunityFields({
 }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("Manuell");
-  const [region, setRegion] = useState("");
-  const [service, setService] = useState("");
+  const [region, setRegion] = useState(seed?.region ?? "");
+  const [service, setService] = useState(seed?.service ?? "");
   const [sourceType, setSourceType] = useState(seed?.sourceType ?? "manual");
   const [score, setScore] = useState("");
   const [reason, setReason] = useState(seed?.reason ?? "");

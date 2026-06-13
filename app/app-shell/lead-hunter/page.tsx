@@ -16,6 +16,7 @@ import {
   Compass,
   Crosshair,
   ArrowRightToLine,
+  ArrowLeft,
   FileText,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
@@ -67,6 +68,12 @@ export default async function AppShellLeadHunterPage({
 
   const sp = await searchParams;
   const sourceParam = typeof sp.source === "string" ? sp.source : undefined;
+  // Safe, NON-PII context from the source-execution flow (region/service only).
+  // Sanitised: single line, trimmed, length-capped. Never carries customer data.
+  const cleanParam = (v: unknown): string =>
+    typeof v === "string" ? v.replace(/[\r\n]+/g, " ").trim().slice(0, 80) : "";
+  const regionParam = cleanParam(sp.region);
+  const serviceParam = cleanParam(sp.service);
 
   const [summary, opportunities, source] = await Promise.all([
     getCompanySummary(companyId),
@@ -77,7 +84,8 @@ export default async function AppShellLeadHunterPage({
   ]);
 
   // Seed the capture form from a registered source (manual workflow — the user
-  // still confirms + saves; nothing auto-runs).
+  // still confirms + saves; nothing auto-runs). Region/service are only honoured
+  // alongside a valid source and are generic context, not PII.
   const allowedSourceValues = OPPORTUNITY_SOURCES.map((s) => s.value as string);
   const seed: OpportunitySeed | undefined = source
     ? {
@@ -89,6 +97,8 @@ export default async function AppShellLeadHunterPage({
         reason:
           `Aus Quelle: ${source.label} (${SOURCE_TYPE_META[source.type].label}).` +
           (source.notes ? `\n${source.notes}` : ""),
+        region: regionParam || undefined,
+        service: serviceParam || undefined,
       }
     : undefined;
 
@@ -162,6 +172,34 @@ export default async function AppShellLeadHunterPage({
             </Link>
           </div>
         </section>
+
+        {/* Quelle aktiv — explicit context when arriving from source execution */}
+        {source && (
+          <section className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50/70 p-4">
+            <div className="flex min-w-0 items-start gap-2.5">
+              <Library className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+              <p className="text-sm leading-relaxed text-navy-800">
+                <span className="font-semibold">Quelle aktiv: {source.label}.</span>{" "}
+                Nächster Schritt: Felder unten prüfen, ergänzen und speichern – die
+                Opportunity wird mit dieser Quelle verknüpft.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-3">
+              <Link
+                href={`/app-shell/lead-hunter/sources/${source.id}/execute`}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-800"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Zur Quellen-Abarbeitung
+              </Link>
+              <Link
+                href="#erfassen"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-navy-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-navy-800"
+              >
+                <Crosshair className="h-3.5 w-3.5" /> Zum Formular
+              </Link>
+            </div>
+          </section>
+        )}
 
         {/* The 4-step path to revenue */}
         <section className="mt-6">

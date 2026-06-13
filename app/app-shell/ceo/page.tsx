@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Crown,
-  ArrowLeft,
   Lock,
   Banknote,
   CheckCircle2,
@@ -13,11 +11,10 @@ import {
   FileText,
   PlugZap,
   Activity,
-  AlertTriangle,
-  ChevronRight,
   ChevronsRight,
 } from "lucide-react";
-import { InternalHeader } from "@/components/InternalHeader";
+import { AppShellNav } from "@/components/app-shell/AppShellNav";
+import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
 import { formatChf } from "@/components/offers/offer-status";
 import { getPackageName } from "@/lib/packages";
 import { computeCeoKpis, type CeoKpis } from "@/components/ceo/kpi";
@@ -78,46 +75,14 @@ export default async function AppShellCeoPage() {
     followupLeadIds: followups.map((f) => f.leadId),
     nowIso,
   });
-
-  const attention = [
-    {
-      show: kpis.attnOffersWaiting > 0,
-      count: kpis.attnOffersWaiting,
-      text: "Offerte(n) warten auf Antwort – nachfassen.",
-      href: "/app-shell/offers",
-    },
-    {
-      show: kpis.attnJobsNotHandedOff > 0,
-      count: kpis.attnJobsNotHandedOff,
-      text: "abgeschlossene(r) Auftrag/Aufträge noch nicht an bexio übergeben.",
-      href: "/app-shell/bexio",
-    },
-    {
-      show: kpis.attnHighScoreNotPromoted > 0,
-      count: kpis.attnHighScoreNotPromoted,
-      text: "High-Score-Opportunit(y/ies) noch nicht in den Lead Inbox übernommen.",
-      href: "/app-shell/lead-hunter",
-    },
-    {
-      show: kpis.attnLeadsNoFollowup > 0,
-      count: kpis.attnLeadsNoFollowup,
-      text: "offene(r) Lead(s) ohne geplantes Follow-up.",
-      href: "/app-shell/leads",
-    },
-  ].filter((a) => a.show);
+  const hasData =
+    kpis.oppsTotal + kpis.leadsTotal + kpis.offersTotal + kpis.jobsTotal > 0;
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <InternalHeader />
+      <AppShellNav companyName={summary?.name} />
       <main className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
-        <Link
-          href="/app-shell"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-800"
-        >
-          <ArrowLeft className="h-4 w-4" /> App-Shell
-        </Link>
-
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-navy-900 text-white ring-1 ring-inset ring-navy-900">
               <Crown className="h-4 w-4" strokeWidth={2} />
@@ -138,17 +103,9 @@ export default async function AppShellCeoPage() {
           )}
         </div>
 
-        {/* Disclaimer */}
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-sm leading-relaxed text-amber-800">
-            <strong className="font-semibold">Read-only KPI-Überblick</strong> auf
-            Basis Ihrer bestehenden Klarsa-Daten (RLS-gefiltert, nur Ihr Mandant).
-            Keine externen Quellen, <strong className="font-semibold">keine
-            KI</strong>, keine bexio-API, kein E-Mail. Die Übersicht je Modul ist
-            auf die neuesten Einträge begrenzt (Fundament). Keine echten
-            Kundendaten.
-          </p>
+        {/* Next actions — the most important thing, first */}
+        <div className="mt-7">
+          <AutopilotCard kpis={kpis} hasData={hasData} />
         </div>
 
         {/* Money impact */}
@@ -159,18 +116,21 @@ export default async function AppShellCeoPage() {
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <MoneyCard
               icon={Banknote}
-              label="Pipeline (offene Offerten)"
+              label="Offene Pipeline"
+              hint="Geld in offenen Offerten"
               value={kpis.pipelineOpenChf}
             />
             <MoneyCard
               icon={CheckCircle2}
-              label="Angenommene Offerten"
+              label="Gewonnen (angenommen)"
+              hint="Angenommene Offerten"
               value={kpis.acceptedChf}
               accent
             />
             <MoneyCard
               icon={Briefcase}
-              label="Abgeschlossene Aufträge"
+              label="Erbracht (abgeschlossen)"
+              hint="Abgeschlossene Aufträge"
               value={kpis.completedJobChf}
             />
           </div>
@@ -241,43 +201,20 @@ export default async function AppShellCeoPage() {
           </div>
         </section>
 
-        {/* Attention */}
-        <section className="mt-8">
-          <h2 className="text-lg font-semibold tracking-tight text-navy-900">
-            Achtung &amp; nächste Schritte
-          </h2>
-          {attention.length === 0 ? (
-            <div className="mt-3 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-              <p className="text-sm font-medium text-emerald-800">
-                Alles im grünen Bereich – keine offenen Hinweise.
-              </p>
-            </div>
-          ) : (
-            <ul className="mt-3 space-y-3">
-              {attention.map((a) => (
-                <li key={a.href}>
-                  <Link
-                    href={a.href}
-                    className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 transition-colors hover:border-amber-300 hover:bg-amber-50"
-                  >
-                    <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
-                    <span className="min-w-0 flex-1 text-sm text-amber-900">
-                      <strong className="font-semibold tabular-nums">
-                        {a.count}
-                      </strong>{" "}
-                      {a.text}
-                    </span>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-amber-400" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        {/* Disclaimer */}
+        <div className="mt-8 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+          <p className="text-sm leading-relaxed text-amber-800">
+            <strong className="font-semibold">Read-only KPI-Überblick</strong> auf
+            Basis Ihrer bestehenden Klarsa-Daten (RLS-gefiltert, nur Ihr Mandant).
+            Keine externen Quellen, <strong className="font-semibold">keine
+            KI</strong>, keine bexio-API, kein E-Mail. Die Übersicht je Modul ist
+            auf die neuesten Einträge begrenzt (Fundament).
+          </p>
+        </div>
 
         {/* Future note */}
-        <p className="mt-8 text-xs leading-relaxed text-slate-400">
+        <p className="mt-6 text-xs leading-relaxed text-slate-400">
           Deterministischer KPI-Überblick – keine KI, keine Empfehlungen aus
           externen Modellen. Ein optionaler KI-CEO-Agent (Zusammenfassung +
           Handlungsempfehlungen mit menschlicher Freigabe) ist eine spätere,
@@ -291,11 +228,13 @@ export default async function AppShellCeoPage() {
 function MoneyCard({
   icon: Icon,
   label,
+  hint,
   value,
   accent,
 }: {
   icon: typeof Banknote;
   label: string;
+  hint: string;
   value: number;
   accent?: boolean;
 }) {
@@ -321,6 +260,9 @@ function MoneyCard({
         }`}
       >
         CHF {formatChf(value)}
+      </p>
+      <p className={`mt-0.5 text-xs ${accent ? "text-blue-200/80" : "text-slate-400"}`}>
+        {hint}
       </p>
     </div>
   );

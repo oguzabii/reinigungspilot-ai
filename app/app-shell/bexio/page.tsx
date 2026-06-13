@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   PlugZap,
-  ArrowLeft,
   Lock,
   CheckCircle2,
   ListChecks,
@@ -14,7 +12,8 @@ import {
   Info,
   ShieldCheck,
 } from "lucide-react";
-import { InternalHeader } from "@/components/InternalHeader";
+import { AppShellNav } from "@/components/app-shell/AppShellNav";
+import { EmptyState } from "@/components/app-shell/EmptyState";
 import { formatChf } from "@/components/offers/offer-status";
 import {
   HANDOFF_STATUS_META,
@@ -109,16 +108,9 @@ export default async function AppShellBexioPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <InternalHeader />
+      <AppShellNav companyName={summary?.name} />
       <main className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
-        <Link
-          href="/app-shell"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-800"
-        >
-          <ArrowLeft className="h-4 w-4" /> App-Shell
-        </Link>
-
-        <div className="mt-3 flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
             <PlugZap className="h-4 w-4" strokeWidth={2} />
           </span>
@@ -178,21 +170,13 @@ export default async function AppShellBexioPage() {
             Abgeschlossene Aufträge ohne bexio-Übergabe.
           </p>
           {ready.length === 0 ? (
-            <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-              <Receipt className="mx-auto h-8 w-8 text-slate-300" strokeWidth={1.8} />
-              <p className="mt-2 text-sm font-medium text-navy-900">
-                Keine abgeschlossenen Aufträge bereit.
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                Aufträge erscheinen hier, sobald ihr Status in den{" "}
-                <Link
-                  href="/app-shell/jobs"
-                  className="font-medium text-blue-700 hover:text-blue-800"
-                >
-                  Aufträgen
-                </Link>{" "}
-                auf „Abgeschlossen“ gesetzt ist.
-              </p>
+            <div className="mt-3">
+              <EmptyState
+                icon={Receipt}
+                title="Keine abgeschlossenen Aufträge bereit."
+                description="Sobald ein Auftrag auf „Abgeschlossen“ steht, erscheint er hier zur Rechnungs-Vorbereitung. Verdientes Geld zeitnah verrechnen sichert Ihren Umsatz."
+                cta={{ label: "Zu den Aufträgen", href: "/app-shell/jobs" }}
+              />
             </div>
           ) : (
             <ul className="mt-3 space-y-3">

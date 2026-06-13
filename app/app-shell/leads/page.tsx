@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Inbox,
-  ArrowLeft,
   Mail,
   Phone,
   UserRound,
@@ -12,7 +10,8 @@ import {
   BellRing,
   CalendarClock,
 } from "lucide-react";
-import { InternalHeader } from "@/components/InternalHeader";
+import { AppShellNav } from "@/components/app-shell/AppShellNav";
+import { EmptyState } from "@/components/app-shell/EmptyState";
 import { NewLeadForm } from "@/components/leads/NewLeadForm";
 import { NewFollowupForm } from "@/components/leads/NewFollowupForm";
 import { LeadStatusForm } from "@/components/leads/LeadStatusForm";
@@ -69,16 +68,9 @@ export default async function AppShellLeadsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <InternalHeader />
+      <AppShellNav companyName={summary?.name} />
       <main className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
-        <Link
-          href="/app-shell"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-800"
-        >
-          <ArrowLeft className="h-4 w-4" /> App-Shell
-        </Link>
-
-        <div className="mt-3 flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
             <Inbox className="h-4 w-4" strokeWidth={2} />
           </span>
@@ -110,7 +102,10 @@ export default async function AppShellLeadsPage() {
         </div>
 
         {/* Create lead */}
-        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <section
+          id="neuer-lead"
+          className="mt-8 scroll-mt-28 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+        >
           <h2 className="text-lg font-semibold tracking-tight text-navy-900">
             Neuen Lead erfassen
           </h2>
@@ -128,14 +123,14 @@ export default async function AppShellLeadsPage() {
             Leads
           </h2>
           {leads.length === 0 ? (
-            <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-              <Inbox className="mx-auto h-8 w-8 text-slate-300" strokeWidth={1.8} />
-              <p className="mt-2 text-sm font-medium text-navy-900">
-                Noch keine Leads.
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                Erfassen Sie oben den ersten Lead für diesen Mandanten.
-              </p>
+            <div className="mt-3">
+              <EmptyState
+                icon={Inbox}
+                tone="ready"
+                title="Noch keine Leads."
+                description="Übernehmen Sie heisse Chancen aus dem Lead Hunter oder erfassen Sie oben direkt den ersten Lead. Jeder Lead ist ein möglicher Auftrag."
+                cta={{ label: "Ersten Lead erfassen", href: "#neuer-lead" }}
+              />
             </div>
           ) : (
             <ul className="mt-3 space-y-3">
@@ -171,14 +166,12 @@ export default async function AppShellLeadsPage() {
           </div>
 
           {followups.length === 0 ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-              <BellRing className="mx-auto h-8 w-8 text-slate-300" strokeWidth={1.8} />
-              <p className="mt-2 text-sm font-medium text-navy-900">
-                Noch keine Follow-ups.
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                Planen Sie oben das erste Follow-up zu einem Lead.
-              </p>
+            <div className="mt-4">
+              <EmptyState
+                icon={BellRing}
+                title="Noch keine Follow-ups."
+                description="Planen Sie oben das erste Follow-up zu einem Lead – ein klarer nächster Schritt sorgt dafür, dass keine Chance liegen bleibt."
+              />
             </div>
           ) : (
             <ul className="mt-4 space-y-3">

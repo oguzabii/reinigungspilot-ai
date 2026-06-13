@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Radar,
-  ArrowLeft,
   Lock,
   MapPin,
   Tag,
@@ -14,8 +13,12 @@ import {
   ChevronRight,
   X,
   Map as MapIcon,
+  Compass,
+  Crosshair,
+  ArrowRightToLine,
+  FileText,
 } from "lucide-react";
-import { InternalHeader } from "@/components/InternalHeader";
+import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import {
   NewOpportunityForm,
   type OpportunitySeed,
@@ -30,6 +33,7 @@ import {
 import { SOURCE_TYPE_META } from "@/components/lead-hunter/source-meta";
 import { matchServices } from "@/components/lead-hunter/scoring";
 import { PromoteOpportunityButton } from "@/components/lead-hunter/PromoteOpportunityButton";
+import { EmptyState } from "@/components/app-shell/EmptyState";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
@@ -73,9 +77,7 @@ export default async function AppShellLeadHunterPage({
   ]);
 
   // Seed the capture form from a registered source (manual workflow — the user
-  // still confirms + saves; nothing auto-runs). Map the source type to an
-  // allowed opportunity source value and fold label + notes into the reason
-  // context. The link itself travels as a hidden `source_id` in the form.
+  // still confirms + saves; nothing auto-runs).
   const allowedSourceValues = OPPORTUNITY_SOURCES.map((s) => s.value as string);
   const seed: OpportunitySeed | undefined = source
     ? {
@@ -100,6 +102,9 @@ export default async function AppShellLeadHunterPage({
   const activeCount = opportunities.filter((o) =>
     ACTIVE_PURSUIT_STATUSES.includes(o.status),
   ).length;
+  const highScore = opportunities.filter(
+    (o) => o.score !== null && o.score >= 70,
+  ).length;
   const typeCounts = OPPORTUNITY_TYPES.map((t) => ({
     type: t,
     count: opportunities.filter((o) => (o.category ?? "Manuell") === t).length,
@@ -107,18 +112,11 @@ export default async function AppShellLeadHunterPage({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <InternalHeader />
+      <AppShellNav companyName={summary?.name} />
       <main className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
-        <Link
-          href="/app-shell"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-800"
-        >
-          <ArrowLeft className="h-4 w-4" /> App-Shell
-        </Link>
-
-        <div className="mt-3 flex items-center gap-3">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
-            <Radar className="h-4 w-4" strokeWidth={2} />
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
+            <Radar className="h-5 w-5" strokeWidth={2} />
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-navy-900">
@@ -130,6 +128,116 @@ export default async function AppShellLeadHunterPage({
             </p>
           </div>
         </div>
+
+        {/* Money-focused hero — "where are new jobs hiding?" */}
+        <section className="mt-6 overflow-hidden rounded-2xl border border-navy-900 surface-hero p-6 text-white shadow-sm sm:p-7">
+          <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
+            <Compass className="h-3.5 w-3.5" />
+            Opportunity Radar
+          </p>
+          <h2 className="mt-2 max-w-2xl text-xl font-semibold tracking-tight sm:text-2xl">
+            Wo verstecken sich Ihre nächsten Aufträge?
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-navy-100">
+            Halten Sie jede reale Chance fest – aus Empfehlungen, Verwaltungen,
+            Bauprojekten oder Ausschreibungen. Klarsa bewertet sie, ordnet sie der
+            Region und dem passenden Service zu und führt Sie Schritt für Schritt
+            zum Abschluss. Sie behalten die Kontrolle – nichts wird automatisch
+            gesucht oder versendet.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link
+              href="#erfassen"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-navy-900 transition-colors hover:bg-blue-50"
+            >
+              <Crosshair className="h-4 w-4 text-blue-600" strokeWidth={2.2} />
+              Opportunity erfassen
+            </Link>
+            <Link
+              href="/app-shell/lead-hunter/radar"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              <MapIcon className="h-4 w-4" strokeWidth={2.2} />
+              Schweiz-Radar öffnen
+            </Link>
+          </div>
+        </section>
+
+        {/* The 4-step path to revenue */}
+        <section className="mt-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <StepCard
+              n={1}
+              icon={Library}
+              title="Quelle wählen"
+              text="Kontrollierte Lead-Quelle aus der Registry."
+              href="/app-shell/lead-hunter/sources"
+              cta="Quellen-Registry"
+            />
+            <StepCard
+              n={2}
+              icon={Crosshair}
+              title="Opportunity erfassen"
+              text="Chance festhalten – Klarsa bewertet & ordnet zu."
+              href="#erfassen"
+              cta="Jetzt erfassen"
+            />
+            <StepCard
+              n={3}
+              icon={ArrowRightToLine}
+              title="Lead übernehmen"
+              text="Heisse Chance in den Lead Inbox holen."
+              href="#opportunities"
+              cta="Zur Liste"
+            />
+            <StepCard
+              n={4}
+              icon={FileText}
+              title="Follow-up / Offerte"
+              text="Nachfassen und Offerte vorbereiten."
+              href="/app-shell/offers"
+              cta="Zur Offer Engine"
+            />
+          </div>
+        </section>
+
+        {/* Connected tools */}
+        <section className="mt-6 grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/app-shell/lead-hunter/sources"
+            className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+          >
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
+              <Library className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-navy-900">
+                Quellen-Registry
+              </span>
+              <span className="block text-sm text-slate-500">
+                Von Menschen freigegebene Lead-Quellen – kein Scraping.
+              </span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+          </Link>
+          <Link
+            href="/app-shell/lead-hunter/radar"
+            className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+          >
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
+              <MapIcon className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-navy-900">
+                Schweiz-Radar
+              </span>
+              <span className="block text-sm text-slate-500">
+                Chancen nach Region/Kanton – manuell, kein Kartenanbieter.
+              </span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+          </Link>
+        </section>
 
         {/* No-real-data / no-scraping note */}
         <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -144,50 +252,10 @@ export default async function AppShellLeadHunterPage({
           </p>
         </div>
 
-        {/* Source Registry link */}
-        <Link
-          href="/app-shell/lead-hunter/sources"
-          className="mt-6 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
-        >
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
-            <Library className="h-4 w-4" strokeWidth={2} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-navy-900">
-              Quellen-Registry
-            </span>
-            <span className="block text-sm text-slate-500">
-              Kontrollierte, von Menschen freigegebene Lead-Quellen verwalten –
-              kein Scraping, keine externen Abfragen.
-            </span>
-          </span>
-          <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
-        </Link>
-
-        {/* Swiss Radar Map link */}
-        <Link
-          href="/app-shell/lead-hunter/radar"
-          className="mt-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
-        >
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
-            <MapIcon className="h-4 w-4" strokeWidth={2} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-navy-900">
-              Schweiz-Radar
-            </span>
-            <span className="block text-sm text-slate-500">
-              Opportunities nach Region/Kanton visualisieren – manuelle Ansicht,
-              kein Kartenanbieter, keine externe Abfrage.
-            </span>
-          </span>
-          <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
-        </Link>
-
         {/* Radar overview */}
         {total > 0 && (
           <section className="mt-8">
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-4">
               <StatCard icon={Target} label="Opportunities" value={String(total)} />
               <StatCard
                 icon={Gauge}
@@ -198,6 +266,11 @@ export default async function AppShellLeadHunterPage({
                 icon={ListChecks}
                 label="Aktiv verfolgt"
                 value={String(activeCount)}
+              />
+              <StatCard
+                icon={Target}
+                label="High-Score (≥70)"
+                value={String(highScore)}
               />
             </div>
             {typeCounts.length > 0 && (
@@ -228,7 +301,10 @@ export default async function AppShellLeadHunterPage({
         )}
 
         {/* Capture form (optionally seeded from a registered source) */}
-        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <section
+          id="erfassen"
+          className="mt-8 scroll-mt-28 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+        >
           <h2 className="text-lg font-semibold tracking-tight text-navy-900">
             {seed ? "Opportunity aus Quelle erstellen" : "Opportunity erfassen"}
           </h2>
@@ -260,20 +336,19 @@ export default async function AppShellLeadHunterPage({
         </section>
 
         {/* Opportunity list / empty state */}
-        <section className="mt-8">
+        <section id="opportunities" className="mt-8 scroll-mt-28">
           <h2 className="text-lg font-semibold tracking-tight text-navy-900">
             Opportunities
           </h2>
           {total === 0 ? (
-            <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-              <Radar className="mx-auto h-8 w-8 text-slate-300" strokeWidth={1.8} />
-              <p className="mt-2 text-sm font-medium text-navy-900">
-                Noch keine Opportunities.
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                Erfassen Sie oben die erste Opportunity für diesen Mandanten –
-                manuell, ohne externe Quellen.
-              </p>
+            <div className="mt-3">
+              <EmptyState
+                icon={Radar}
+                tone="ready"
+                title="Noch keine Opportunities – der Radar ist bereit."
+                description="Erfassen Sie oben die erste reale Chance. Klarsa bewertet sie sofort, ordnet Region und Service zu und zeigt Ihnen den nächsten Schritt."
+                cta={{ label: "Erste Opportunity erfassen", href: "#erfassen" }}
+              />
             </div>
           ) : (
             <ul className="mt-3 space-y-3">
@@ -285,6 +360,42 @@ export default async function AppShellLeadHunterPage({
         </section>
       </main>
     </div>
+  );
+}
+
+function StepCard({
+  n,
+  icon: Icon,
+  title,
+  text,
+  href,
+  cta,
+}: {
+  n: number;
+  icon: typeof Library;
+  title: string;
+  text: string;
+  href: string;
+  cta: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+    >
+      <div className="flex items-center justify-between">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-navy-900 text-xs font-bold text-white">
+          {n}
+        </span>
+        <Icon className="h-4 w-4 text-blue-600" strokeWidth={2} />
+      </div>
+      <p className="mt-3 text-sm font-semibold text-navy-900">{title}</p>
+      <p className="mt-0.5 flex-1 text-xs leading-relaxed text-slate-500">{text}</p>
+      <span className="mt-2 inline-flex items-center gap-0.5 text-xs font-medium text-blue-700">
+        {cta}
+        <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </Link>
   );
 }
 

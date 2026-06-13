@@ -4,20 +4,17 @@ import { redirect } from "next/navigation";
 import {
   Lock,
   LogOut,
-  Building2,
   KeyRound,
-  Inbox,
-  Sparkles,
-  FileText,
-  BellRing,
-  Briefcase,
-  PlugZap,
-  ChartColumn,
   UserRound,
   Crown,
   ChevronRight,
+  ShieldCheck,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
+import { AppShellNav } from "@/components/app-shell/AppShellNav";
+import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
+import { ChainStepper } from "@/components/app-shell/ChainStepper";
+import { computeCeoKpis } from "@/components/ceo/kpi";
 import { isSupabaseConfigured } from "@/lib/env";
 import {
   getCurrentProfile,
@@ -26,8 +23,15 @@ import {
 import {
   getCompanySummary,
   getTenantCounts,
+  getProspects,
+  getLeads,
+  getOffers,
+  getJobs,
+  getInvoiceHandoffJobs,
+  getFollowups,
   type TenantCounts,
 } from "@/lib/auth/tenant-data";
+import type { CeoKpis } from "@/components/ceo/kpi";
 import { getPackageName } from "@/lib/packages";
 
 // Reads the session/cookies -> always rendered on demand, never prerendered.
@@ -37,7 +41,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "App-Shell (intern) – Klarsa",
   description:
-    "Geschützter Klarsa-Arbeitsbereich. Staging-Tenant-Kontext via Supabase. Keine echten Kundendaten.",
+    "Geschützter Klarsa-Arbeitsbereich. Mandanten-Kontext via Supabase mit role-aware RLS.",
   robots: { index: false, follow: false },
 };
 
@@ -62,29 +66,52 @@ export default async function AppShellPage() {
     return <NoTenant email={context.user.email} />;
   }
 
-  // State 4 — authenticated tenant shell (RLS-scoped fake staging data).
+  // State 4 — authenticated tenant cockpit (RLS-scoped data).
   const activeMembership =
     context.memberships.find((m) => m.companyId === companyId) ??
     context.memberships[0];
-  const [summary, counts] = await Promise.all([
-    getCompanySummary(companyId),
-    getTenantCounts(companyId),
-  ]);
+
+  const [summary, counts, opportunities, leads, offers, jobs, handoffJobs, followups] =
+    await Promise.all([
+      getCompanySummary(companyId),
+      getTenantCounts(companyId),
+      getProspects(companyId),
+      getLeads(companyId),
+      getOffers(companyId),
+      getJobs(companyId),
+      getInvoiceHandoffJobs(companyId),
+      getFollowups(companyId),
+    ]);
+
+  const now = new Date();
+  const kpis = computeCeoKpis({
+    opportunities,
+    leads,
+    offers,
+    jobs,
+    handoffJobs,
+    followupLeadIds: followups.map((f) => f.leadId),
+    nowIso: now.toISOString(),
+  });
+  const hasData =
+    kpis.oppsTotal + kpis.leadsTotal + kpis.offersTotal + kpis.jobsTotal > 0;
 
   return (
-    <TenantShell
+    <TenantCockpit
       displayName={displayName}
       email={context.user.email}
       companyName={summary?.name ?? "Unbekannter Mandant"}
       role={activeMembership.role}
       tierLabel={summary ? getPackageName(summary.tier) : "—"}
       counts={counts}
+      kpis={kpis}
+      hasData={hasData}
     />
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* State views                                                                */
+/* Edge / setup states (no tenant context yet → marketing header is fine)      */
 /* -------------------------------------------------------------------------- */
 
 function Shell({ children }: { children: React.ReactNode }) {
@@ -112,11 +139,10 @@ function SetupNeeded() {
             Supabase ist in dieser Umgebung nicht konfiguriert.
           </p>
           <p className="mt-1 text-sm leading-relaxed text-amber-800">
-            Lege eine lokale <code>.env.local</code> mit den Staging-Werten an
-            (siehe <code>docs/app-shell-staging-connection.md</code> und{" "}
-            <code>.env.local.example</code>). Es werden{" "}
-            <strong className="font-semibold">keine</strong> echten Kundendaten
-            verwendet – nur fiktive <code>@example.test</code>-Staging-Daten.
+            Lege die Supabase-Umgebungswerte an (siehe{" "}
+            <code>docs/app-shell-staging-connection.md</code> und{" "}
+            <code>.env.local.example</code>). Schlüssel/Secrets werden{" "}
+            <strong className="font-semibold">nicht</strong> im Repo abgelegt.
           </p>
         </div>
       </div>
@@ -158,29 +184,19 @@ function NoTenant({ email }: { email: string | null }) {
   );
 }
 
-const MODULES: Array<{
-  name: string;
-  icon: typeof Inbox;
-  countKey: keyof TenantCounts | null;
-  tier: string;
-  href?: string;
-}> = [
-  { name: "Lead Inbox", icon: Inbox, countKey: "leads", tier: "Alle Pakete", href: "/app-shell/leads" },
-  { name: "Lead Hunter", icon: Sparkles, countKey: "prospects", tier: "Ab Pro", href: "/app-shell/lead-hunter" },
-  { name: "Offer Engine", icon: FileText, countKey: "offers", tier: "Alle Pakete", href: "/app-shell/offers" },
-  { name: "Follow-ups", icon: BellRing, countKey: "followupTasks", tier: "Alle Pakete" },
-  { name: "Jobs", icon: Briefcase, countKey: "jobs", tier: "Ab Pro", href: "/app-shell/jobs" },
-  { name: "bexio Übergabe", icon: PlugZap, countKey: "bexioHandoffs", tier: "Ab Pro", href: "/app-shell/bexio" },
-  { name: "Reports", icon: ChartColumn, countKey: null, tier: "Ab Pro" },
-];
+/* -------------------------------------------------------------------------- */
+/* Authenticated cockpit                                                       */
+/* -------------------------------------------------------------------------- */
 
-function TenantShell({
+function TenantCockpit({
   displayName,
   email,
   companyName,
   role,
   tierLabel,
   counts,
+  kpis,
+  hasData,
 }: {
   displayName: string;
   email: string | null;
@@ -188,129 +204,78 @@ function TenantShell({
   role: string;
   tierLabel: string;
   counts: TenantCounts;
+  kpis: CeoKpis;
+  hasData: boolean;
 }) {
   return (
-    <Shell>
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="min-h-screen bg-slate-50">
+      <AppShellNav companyName={companyName} />
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+        {/* Greeting / tenant context */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
-            Klarsa App · Staging
+            Klarsa · Arbeitsbereich
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-navy-900">
             {companyName}
           </h1>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-100">
+              <KeyRound className="h-3.5 w-3.5" />
+              Rolle: {role}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-100">
+              Paket: {tierLabel}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+              <UserRound className="h-3.5 w-3.5" />
+              {displayName}
+              {email ? ` · ${email}` : ""}
+            </span>
+          </div>
         </div>
-        <LogoutButton />
-      </div>
 
-      {/* Tenant context */}
-      <div className="mt-5 flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-navy-50 px-3 py-1 text-xs font-medium text-navy-700 ring-1 ring-inset ring-navy-100">
-          <Building2 className="h-3.5 w-3.5" />
-          {companyName}
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-100">
-          <KeyRound className="h-3.5 w-3.5" />
-          Rolle: {role}
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-100">
-          Paket: {tierLabel}
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-          <UserRound className="h-3.5 w-3.5" />
-          {displayName}
-          {email ? ` · ${email}` : ""}
-        </span>
-      </div>
+        {/* Autopilot — the daily hero: where the money is + what to do next */}
+        <div className="mt-7">
+          <AutopilotCard kpis={kpis} hasData={hasData} />
+        </div>
 
-      {/* No-real-data note */}
-      <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-        <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-        <p className="text-sm leading-relaxed text-amber-800">
-          Staging-Ansicht mit fiktiven <code>@example.test</code>-Daten –{" "}
-          <strong className="font-semibold">keine echten Kundendaten</strong>.
-          Die Zahlen unten werden über die <strong className="font-semibold">RLS</strong>
-          {" "}gefiltert und zeigen ausschliesslich Ihren Mandanten.
-        </p>
-      </div>
+        {/* The money chain, in order */}
+        <div className="mt-6">
+          <ChainStepper counts={counts} />
+        </div>
 
-      {/* CEO Briefing — read-only KPI overview across the whole chain */}
-      <Link
-        href="/app-shell/ceo"
-        className="mt-6 flex items-center gap-3 rounded-2xl border border-navy-900 bg-navy-900 p-4 text-white shadow-sm transition-colors hover:bg-navy-800"
-      >
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-inset ring-white/20">
-          <Crown className="h-4 w-4" strokeWidth={2} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold">CEO-Briefing öffnen</span>
-          <span className="block text-sm text-blue-100">
-            KPI-Überblick über die ganze Kette: Opportunities → Leads → Offerten →
-            Aufträge → bexio. Read-only, keine externen Quellen.
+        {/* CEO briefing entry */}
+        <Link
+          href="/app-shell/ceo"
+          className="mt-6 flex items-center gap-3 rounded-2xl border border-navy-900 bg-navy-900 p-4 text-white shadow-sm transition-colors hover:bg-navy-800"
+        >
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-inset ring-white/20">
+            <Crown className="h-4 w-4" strokeWidth={2} />
           </span>
-        </span>
-        <ChevronRight className="h-5 w-5 shrink-0 text-blue-200" />
-      </Link>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">CEO-Briefing öffnen</span>
+            <span className="block text-sm text-blue-100">
+              Geld-Wirkung, Trichter und Kennzahlen über die ganze Kette –
+              read-only, keine externen Quellen.
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-blue-200" />
+        </Link>
 
-      {/* Modules with RLS-scoped counts */}
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {MODULES.map((m) => {
-          const Icon = m.icon;
-          const value = m.countKey === null ? null : counts[m.countKey];
-          const inner = (
-            <>
-              <div className="flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-2 font-semibold text-navy-900">
-                  <Icon className="h-4 w-4 text-blue-600" strokeWidth={2} />
-                  {m.name}
-                </span>
-                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-                  {m.tier}
-                </span>
-              </div>
-              <p className="mt-3 text-2xl font-semibold tabular-nums text-navy-900">
-                {value === null ? "—" : value}
-              </p>
-              <p className="text-xs text-slate-400">
-                {m.href
-                  ? "Öffnen →"
-                  : m.countKey === null
-                    ? "geplant"
-                    : "Einträge (Staging)"}
-              </p>
-            </>
-          );
-          return m.href ? (
-            <Link
-              key={m.name}
-              href={m.href}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
-            >
-              {inner}
-            </Link>
-          ) : (
-            <div
-              key={m.name}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-            >
-              {inner}
-            </div>
-          );
-        })}
-      </div>
-
-      <p className="mt-8 text-sm text-slate-500">
-        Öffnen Sie die <strong className="font-semibold text-navy-900">Lead
-        Inbox</strong> (Leads, Status &amp; Follow-ups) oder die{" "}
-        <strong className="font-semibold text-navy-900">Offer Engine</strong>{" "}
-        (Offerten-Entwürfe). Architektur:{" "}
-        <code>docs/clean24-offer-draft-foundation.md</code>. Nächster Schritt:{" "}
-        <strong className="font-semibold text-navy-900">
-          v0.3.3 – Offer PDF / Versand
-        </strong>
-        .
-      </p>
-    </Shell>
+        {/* Honest data-protection note (production-appropriate, no fake-data claim) */}
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+          <p className="text-sm leading-relaxed text-slate-600">
+            Ihre Daten sind über <strong className="font-semibold text-navy-800">Row-Level-Security</strong>{" "}
+            streng auf Ihren Betrieb isoliert – Sie sehen ausschliesslich die
+            Klarsa-Daten Ihres Mandanten. Erfassung erfolgt nur über diese App:
+            kein automatischer Versand, keine externen Abfragen, keine
+            service-role-Zugriffe.
+          </p>
+        </div>
+      </main>
+    </div>
   );
 }
 

@@ -13,13 +13,15 @@ import {
   CheckCircle2,
   Tag,
   Library,
+  ArrowRight,
 } from "lucide-react";
-import { InternalHeader } from "@/components/InternalHeader";
+import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { matchServices } from "@/components/lead-hunter/scoring";
 import {
   CANTON_BY_CODE,
   cantonForRegion,
-  scoreFill,
+  outlinePath,
+  scoreFillRadar,
   scoreToneBadge,
 } from "@/components/lead-hunter/swiss-radar";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -176,9 +178,11 @@ export default async function AppShellLeadRadarPage() {
     .map(([type, count]) => ({ type, count }))
     .sort((a, b) => b.count - a.count);
 
+  const isEmpty = total === 0;
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <InternalHeader />
+      <AppShellNav companyName={summary?.name} />
       <main className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
         <Link
           href="/app-shell/lead-hunter"
@@ -197,13 +201,73 @@ export default async function AppShellLeadRadarPage() {
             </h1>
             <p className="text-sm text-slate-500">
               {summary?.name ?? "Mandant"} · {total}
-              {total >= 100 ? "+" : ""} Opportunit{total === 1 ? "y" : "ies"}
+              {total >= 100 ? "+" : ""} Opportunit{total === 1 ? "y" : "ies"} auf
+              dem Radar
             </p>
           </div>
         </div>
 
+        {/* Stat cards — always shown (zeros read as "armed", not broken) */}
+        <section className="mt-8">
+          <div className="grid gap-3 sm:grid-cols-4">
+            <StatCard icon={Target} label="Opportunities" value={String(total)} />
+            <StatCard
+              icon={Gauge}
+              label="Ø Score"
+              value={avgScore === null ? "—" : String(avgScore)}
+            />
+            <StatCard
+              icon={TrendingUp}
+              label="High-Score (≥70)"
+              value={String(highScore)}
+            />
+            <StatCard
+              icon={CheckCircle2}
+              label="Konvertiert"
+              value={String(converted)}
+            />
+          </div>
+        </section>
+
+        {/* Swiss radar — ALWAYS rendered, even with 0 opportunities */}
+        <section className="mt-8 overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-2 border-b border-navy-100 px-5 py-4">
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-navy-900">
+              <Radar className="h-4 w-4 text-blue-600" />
+              Schweiz-Radar · Kantone
+            </h2>
+            <span className="text-xs text-slate-400">
+              {isEmpty
+                ? "bereit"
+                : `${cantonBuckets.length} Region${cantonBuckets.length === 1 ? "" : "en"} platziert`}
+            </span>
+          </div>
+
+          <SwissRadar buckets={cantonBuckets} />
+
+          {/* Score legend */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-5 pb-4 text-xs text-slate-500">
+            <span className="font-medium text-slate-400">Score-Intensität:</span>
+            <LegendDot color="#34d399" label="≥70 hoch" />
+            <LegendDot color="#60a5fa" label="40–69 mittel" />
+            <LegendDot color="#fbbf24" label="<40 niedrig" />
+            <LegendDot color="#94a3b8" label="kein Score" />
+            <span className="text-slate-400">· Punktgrösse ≈ Anzahl</span>
+          </div>
+
+          {(unknownRegion > 0 || noRegion > 0) && (
+            <p className="px-5 pb-4 text-xs text-slate-400">
+              {unknownRegion > 0 &&
+                `${unknownRegion} Opportunit${unknownRegion === 1 ? "y" : "ies"} ohne erkannten Kanton`}
+              {unknownRegion > 0 && noRegion > 0 && " · "}
+              {noRegion > 0 && `${noRegion} ohne Regionsangabe`}
+              {" "}– nicht auf der Karte platziert.
+            </p>
+          )}
+        </section>
+
         {/* Honest no-automation note */}
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <p className="text-sm leading-relaxed text-amber-800">
             <strong className="font-semibold">Manuelle Radar-Ansicht, keine
@@ -216,84 +280,29 @@ export default async function AppShellLeadRadarPage() {
           </p>
         </div>
 
-        {total === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-            <Radar className="mx-auto h-8 w-8 text-slate-300" strokeWidth={1.8} />
-            <p className="mt-2 text-sm font-medium text-navy-900">
-              Noch keine Opportunities zum Visualisieren.
+        {isEmpty ? (
+          /* Honest, premium empty-state CTA — the radar above already looks alive */
+          <section className="mt-6 rounded-2xl border border-blue-200 bg-gradient-to-b from-blue-50/70 to-white p-6 text-center sm:p-8">
+            <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-100">
+              <Radar className="h-5 w-5" strokeWidth={1.8} />
+            </span>
+            <p className="mt-3 text-base font-semibold text-navy-900">
+              Der Radar ist bereit.
             </p>
-            <p className="mt-1 text-sm text-slate-500">
-              Erfassen Sie im{" "}
-              <Link
-                href="/app-shell/lead-hunter"
-                className="font-medium text-blue-700 hover:text-blue-800"
-              >
-                Opportunity Radar
-              </Link>{" "}
-              die erste Opportunity – manuell, ohne externe Quellen.
+            <p className="mx-auto mt-1.5 max-w-xl text-sm leading-relaxed text-slate-600">
+              Erfassen Sie die erste reale Opportunity, damit Klarsa Chancen nach
+              Region, Quelle und Potenzial sichtbar macht.
             </p>
-          </div>
+            <Link
+              href="/app-shell/lead-hunter"
+              className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-navy-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-800"
+            >
+              Erste Opportunity erfassen
+              <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+            </Link>
+          </section>
         ) : (
           <>
-            {/* Stat cards */}
-            <section className="mt-8">
-              <div className="grid gap-3 sm:grid-cols-4">
-                <StatCard icon={Target} label="Opportunities" value={String(total)} />
-                <StatCard
-                  icon={Gauge}
-                  label="Ø Score"
-                  value={avgScore === null ? "—" : String(avgScore)}
-                />
-                <StatCard
-                  icon={TrendingUp}
-                  label="High-Score (≥70)"
-                  value={String(highScore)}
-                />
-                <StatCard
-                  icon={CheckCircle2}
-                  label="Konvertiert"
-                  value={String(converted)}
-                />
-              </div>
-            </section>
-
-            {/* Swiss radar map (stylised, static SVG) */}
-            <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-navy-900">
-                  <Radar className="h-4 w-4 text-blue-600" />
-                  Schweiz-Radar · Kantone
-                </h2>
-                <span className="text-xs text-slate-400">
-                  {cantonBuckets.length} Region
-                  {cantonBuckets.length === 1 ? "" : "en"} platziert
-                </span>
-              </div>
-
-              <SwissRadar buckets={cantonBuckets} />
-
-              {/* Score legend */}
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500">
-                <span className="font-medium text-slate-400">Score-Intensität:</span>
-                <LegendDot color="#10b981" label="≥70 hoch" />
-                <LegendDot color="#3b82f6" label="40–69 mittel" />
-                <LegendDot color="#f59e0b" label="<40 niedrig" />
-                <LegendDot color="#cbd5e1" label="kein Score" />
-                <span className="text-slate-400">· Punktgrösse ≈ Anzahl</span>
-              </div>
-
-              {(unknownRegion > 0 || noRegion > 0) && (
-                <p className="mt-3 text-xs text-slate-400">
-                  {unknownRegion > 0 &&
-                    `${unknownRegion} Opportunit${unknownRegion === 1 ? "y" : "ies"} ohne erkannten Kanton`}
-                  {unknownRegion > 0 && noRegion > 0 && " · "}
-                  {noRegion > 0 &&
-                    `${noRegion} ohne Regionsangabe`}
-                  {" "}– nicht auf der Karte platziert.
-                </p>
-              )}
-            </section>
-
             {/* Top regions / cantons */}
             {topRegions.length > 0 && (
               <section className="mt-8">
@@ -433,69 +442,117 @@ function ChipCard({
 }
 
 /**
- * Stylised Swiss canton radar — a static SVG. Decorative concentric rings give
- * the "radar" feel; canton pins are placed by the approximate offline layout
- * (no map provider/tiles). Pin size ≈ opportunity count, colour ≈ average score.
+ * Premium Swiss radar — a dark "radar screen" rendered as a self-contained
+ * static SVG (with a slow CSS/SMIL sweep so it feels alive even when empty).
+ * A stylised Switzerland silhouette anchors the canvas; canton pins are placed
+ * by the approximate offline layout (no map provider/tiles). Pin size ≈ count,
+ * colour ≈ average score. Nothing here fetches anything.
  */
 function SwissRadar({ buckets }: { buckets: CantonBucket[] }) {
-  const W = 320;
-  const H = 220;
-  const PAD = 18;
+  const W = 480;
+  const H = 300;
+  const PAD = 28;
   const px = (x: number) => PAD + (x / 100) * (W - 2 * PAD);
   const py = (y: number) => PAD + (y / 100) * (H - 2 * PAD);
   const maxCount = Math.max(1, ...buckets.map((b) => b.count));
   const pinR = (count: number) =>
-    5 + (Math.sqrt(count) / Math.sqrt(maxCount)) * 9;
+    6 + (Math.sqrt(count) / Math.sqrt(maxCount)) * 12;
   const cx = W / 2;
   const cy = H / 2;
+  const path = outlinePath(px, py);
 
   return (
-    <div className="mt-4 overflow-hidden rounded-xl border border-slate-100 bg-slate-50/60">
+    <div className="bg-slate-50/60 px-5 py-4">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"
         aria-label="Stilisierte Schweiz-Radar-Karte der Opportunities nach Kanton"
-        className="h-auto w-full"
+        className="h-auto w-full rounded-xl"
       >
-        {/* Decorative radar rings + crosshair */}
-        {[44, 78, 112].map((r) => (
+        <defs>
+          <radialGradient id="radarBg" cx="50%" cy="45%" r="75%">
+            <stop offset="0%" stopColor="#1a2e57" />
+            <stop offset="60%" stopColor="#0f1e3c" />
+            <stop offset="100%" stopColor="#081025" />
+          </radialGradient>
+          <linearGradient id="radarSweep" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.32" />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* Dark radar canvas */}
+        <rect x="0" y="0" width={W} height={H} rx="12" fill="url(#radarBg)" />
+
+        {/* Concentric range rings */}
+        {[52, 92, 132].map((r) => (
           <circle
             key={r}
             cx={cx}
             cy={cy}
             r={r}
             fill="none"
-            stroke="#e2e8f0"
+            stroke="rgba(148,180,230,0.16)"
             strokeWidth={1}
-            strokeDasharray="3 4"
           />
         ))}
-        <line x1={PAD} y1={cy} x2={W - PAD} y2={cy} stroke="#eef2f7" strokeWidth={1} />
-        <line x1={cx} y1={PAD} x2={cx} y2={H - PAD} stroke="#eef2f7" strokeWidth={1} />
-        <text x={W - PAD} y={H - 8} textAnchor="end" className="fill-slate-300" fontSize="9">
+
+        {/* Crosshair */}
+        <line x1={PAD} y1={cy} x2={W - PAD} y2={cy} stroke="rgba(148,180,230,0.10)" strokeWidth={1} />
+        <line x1={cx} y1={PAD} x2={cx} y2={H - PAD} stroke="rgba(148,180,230,0.10)" strokeWidth={1} />
+
+        {/* Rotating sweep beam — pure SVG/SMIL, no JS, no clock */}
+        <g>
+          <path
+            d={`M${cx} ${cy} L${cx + 150} ${cy - 44} A156 156 0 0 1 ${cx + 150} ${cy + 44} Z`}
+            fill="url(#radarSweep)"
+          >
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              from={`0 ${cx} ${cy}`}
+              to={`360 ${cx} ${cy}`}
+              dur="7s"
+              repeatCount="indefinite"
+            />
+          </path>
+        </g>
+
+        {/* Stylised Switzerland silhouette */}
+        <path
+          d={path}
+          fill="rgba(96,165,250,0.06)"
+          stroke="rgba(130,175,240,0.42)"
+          strokeWidth={1.3}
+          strokeLinejoin="round"
+        />
+
+        <text x={W - PAD} y={H - 12} textAnchor="end" fill="rgba(148,180,230,0.45)" fontSize="10">
           CH · stilisiert
         </text>
 
-        {/* Canton pins */}
+        {/* Canton pins (glow halo + core + label) */}
         {buckets.map((b) => {
           const r = pinR(b.count);
+          const fill = scoreFillRadar(b.avgScore);
           return (
             <g key={b.code}>
+              <circle cx={px(b.x)} cy={py(b.y)} r={r * 2.3} fill={fill} fillOpacity={0.16} />
               <circle
                 cx={px(b.x)}
                 cy={py(b.y)}
                 r={r}
-                fill={scoreFill(b.avgScore)}
-                fillOpacity={0.85}
-                stroke="#ffffff"
+                fill={fill}
+                fillOpacity={0.95}
+                stroke="rgba(255,255,255,0.55)"
                 strokeWidth={1.5}
               />
               <text
                 x={px(b.x)}
-                y={py(b.y) + r + 8}
+                y={py(b.y) + r + 11}
                 textAnchor="middle"
-                className="fill-navy-700"
-                fontSize="8"
+                fill="rgba(226,235,250,0.92)"
+                fontSize="9.5"
                 fontWeight="600"
               >
                 {b.code} · {b.count}

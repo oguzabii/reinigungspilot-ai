@@ -11,7 +11,7 @@ import {
   Info,
   Crosshair,
 } from "lucide-react";
-import { InternalHeader } from "@/components/InternalHeader";
+import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { NewSourceForm } from "@/components/lead-hunter/NewSourceForm";
 import {
   SOURCE_TYPE_META,
@@ -69,7 +69,7 @@ export default async function AppShellLeadSourcesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <InternalHeader />
+      <AppShellNav companyName={summary?.name} />
       <main className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
         <Link
           href="/app-shell/lead-hunter"

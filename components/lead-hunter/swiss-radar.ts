@@ -55,6 +55,59 @@ export const CANTON_BY_CODE: Record<string, Canton> = Object.fromEntries(
 );
 
 /**
+ * Stylised Switzerland border outline, as normalised points (x 0=west..100=east,
+ * y 0=north..100=south) traced roughly clockwise from the Basel corner. This is
+ * a decorative silhouette for the radar canvas — NOT a GIS boundary. It exists
+ * so the radar reads as "Switzerland" even with zero opportunities. No map
+ * provider, no tiles, no geocoding: just a fixed, offline point list.
+ */
+export const CH_OUTLINE: Array<[number, number]> = [
+  [33, 7],
+  [42, 5],
+  [52, 3],
+  [59, 7],
+  [67, 11],
+  [75, 16],
+  [81, 24],
+  [86, 34],
+  [91, 44],
+  [92, 52],
+  [85, 58],
+  [81, 66],
+  [74, 77],
+  [70, 87],
+  [66, 93],
+  [60, 86],
+  [53, 82],
+  [46, 86],
+  [39, 90],
+  [32, 88],
+  [25, 82],
+  [14, 82],
+  [5, 80],
+  [10, 70],
+  [17, 63],
+  [20, 53],
+  [19, 44],
+  [23, 35],
+  [27, 27],
+  [30, 17],
+  [32, 11],
+];
+
+/** Build an SVG path string for the CH outline, given normalised→pixel mappers. */
+export function outlinePath(
+  px: (x: number) => number,
+  py: (y: number) => number,
+): string {
+  return (
+    CH_OUTLINE.map(
+      ([x, y], i) => `${i === 0 ? "M" : "L"}${px(x).toFixed(1)} ${py(y).toFixed(1)}`,
+    ).join(" ") + " Z"
+  );
+}
+
+/**
  * Region/city keywords → canton code, in priority order. Matched against the
  * lower-cased region text via `includes`, so more specific entries (e.g.
  * Basel-Landschaft before Basel-Stadt, Appenzell A.Rh. before Appenzell) come
@@ -123,6 +176,20 @@ export function scoreFill(score: number | null): string {
       return "#f59e0b"; // amber-500
     default:
       return "#cbd5e1"; // slate-300
+  }
+}
+
+/** Score → brighter SVG fill hex, tuned for pins on the dark radar canvas. */
+export function scoreFillRadar(score: number | null): string {
+  switch (scoreTone(score)) {
+    case "high":
+      return "#34d399"; // emerald-400
+    case "mid":
+      return "#60a5fa"; // blue-400
+    case "low":
+      return "#fbbf24"; // amber-400
+    default:
+      return "#94a3b8"; // slate-400
   }
 }
 

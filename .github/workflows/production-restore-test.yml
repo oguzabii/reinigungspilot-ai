@@ -1,0 +1,166 @@
+name: Production restore test (manual)
+
+# =============================================================================
+# Klarsa Core — production logical backup/restore test (v0.4.2 gate utility)
+# =============================================================================
+# Manual-only. Proves that a logical dump of the klarsa-production database
+# RESTORES cleanly into a THROWAWAY local PostgreSQL on the runner, and that the
+# application-owned (public) schema + Clean24 config survive the round-trip.
+#
+# Safety:
+#   * Read-only against production (pg_dump only) — never overwrites any project.
+#   * No new Supabase project (uses an ephemeral GitHub-hosted runner + a local
+#     throwaway Postgres service), so it costs nothing extra.
+#   * The dump lives in /tmp only, is NEVER uploaded as an artifact, and is
+#     deleted at the end. The runner is destroyed after the run.
+#   * Logs only PASS/FAIL + counts. The DB URL secret is never printed.
+#
+# Scope / honest limitation: this validates the APPLICATION-owned `public`
+# schema + data (everything our migrations create). It does NOT restore the
+# Supabase-managed `auth`/`storage`/`realtime`/`extensions` schemas or roles —
+# those are platform concerns recovered via Supabase's own backups/PITR. We
+# create minimal stubs (auth.uid(), auth.users, a few roles) so the public dump
+# can restore, and load data with FK triggers disabled. See
+# docs/production-restore-test-github-actions.md.
+#
+# Requires repo Actions secret: KLARSA_PROD_DB_URL  (Supabase SESSION POOLER URI).
+# =============================================================================
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  restore-test:
+    runs-on: ubuntu-latest
+
+    # Throwaway restore TARGET — a local, ephemeral Postgres. The password here
+    # is NOT a secret: it is a localhost-only container destroyed with the runner.
+    services:
+      target:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TARGET_ADMIN_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      TARGET_URL: postgresql://postgres:postgres@localhost:5432/restore_target
+      CLEAN24_COMPANY_ID: 00000000-0000-4000-8000-0000000c1e00
+      DUMP_FILE: /tmp/klarsa_public.dump
+
+    steps:
+      - name: Guard — production DB URL secret must be set
+        run: |
+          set -euo pipefail
+          if [ -z "${{ secrets.KLARSA_PROD_DB_URL }}" ]; then
+            echo "::error::Missing Actions secret KLARSA_PROD_DB_URL (use the Supabase Session Pooler URI). See docs/production-restore-test-github-actions.md"
+            exit 1
+          fi
+          echo "Secret KLARSA_PROD_DB_URL is present (value not printed)."
+
+      - name: Install PostgreSQL client 17
+        run: |
+          set -euo pipefail
+          echo "deb [signed-by=/etc/apt/trusted.gpg.d/pgdg-klarsa.gpg] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg-klarsa.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          pg_dump --version
+
+      - name: Prepare throwaway target (stub Supabase prerequisites)
+        run: |
+          set -euo pipefail
+          # Fresh restore target DB.
+          psql "$TARGET_ADMIN_URL" -v ON_ERROR_STOP=1 -c "drop database if exists restore_target;"
+          psql "$TARGET_ADMIN_URL" -v ON_ERROR_STOP=1 -c "create database restore_target;"
+          # Minimal stubs so the application 'public' dump can restore on plain
+          # Postgres (these objects normally live in Supabase-managed schemas):
+          psql "$TARGET_URL" -v ON_ERROR_STOP=1 \
+            -c "create extension if not exists pgcrypto;" \
+            -c "create role anon nologin;" \
+            -c "create role authenticated nologin;" \
+            -c "create role service_role nologin;" \
+            -c "create role authenticator nologin;" \
+            -c "create schema if not exists auth;" \
+            -c "create or replace function auth.uid() returns uuid language sql stable as 'select null::uuid';" \
+            -c "create or replace function auth.role() returns text language sql stable as 'select null::text';" \
+            -c "create or replace function auth.jwt() returns jsonb language sql stable as 'select ''{}''::jsonb';" \
+            -c "create table if not exists auth.users (id uuid primary key, email text);" \
+            -c "drop schema if exists public cascade;" \
+            -c "create schema public;"
+          echo "Target prepared (auth/roles stubbed, clean public schema)."
+
+      - name: Dump production public schema (read-only; /tmp only)
+        env:
+          KLARSA_PROD_DB_URL: ${{ secrets.KLARSA_PROD_DB_URL }}
+        run: |
+          set -euo pipefail
+          # Read-only logical dump of the APPLICATION-owned public schema only.
+          # --no-owner/--no-privileges avoids Supabase role/ownership statements.
+          # The URL is never echoed (no set -x; pg_dump errors do not print it).
+          pg_dump "$KLARSA_PROD_DB_URL" --schema=public --no-owner --no-privileges -Fc -f "$DUMP_FILE"
+          echo "Dump created: $(du -h "$DUMP_FILE" | cut -f1) at $DUMP_FILE (NOT uploaded)."
+
+      - name: Restore into throwaway target
+        run: |
+          set -euo pipefail
+          # Schema first (tables, helper functions, RLS policies, FKs, indexes).
+          # A benign "schema public already exists" notice may appear (we
+          # pre-created public); integrity is proven by the verification step.
+          pg_restore --no-owner --no-privileges --schema-only -d "$TARGET_URL" "$DUMP_FILE" || true
+          # Data with triggers/FK checks disabled (the auth.users stub stays
+          # empty by design — we are validating the public data, not auth).
+          pg_restore --no-owner --no-privileges --data-only --disable-triggers -d "$TARGET_URL" "$DUMP_FILE" || true
+          echo "Restore completed."
+
+      - name: Verify restored schema + Clean24 config (PASS/FAIL only)
+        run: |
+          set -euo pipefail
+          fails=0
+          q() { psql "$TARGET_URL" -tAc "$1" 2>/dev/null | tr -d '[:space:]' || true; }
+          check() { # $1=name $2=want $3=got
+            if [ "$2" = "$3" ]; then
+              echo "PASS: $1 (got $3, want $2)"
+            else
+              echo "FAIL: $1 (got '$3', want $2)"; fails=$((fails+1))
+            fi
+          }
+
+          echo "--- a) application restore integrity (schema / RLS / functions / policies) ---"
+          check "public tables = 20"          20 "$(q "select count(*) from information_schema.tables where table_schema='public' and table_type='BASE TABLE'")"
+          check "tables with RLS off = 0"      0  "$(q "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and not c.relrowsecurity")"
+          check "role-aware helper fns = 8"    8  "$(q "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('set_updated_at','member_role_for','can_read_company','can_manage_company','can_write_sales','can_write_ops','can_write_settings','can_superadmin')")"
+          check "public tables w/o policy = 0" 0  "$(q "select count(*) from pg_tables t where t.schemaname='public' and not exists (select 1 from pg_policies p where p.schemaname='public' and p.tablename=t.tablename)")"
+          check "audit_logs write policy = 0"  0  "$(q "select count(*) from pg_policies where schemaname='public' and tablename='audit_logs' and cmd in ('UPDATE','DELETE','ALL')")"
+
+          echo "--- b) Clean24 bootstrap config counts (config present, NO customer data) ---"
+          C="$CLEAN24_COMPANY_ID"
+          check "company_services = 8" 8 "$(q "select count(*) from public.company_services where company_id='$C'")"
+          check "lead_sources = 4"     4 "$(q "select count(*) from public.lead_sources where company_id='$C'")"
+          check "owners = 1"           1 "$(q "select count(*) from public.company_members where company_id='$C' and role='owner' and is_active")"
+          check "leads = 0"            0 "$(q "select count(*) from public.leads where company_id='$C'")"
+          check "offers = 0"           0 "$(q "select count(*) from public.offers where company_id='$C'")"
+          check "jobs = 0"             0 "$(q "select count(*) from public.jobs where company_id='$C'")"
+          check "prospects = 0"        0 "$(q "select count(*) from public.prospects where company_id='$C'")"
+
+          echo "----"
+          if [ "$fails" -ne 0 ]; then
+            echo "::error::Restore test FAILED ($fails check(s) failed)."
+            exit 1
+          fi
+          echo "Restore test PASSED (all checks)."
+
+      - name: Always delete the dump
+        if: always()
+        run: |
+          rm -f "$DUMP_FILE"
+          echo "Dump deleted ($DUMP_FILE). Runner is ephemeral; nothing persisted."

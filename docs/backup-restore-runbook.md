@@ -103,6 +103,24 @@ pg_restore --clean --if-exists --no-owner \
 A scheduled drill that executes §5a–5c against a **throwaway** target — proving
 the backups are usable.
 
+### Low-cost path: GitHub Actions logical restore test (no new project, no local tools)
+
+When local tooling (pg_dump/Docker) or a spare Supabase project isn't available,
+run the manual **GitHub Actions** workflow
+[`.github/workflows/production-restore-test.yml`](../.github/workflows/production-restore-test.yml):
+it dumps the production `public` schema (read-only), restores it into a
+**throwaway Postgres on the runner**, and verifies the schema/RLS/functions/
+policies + the Clean24 config counts — **no production overwrite, no artifact
+upload, no secrets logged**, nothing persisted. Setup (add the
+`KLARSA_PROD_DB_URL` Session-Pooler secret), how to run, what PASS means, and the
+honest limitations (it validates the **application-owned** `public` schema/data;
+Supabase-managed schemas are covered by Supabase backups/PITR) are in
+[`production-restore-test-github-actions.md`](./production-restore-test-github-actions.md).
+Record its outcome in the table below (and in
+`clean24-backup-restore-test-results.md` once run).
+
+### Full drill (Supabase backup / external dump)
+
 - [ ] Perform a full restore to a fresh project from (a) a Supabase backup and
       (b) the external dump.
 - [ ] §5c verification passes on the restored copy.

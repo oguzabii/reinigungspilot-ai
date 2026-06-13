@@ -146,7 +146,8 @@ Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 > v0.3.12/.12.1 (bexio-Übergabe-Fundament, manuell, keine echte bexio-API, keine neue Migration, auf Staging verifiziert),
 > v0.3.13/.13.1 (CEO-/KPI-Dashboard-Fundament, read-only, keine neue Migration, auf Staging verifiziert),
 > v0.4.0 (Clean24 Production-Readiness-Gate — Policy/Runbooks/Checks, keine Features, Produktion gesperrt bis Freigabe),
-> **v0.4.1/.1.1 (Clean24 Production-Tenant-Bootstrap-Skript + Produktions-Login verifiziert — produktionssicher, idempotent, Platzhalter-UID, keine Kundendaten; real-data weiter NO-GO bis Restore-Test + GO)**.
+> v0.4.1/.1.1 (Clean24 Production-Tenant-Bootstrap-Skript + Produktions-Login verifiziert — produktionssicher, idempotent, Platzhalter-UID, keine Kundendaten; real-data weiter NO-GO bis Restore-Test + GO),
+> **v0.4.2-prep (manueller GitHub-Actions-Restore-Test-Workflow vorbereitet — Gate-Utility, read-only gegen Produktion, kein neues Supabase-Projekt; noch nicht ausgeführt; real-data weiter NO-GO)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -358,6 +359,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-data-handling-policy.md    # Zugriff/Export/Löschung/Audit/Aufbewahrung für Clean24 (v0.4.0)
   clean24-production-tenant-bootstrap.md # Produktions-Tenant-Bootstrap: Platzhalter-UID ersetzen, nur in klarsa-production, keine Fake-/Kundendaten, Verifikation, real-data weiter NO-GO (v0.4.1)
   clean24-production-bootstrap-results.md # Ergebnis: Bootstrap + Vercel-Produktions-Login auf klarsa-production verifiziert (Verifikationszähler, Env ohne Secret-Werte, Owner-Login), real-data weiter NO-GO bis Restore-Test + GO (v0.4.1.1)
+  production-restore-test-github-actions.md # Low-Cost-Restore-Test via manuellem GitHub-Actions-Workflow (.github/workflows/production-restore-test.yml): Dump→throwaway-Postgres→Verify, kein neues Projekt/keine lokalen Tools/kein Prod-Overwrite/kein Artefakt/keine Secrets; nur public-Schema (Limitation dokumentiert) (v0.4.2-prep)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
@@ -598,6 +600,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [clean24-data-handling-policy.md](docs/clean24-data-handling-policy.md) | Clean24-Datenrichtlinie: Zugriff (least privilege, kein Service-Role in App), Export (owner/admin, auditiert), Löschung (soft→kontrolliert hart), Audit-Erwartungen (append-only), Aufbewahrung, Betroffenenrechte (v0.4.0) |
 | [clean24-production-tenant-bootstrap.md](docs/clean24-production-tenant-bootstrap.md) | Clean24 Produktions-Tenant-Bootstrap: produktionssicheres, idempotentes Skript (`supabase/production/001…`) für Company/Settings/Owner/Service-/Quellen-Konfig; **Platzhalter `CLEAN24_OWNER_AUTH_USER_ID` vor dem Lauf ersetzen, echten UID nie committen**, nur in `klarsa-production`, keine Fake-/Kundendaten, Verifikation, real-data weiter **NO-GO** (v0.4.1) |
 | [clean24-production-bootstrap-results.md](docs/clean24-production-bootstrap-results.md) | Ergebnis: Clean24-Produktions-Bootstrap **auf Produktion verifiziert** (2026-06-13) — Skript-Lauf + Verifikationszähler (premium/active/internal_founder/full, services=8, sources=4, owners=1, alle Kundendaten-Zähler=0), Vercel-Produktions-Env **ohne Secret-Werte** + Auth-URL `klarsa.vercel.app`, Redeploy, **Owner-Login erfolgreich**, keine echten Daten; real-data weiter **NO-GO** bis Restore-Test + Inhaber-GO (v0.4.1.1) |
+| [production-restore-test-github-actions.md](docs/production-restore-test-github-actions.md) | Low-Cost-Restore-Test via manuellem GitHub-Actions-Workflow [`.github/workflows/production-restore-test.yml`]: read-only `pg_dump` der Produktion → throwaway-Postgres auf dem Runner → Verify (20 Tabellen/RLS/8 Helfer/Policies/audit-append-only + Clean24-Zähler services=8/sources=4/owners=1/Kundendaten=0); **kein neues Supabase-Projekt, keine lokalen Tools, kein Prod-Overwrite, kein Artefakt-Upload, keine Secrets im Log**; Setup (Session-Pooler-Secret `KLARSA_PROD_DB_URL`), Limitation (nur `public`-Schema; Supabase-managed via PITR), real-data weiter **NO-GO** (v0.4.2-prep) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -978,12 +981,27 @@ Gate-Stand: Schema/Tenant/Owner/Vercel-Login **done**, Produktion aber weiter
 **gesperrt**. Festgehalten in `docs/clean24-production-bootstrap-results.md`;
 `docs/production-readiness-gate.md` aktualisiert (A+B abgehakt). Nur Docs.
 
-**v0.4.2 (nächster Schritt)** – **Backup-/Restore-Test-Record**: den **Restore-Test**
-gemäss `docs/backup-restore-runbook.md` ausführen (Restore in ein frisches Projekt,
-Daten + RLS + Login prüfen), PITR + täglichen externen Export bestätigen und das
-Ergebnis festhalten – der **letzte Pflichtpunkt** vor der Inhaber-Freigabe **GO**;
-erst danach Clean24-Onboarding mit echten Daten. *Offer-PDF-Politur ist
-aufgeschoben, bis der Nutzer sie anfordert.* Echte Daten erst nach diesem Gate.
+**v0.4.2-prep (erledigt)** – **Manueller GitHub-Actions-Restore-Test-Workflow**:
+`.github/workflows/production-restore-test.yml` (nur `workflow_dispatch`,
+`permissions: contents: read`) macht einen **read-only** `pg_dump` des Produktions-
+`public`-Schemas (Secret `KLARSA_PROD_DB_URL` = Supabase Session Pooler), restored
+in einen **throwaway**-Postgres-Service auf dem Runner (Stubs für
+`auth.uid()`/`auth.users`/Rollen; Daten via `--disable-triggers`) und verifiziert
+Schema/RLS/8 Helfer/Policies/`audit_logs`-append-only **plus** Clean24-Zähler
+(services=8, sources=4, owners=1, leads/offers/jobs/prospects=0). **Kein neues
+Supabase-Projekt, keine lokalen Tools, kein Prod-Overwrite, kein Artefakt-Upload,
+keine Secrets im Log; Dump nur in `/tmp`, am Ende gelöscht.** Validiert das
+**App-eigene `public`-Schema** (Supabase-managed via Supabase-Backups/PITR –
+ehrlich dokumentiert). Doku `docs/production-restore-test-github-actions.md`,
+Runbook ergänzt. **Restore-Test damit vorbereitet, aber noch nicht bestanden.**
+
+**v0.4.2 (nächster Schritt)** – **Backup-/Restore-Test ausführen & Ergebnis
+festhalten**: `KLARSA_PROD_DB_URL`-Secret setzen, den Workflow manuell starten
+(grün = bestanden), PITR + täglichen externen Export bestätigen und in
+`docs/clean24-backup-restore-test-results.md` festhalten (+ Gate/README
+aktualisieren) – der **letzte Pflichtpunkt** vor der Inhaber-Freigabe **GO**; erst
+danach Clean24-Onboarding mit echten Daten. *Offer-PDF-Politur ist aufgeschoben,
+bis der Nutzer sie anfordert.* Echte Daten erst nach diesem Gate.
 
 ## Empfohlener nächster Schritt
 

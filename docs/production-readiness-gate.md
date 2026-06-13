@@ -31,8 +31,13 @@
   [`clean24-production-bootstrap-results.md`](./clean24-production-bootstrap-results.md).
 - ✅ **Vercel Production env + owner login working** at `https://klarsa.vercel.app`
   (prod env points at `klarsa-production`; `/app-shell` opens for the owner).
-- ❌ **Restore test NOT yet performed.** PITR and the daily external export are
-  not yet confirmed. These are the **blocking** items before owner GO.
+- 🟡 **Restore test PREPARED, not yet passed (2026-06-13):** a manual GitHub
+  Actions logical restore-test workflow is added
+  (`.github/workflows/production-restore-test.yml` +
+  [`production-restore-test-github-actions.md`](./production-restore-test-github-actions.md))
+  — low-cost (no new Supabase project, no local tools, no prod overwrite). Still
+  to do: **run it + record the result**, and confirm **PITR + daily external
+  export**. These remain the **blocking** items before owner GO.
 - ❌ Several plan controls not yet implemented (audit-log writes wired in,
   rate-limiting, CSP, MFA). Tracked below.
 
@@ -95,6 +100,7 @@ Each item is **manually verified** and dated by the **owner** before go-live.
 - [ ] **Daily external export** (off-Supabase) configured. → doc 3
 - [ ] **Restore test PASSED** (restore to a fresh project, verify data + RLS +
       login) and recorded — not just "a backup exists". → doc 3
+      *(GitHub Actions workflow prepared 2026-06-13 — run & record to pass)*
 - [ ] Code/deploy **rollback** path (Vercel) confirmed. → doc 3
 - [ ] [Incident/recovery runbook](./incident-recovery-runbook.md) reviewed. → doc 6
 
@@ -127,7 +133,7 @@ the owner, **and** the restore test passed.
 | Field | Value |
 | --- | --- |
 | Decision | **NO-GO (current)** |
-| Reason | Production tenant + owner login work (2026-06-13), but the **restore test is not yet performed** (PITR / daily external export also pending) |
+| Reason | Production tenant + owner login work (2026-06-13); the restore-test **workflow is prepared but not yet run/passed** (PITR / daily external export also pending) |
 | Mandatory items complete | No — A + B done; **C/D pending**, restore test is the blocker |
 | Restore test passed | No |
 | Decided by | _(owner)_ |

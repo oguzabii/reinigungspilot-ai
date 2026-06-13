@@ -7,7 +7,8 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.4.1** — **Clean24 Production-Tenant-Bootstrap (Gate-Ausführung).** Produktion
+**v0.4.1.1** — **Clean24 Production-Tenant-Bootstrap (Produktion verifiziert).**
+Produktion
 läuft an: Supabase **Pro**, Projekt `klarsa-production` mit Migrationen 001–006,
 `verification/006` **PASS**, tägliche Backups aktiv. Neu: ein **produktionssicheres,
 idempotentes** Bootstrap-Skript
@@ -22,8 +23,16 @@ E-Mail wird aus `auth.users` gelesen, nicht hartcodiert. **Keine Kunden-Leads/
 -Offerten/-Aufträge/-Prospects, keine Fake-/Demo-/Staging-Daten.** Doku
 `docs/clean24-production-tenant-bootstrap.md`. **001–006 unverändert; die Staging-/
 Fake-Skripte (`verification/002–005`) laufen nie in Produktion; `004`
-unangetastet.** **Echte Kundendaten bleiben NO-GO**, bis Vercel-Produktions-Login
-und Inhaber-Freigabe (GO) vorliegen. Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
+unangetastet.** Auf **Produktion verifiziert** (2026-06-13, manueller Nutzertest):
+Bootstrap in `klarsa-production` ausgeführt (Platzhalter nur im SQL-Editor
+ersetzt), Verifikationsabfrage erwartungsgemäss (Clean24 Memis GmbH ·
+premium/active/internal_founder/full · services=8 · sources=4 · owners=1 · alle
+Kundendaten-Zähler=0), Vercel-Produktions-Env gesetzt (ohne Secret-Werte hier) +
+Auth-URL `https://klarsa.vercel.app`, Redeploy, **Owner-Login erfolgreich**,
+`/app-shell` geöffnet, keine echten Kundendaten —
+`docs/clean24-production-bootstrap-results.md`. **Echte Kundendaten bleiben
+NO-GO**, bis **Restore-Test** bestanden und **Inhaber-Freigabe (GO)** vorliegen.
+Die Verkaufs-Demo (v0.1.7) bleibt unverändert.
 
 > **v0.4.0:** Clean24 Production-Readiness-Gate — Policy/Runbooks + read-only
 > Checks (Hub `production-readiness-gate.md` + RLS-Verifikation, Backup/Restore,
@@ -137,7 +146,7 @@ und Inhaber-Freigabe (GO) vorliegen. Die Verkaufs-Demo (v0.1.7) bleibt unveränd
 > v0.3.12/.12.1 (bexio-Übergabe-Fundament, manuell, keine echte bexio-API, keine neue Migration, auf Staging verifiziert),
 > v0.3.13/.13.1 (CEO-/KPI-Dashboard-Fundament, read-only, keine neue Migration, auf Staging verifiziert),
 > v0.4.0 (Clean24 Production-Readiness-Gate — Policy/Runbooks/Checks, keine Features, Produktion gesperrt bis Freigabe),
-> **v0.4.1 (Clean24 Production-Tenant-Bootstrap-Skript — produktionssicher, idempotent, Platzhalter-UID, keine Kundendaten; real-data weiter NO-GO)**.
+> **v0.4.1/.1.1 (Clean24 Production-Tenant-Bootstrap-Skript + Produktions-Login verifiziert — produktionssicher, idempotent, Platzhalter-UID, keine Kundendaten; real-data weiter NO-GO bis Restore-Test + GO)**.
 > **Clean24 Memis GmbH** = **erster Tenant / Live-Proof** – erst nach dem Auth-/
 > RLS-/Backup-Gate.
 
@@ -348,6 +357,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   incident-recovery-runbook.md       # Secret-Leak/Datenverlust/Bad-Deploy/Migration/RLS-Regression (v0.4.0)
   clean24-data-handling-policy.md    # Zugriff/Export/Löschung/Audit/Aufbewahrung für Clean24 (v0.4.0)
   clean24-production-tenant-bootstrap.md # Produktions-Tenant-Bootstrap: Platzhalter-UID ersetzen, nur in klarsa-production, keine Fake-/Kundendaten, Verifikation, real-data weiter NO-GO (v0.4.1)
+  clean24-production-bootstrap-results.md # Ergebnis: Bootstrap + Vercel-Produktions-Login auf klarsa-production verifiziert (Verifikationszähler, Env ohne Secret-Werte, Owner-Login), real-data weiter NO-GO bis Restore-Test + GO (v0.4.1.1)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)
@@ -587,6 +597,7 @@ aber strikt über `company_id` getrennt (Supabase RLS).
 | [incident-recovery-runbook.md](docs/incident-recovery-runbook.md) | Incident-/Recovery-Runbook: Severity, Playbooks für Secret-Leak/Datenverlust/unbefugten Zugriff/Bad-Deploy/Bad-Migration/RLS-Regression, Post-Incident-Review, Drills (v0.4.0) |
 | [clean24-data-handling-policy.md](docs/clean24-data-handling-policy.md) | Clean24-Datenrichtlinie: Zugriff (least privilege, kein Service-Role in App), Export (owner/admin, auditiert), Löschung (soft→kontrolliert hart), Audit-Erwartungen (append-only), Aufbewahrung, Betroffenenrechte (v0.4.0) |
 | [clean24-production-tenant-bootstrap.md](docs/clean24-production-tenant-bootstrap.md) | Clean24 Produktions-Tenant-Bootstrap: produktionssicheres, idempotentes Skript (`supabase/production/001…`) für Company/Settings/Owner/Service-/Quellen-Konfig; **Platzhalter `CLEAN24_OWNER_AUTH_USER_ID` vor dem Lauf ersetzen, echten UID nie committen**, nur in `klarsa-production`, keine Fake-/Kundendaten, Verifikation, real-data weiter **NO-GO** (v0.4.1) |
+| [clean24-production-bootstrap-results.md](docs/clean24-production-bootstrap-results.md) | Ergebnis: Clean24-Produktions-Bootstrap **auf Produktion verifiziert** (2026-06-13) — Skript-Lauf + Verifikationszähler (premium/active/internal_founder/full, services=8, sources=4, owners=1, alle Kundendaten-Zähler=0), Vercel-Produktions-Env **ohne Secret-Werte** + Auth-URL `klarsa.vercel.app`, Redeploy, **Owner-Login erfolgreich**, keine echten Daten; real-data weiter **NO-GO** bis Restore-Test + Inhaber-GO (v0.4.1.1) |
 | [clean24-offer-draft-results.md](docs/clean24-offer-draft-results.md) | Ergebnis: Offer Engine auf Staging verifiziert — Migration 004 angewendet, Offer Create/List + Positions-Add + Status-Update für Clean24, RLS-Schreibpfad bestätigt (2026-06-10, v0.3.2.1) |
 | [rls-test-plan.md](docs/rls-test-plan.md) | 13 RLS-Testfälle + Rollenmatrix: Mandantentrennung, readonly-Schreibsperre, Rollen-Scoping, Append-only-Audit, kein Anon-Zugriff |
 | [staging-seed-plan.md](docs/staging-seed-plan.md) | Fiktive Testdaten (zwei Demo-Tenants) nur für RLS-/Workflow-Tests |
@@ -956,32 +967,42 @@ Produktion; `004` unangetastet; 001–006 unverändert.** Doku
 `docs/clean24-production-tenant-bootstrap.md`. Echte Daten weiter **NO-GO** bis
 Vercel-Produktions-Login + Inhaber-Freigabe.
 
-**Nach v0.4.1 (operativ, durch den Nutzer)** – Pflicht-Checkliste abarbeiten:
-Produktions-Supabase-Projekt anlegen (getrennte Secrets), Backups + PITR
-aktivieren, **Restore-Test bestehen**, `verification/006` auf Produktion grün,
-`verification/003` (RLS) auf Staging grün – dann Inhaber-Freigabe **GO** und erst
-danach Clean24-Onboarding. *Offer-PDF-Politur ist aufgeschoben, bis der Nutzer sie
-anfordert.* Echte Daten erst nach diesem Gate.
+**v0.4.1.1 (erledigt, Patch)** – **Clean24-Produktions-Bootstrap + Produktions-Login
+verifiziert** (manuell, 2026-06-13): Bootstrap-Skript in `klarsa-production`
+ausgeführt (Platzhalter nur im SQL-Editor ersetzt), Verifikationsabfrage
+erwartungsgemäss (Clean24 Memis GmbH, premium/active/internal_founder/full,
+services=8, sources=4, owners=1, alle Kundendaten-Zähler=0), Vercel-Produktions-Env
+gesetzt (**ohne Secret-Werte im Repo**) + Auth-URL `https://klarsa.vercel.app`,
+Redeploy, **Owner-Login erfolgreich**, `/app-shell` geöffnet, keine echten Daten.
+Gate-Stand: Schema/Tenant/Owner/Vercel-Login **done**, Produktion aber weiter
+**gesperrt**. Festgehalten in `docs/clean24-production-bootstrap-results.md`;
+`docs/production-readiness-gate.md` aktualisiert (A+B abgehakt). Nur Docs.
+
+**v0.4.2 (nächster Schritt)** – **Backup-/Restore-Test-Record**: den **Restore-Test**
+gemäss `docs/backup-restore-runbook.md` ausführen (Restore in ein frisches Projekt,
+Daten + RLS + Login prüfen), PITR + täglichen externen Export bestätigen und das
+Ergebnis festhalten – der **letzte Pflichtpunkt** vor der Inhaber-Freigabe **GO**;
+erst danach Clean24-Onboarding mit echten Daten. *Offer-PDF-Politur ist
+aufgeschoben, bis der Nutzer sie anfordert.* Echte Daten erst nach diesem Gate.
 
 ## Empfohlener nächster Schritt
 
-Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.3.13/.13.1
-(CEO-/KPI-Dashboard, auf Staging verifiziert) und **v0.4.0 (Clean24
-Production-Readiness-Gate — Policy/Runbooks/Checks, Produktion gesperrt bis
-Freigabe)** sind erledigt. Parallel bleibt **A) Deploy / Visual Review** der
-Verkaufs-Demo
+Der **Architektur-Plan (B)** läuft: v0.2.0 (Docs/Typen) bis v0.4.0 (Clean24
+Production-Readiness-Gate) und **v0.4.1/.1.1 (Clean24 Production-Tenant-Bootstrap +
+Produktions-Login auf `klarsa-production` verifiziert)** sind erledigt –
+Schema/Tenant/Owner/Vercel-Login stehen, Produktion bleibt aber **gesperrt**.
+Parallel bleibt **A) Deploy / Visual Review** der Verkaufs-Demo
 möglich (Live-Deployment, echtes Postfach `info@klarsa.ch`, PDF-Export,
 Erklärvideo).
 
-**Empfehlung:** als Nächstes die **Gate-Pflichtcheckliste** aus
-`docs/production-readiness-gate.md` operativ abarbeiten (Produktions-Projekt mit
-getrennten Secrets, Backups + PITR, **Restore-Test**, `verification/006` auf
-Produktion grün, `verification/003` auf Staging grün) bis zur **Inhaber-Freigabe
-(GO)** – erst danach Clean24-Onboarding. **Offer-PDF-Politur ist aufgeschoben, bis
-angefordert.** **Voraussetzung vor echten Kundendaten:** Backup/Restore
-eingerichtet und getestet, **Staging und Produktion strikt getrennt** (eigene
-Projekte/Keys), sowie validiertes Auth, RLS und Security — **nie vor** diesem
-Gate.
+**Empfehlung:** als Nächstes **v0.4.2 — Backup-/Restore-Test** (gemäss
+`docs/backup-restore-runbook.md`: Restore in ein frisches Projekt + Daten/RLS/Login
+prüfen, PITR + täglicher Export) – der **letzte Pflichtpunkt** vor der
+**Inhaber-Freigabe (GO)**; erst danach Clean24-Onboarding mit echten Daten.
+**Offer-PDF-Politur ist aufgeschoben, bis angefordert.** **Voraussetzung vor echten
+Kundendaten:** Backup/Restore eingerichtet **und getestet**, **Staging und
+Produktion strikt getrennt** (eigene Projekte/Keys), sowie validiertes Auth, RLS
+und Security — **nie vor** diesem Gate.
 
 ## Phase 2 — Klarsa Core (Plan dokumentiert)
 

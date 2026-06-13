@@ -1,5 +1,12 @@
 # Klarsa Core — Clean24 Production Tenant Bootstrap (v0.4.1)
 
+> **Status: RUN & VERIFIED on production (2026-06-13).** The script ran on
+> `klarsa-production`; the verification query returned the expected config-only
+> result (owner bound, all customer-data counts 0), and the owner logged in at
+> `https://klarsa.vercel.app`. No real customer data. Real-data go-live is still
+> **NO-GO** until the restore test + owner GO. Result:
+> [`clean24-production-bootstrap-results.md`](./clean24-production-bootstrap-results.md).
+
 > **PRODUCTION ONLY.** A production-safe script that sets up the **Clean24 Memis
 > GmbH** tenant on the `klarsa-production` project: the company row, settings,
 > the owner membership, package/access/billing status, and the company's own

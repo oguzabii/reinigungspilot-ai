@@ -23,12 +23,22 @@
   staging (`docs/supabase-staging-results.md`).
 - ✅ App uses the **session/anon client only** — the service-role client is never
   imported by any route or server action (see the RLS checklist).
-- ❌ **No production Supabase project yet.** No backups/PITR enabled. **No restore
-  test performed.** No staging↔production separation in place operationally.
-- ❌ Several plan controls are not yet implemented (audit-log writes wired in,
-  rate-limiting, CSP, MFA). These are tracked below.
+- ✅ **Production project `klarsa-production` created** (separate secrets);
+  migrations 001–006 applied; `verification/006` **PASS**; daily backups
+  scheduled. (2026-06-13)
+- ✅ **Clean24 production tenant + owner binding done** via the bootstrap script
+  (config only, **no customer data**) — see
+  [`clean24-production-bootstrap-results.md`](./clean24-production-bootstrap-results.md).
+- ✅ **Vercel Production env + owner login working** at `https://klarsa.vercel.app`
+  (prod env points at `klarsa-production`; `/app-shell` opens for the owner).
+- ❌ **Restore test NOT yet performed.** PITR and the daily external export are
+  not yet confirmed. These are the **blocking** items before owner GO.
+- ❌ Several plan controls not yet implemented (audit-log writes wired in,
+  rate-limiting, CSP, MFA). Tracked below.
 
-**Therefore: production use is BLOCKED.** Staging + fake `@example.test` data only.
+**Therefore: real customer data stays BLOCKED** until the **restore test passes**
+and the **owner signs GO** — even though the production tenant + owner login now
+work. No real customer data has been added.
 
 ## Companion documents (read these)
 
@@ -53,29 +63,34 @@ Each item is **manually verified** and dated by the **owner** before go-live.
 
 ### A. Environment & separation (mandatory)
 
-- [ ] Separate **production** Supabase project exists (own ref/URL/keys/DB
-      password/JWT secret), distinct from `klarsa-staging`. → doc 4
-- [ ] Production secrets live **only** in Vercel/server env — never in the repo,
-      never in `.env.local`, never in the client bundle. → doc 4
-- [ ] `.gitignore` excludes `.env*` (only `.env.local.example` tracked); a secret
+- [x] Separate **production** Supabase project exists (own ref/URL/keys/DB
+      password/JWT secret), distinct from `klarsa-staging`. → doc 4 *(done 2026-06-13)*
+- [x] Production secrets live **only** in Vercel/server env — never in the repo,
+      never in `.env.local`, never in the client bundle. → doc 4 *(done 2026-06-13)*
+- [x] `.gitignore` excludes `.env*` (only `.env.local.example` tracked); a secret
       scan of the repo/history is clean. → doc 4
-- [ ] Fake `verification/002` seed is **never** run on production; no
-      `@example.test` data in production. → doc 4
+- [x] Fake `verification/002` seed is **never** run on production; no
+      `@example.test` data in production. → doc 4 *(only the production bootstrap ran)*
 
 ### B. Auth, RBAC & RLS (mandatory)
 
-- [ ] Supabase Auth in production; protected routes redirect when unauthenticated.
-- [ ] RLS **enabled on every table**, default deny — `verification/006` PASS on the
-      production project. → doc 2
-- [ ] Cross-tenant read/write is blocked — `verification/003` RLS tests PASS. → doc 2
-- [ ] Role/domain matrix verified: owner/admin (manage), sales, ops, readonly
+- [x] Supabase Auth in production; protected routes redirect when unauthenticated.
+      *(owner login works; `/app-shell` opens, 2026-06-13)*
+- [x] RLS **enabled on every table**, default deny — `verification/006` PASS on the
+      production project. → doc 2 *(PASS on `klarsa-production`)*
+- [x] Cross-tenant read/write is blocked — `verification/003` RLS tests PASS. → doc 2
+      *(verified on staging — `003` is fake-data / staging-only by design)*
+- [x] Role/domain matrix verified: owner/admin (manage), sales, ops, readonly
       (SELECT only), superadmin (cross-tenant read, never write). → doc 2
-- [ ] **No service-role client** in any app route/action (grep clean). → doc 2
-- [ ] `audit_logs` is append-only (no UPDATE/DELETE policy) — `verification/006` PASS.
+      *(verified on staging)*
+- [x] **No service-role client** in any app route/action (grep clean). → doc 2
+      *(verified v0.4.0)*
+- [x] `audit_logs` is append-only (no UPDATE/DELETE policy) — `verification/006` PASS.
 
 ### C. Backup, restore & recovery (mandatory)
 
-- [ ] Supabase automated **backups** enabled on production.
+- [x] Supabase automated **backups** enabled on production. *(daily backup
+      scheduled, 2026-06-13)*
 - [ ] **PITR** enabled on production. → doc 3
 - [ ] **Daily external export** (off-Supabase) configured. → doc 3
 - [ ] **Restore test PASSED** (restore to a fresh project, verify data + RLS +
@@ -112,14 +127,16 @@ the owner, **and** the restore test passed.
 | Field | Value |
 | --- | --- |
 | Decision | **NO-GO (current)** |
-| Reason | No production project / no backups / no restore test yet |
-| Mandatory items complete | No |
+| Reason | Production tenant + owner login work (2026-06-13), but the **restore test is not yet performed** (PITR / daily external export also pending) |
+| Mandatory items complete | No — A + B done; **C/D pending**, restore test is the blocker |
 | Restore test passed | No |
 | Decided by | _(owner)_ |
 | Date | _(pending)_ |
 
-Until this records **GO**, the system runs on **staging with fake data only**.
-See the binding policy in [`real-data-gate-policy.md`](./real-data-gate-policy.md).
+Until this records **GO**, **no real customer data is entered** — the
+`klarsa-production` tenant holds **config only** (company, owner, services,
+sources). See the binding policy in
+[`real-data-gate-policy.md`](./real-data-gate-policy.md).
 
 ## NOT in scope (v0.4.0)
 

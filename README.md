@@ -7,9 +7,32 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.5.1** — **Controlled Source Execution (geführte reale Lead-Recherche).** Neue
-geschützte, dynamische Route `/app-shell/lead-hunter/sources/[id]/execute`: ein
-geführtes Quellen-Abarbeitungs-Cockpit als 5-Schritte-Worklist — **Ziel** (z. B.
+**v0.5.1.1** — **Controlled Source Execution in Produktion verifiziert.** Der Inhaber
+hat sich in der Produktion (`https://klarsa.vercel.app`) angemeldet, eine Quelle über
+**„Quelle abarbeiten"** geöffnet und das geführte Cockpit
+(`/app-shell/lead-hunter/sources/[id]/execute`) durchgearbeitet: die
+5-Schritte-Worklist (**Ziel → Recherchieren → Qualifizieren → Erfassen → Kontakt
+vorbereiten**) rendert, die Recherche-Links öffnen die **eigene Browser-Suche** des
+Nutzers (kein Scraping/`fetch`/Server-Sammeln), der Capture-Flow trägt
+**nicht-PII**-Kontext (`?source=&service=&region=`) ins Formular und der **Lead Hunter
+zeigt „Quelle aktiv"**. **Kein Auto-Versand, keine Auto-Buchung, keine echten
+Kundendaten erfasst.** **Docs-only** (neu
+`docs/clean24-controlled-source-execution-results.md`;
+`clean24-controlled-source-execution.md` mit **VERIFIED**-Abschnitt). Ehrlicher Scope:
+geführter realer Lead-Hunting-Workflow – **Discovery, Versand und Buchung bleiben
+manuell**. **LIMITED GO bleibt**: echte Daten nur über die App-UI, Restore-Test weiter
+aufgeschoben, kein breiter Rollout. **001–006 unverändert; `004` unangetastet.**
+
+> **v0.5.1 Fundament:** Neue geschützte, dynamische Route
+> `/app-shell/lead-hunter/sources/[id]/execute` – ein geführtes Quellen-
+> Abarbeitungs-Cockpit, integriert in Revenue Autopilot, Quellen-Registry und Lead
+> Hunter („Quelle abarbeiten"-CTAs, „Quelle aktiv"-Banner). Reine Helper
+> (`source-queue.ts` erweitert um `sourceTaskFor`, neue `ResearchTools.tsx`), keine
+> neue Migration, kein Service-Role/Scraping/Versand/Buchung —
+> `docs/clean24-controlled-source-execution.md`.
+
+**Fundament-Details (v0.5.1):** Geführtes Quellen-Abarbeitungs-Cockpit als
+5-Schritte-Worklist — **Ziel** (z. B.
 „Heute ≈5 Liegenschaftsverwaltungen recherchieren"), **Recherchieren** über
 **vom Nutzer geöffnete** Such-Links (Google / Google Maps / ZEFIX / Website – reine
 `<a href>`-Links, **kein `fetch`/Scraping/API/Server-Sammeln**, Klarsa liest keine

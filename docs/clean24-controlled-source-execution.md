@@ -1,9 +1,28 @@
 # Clean24 Controlled Source Execution (v0.5.1)
 
-> Status: **shipped foundation** (v0.5.1). Extends the Revenue Autopilot
-> (`docs/clean24-revenue-autopilot-foundation.md`) and follows the roadmap
-> (`docs/clean24-revenue-autopilot-roadmap.md`).
+> Status: **shipped foundation** (v0.5.1) · **VERIFIED in production** (v0.5.1.1).
+> Extends the Revenue Autopilot (`docs/clean24-revenue-autopilot-foundation.md`)
+> and follows the roadmap (`docs/clean24-revenue-autopilot-roadmap.md`).
 > Guardrail level: **high** — guided **manual** discovery, never automation.
+
+## 0. VERIFIED in production (v0.5.1.1, 2026-06-13)
+
+The Clean24 owner logged in to production (`https://klarsa.vercel.app`), opened a
+source via **"Quelle abarbeiten"** and worked the guided cockpit. Confirmed:
+
+- ✅ `/app-shell/lead-hunter/sources/[id]/execute` opens after login; reachable
+  via "Quelle abarbeiten" from both the Source Registry and the Revenue Autopilot.
+- ✅ The 5-step worklist renders: **Ziel → Recherchieren → Qualifizieren →
+  Erfassen → Kontakt vorbereiten**.
+- ✅ Research links open the owner's **own** browser searches (new tab) — no
+  scraping, no API fetch, no server-side collection.
+- ✅ The capture flow routes to `…/lead-hunter?source=<id>&service=…&region=…`,
+  and the Lead Hunter shows the **"Quelle aktiv"** context.
+- ✅ No automatic sending, no automatic booking, **no real customer data entered**.
+
+Full record: [`clean24-controlled-source-execution-results.md`](./clean24-controlled-source-execution-results.md).
+This reaffirms the LIMITED GO: real Clean24 data only via the app UI, restore test
+still deferred, broad rollout still blocked.
 
 ## 1. What v0.5.1 adds
 

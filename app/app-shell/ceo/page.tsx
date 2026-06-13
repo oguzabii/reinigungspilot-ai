@@ -105,7 +105,11 @@ export default async function AppShellCeoPage() {
 
         {/* Next actions — the most important thing, first */}
         <div className="mt-7">
-          <AutopilotCard kpis={kpis} hasData={hasData} />
+          <AutopilotCard
+            kpis={kpis}
+            hasData={hasData}
+            ctaHref="/app-shell/revenue-autopilot"
+          />
         </div>
 
         {/* Money impact */}

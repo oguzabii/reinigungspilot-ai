@@ -7,23 +7,36 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.4.2** — **Kontrollierter Clean24-Produktionsstart (LIMITED GO).** Der Inhaber
-startet die **kontrollierte, begrenzte** echte Produktionsnutzung: er erfasst die
-**eigenen** Clean24-Geschäftsdaten **nur über die Produktions-App-UI**
-(`https://klarsa.vercel.app`, authentifizierte Session/RLS), während der
-**Restore-Test aufgeschoben** ist und das bekannte Backup-/Restore-**Risiko
-bewusst akzeptiert** wird. Das Gate wechselt von vollem NO-GO zu **LIMITED GO (nur
-kontrollierte Inhaber-Nutzung)**. **Kein breiter Rollout, kein externes
-Kunden-Onboarding, kein SQL-/Bulk-Import, kein Service-Role, keine Kunden-PII in
-Repo/Docs/Prompts** – echte Daten ausschliesslich über die UI. **Nur
-Governance/Docs, kein Code, keine Features, keine echten Daten committet.** Neu:
-`docs/clean24-controlled-production-start.md` (Entscheidungs-Record + Regeln +
-„limited & monitored"); `production-readiness-gate.md` (NO-GO → **LIMITED GO**,
-Restore-Test = **aufgeschoben/nicht bestanden**, Risiko-Note) und
-`real-data-gate-policy.md` (Controlled-Start-Ausnahme) aktualisiert. **001–006
-unverändert; `004` unangetastet.** Der **Restore-Test bleibt erforderlich** vor
-breiterem Rollout (Workflow aus v0.4.2-prep vorbereitet). Die Verkaufs-Demo
-(v0.1.7) bleibt unverändert.
+**v0.5.0** — **Revenue Autopilot-Fundament.** Neue geschützte Route
+`/app-shell/revenue-autopilot` als Command Center „Heute Geld holen": priorisierte
+**Umsatz-Aktionen**, eine **Source Execution Queue** (pro aktiver
+`lead_sources`-Quelle ein konkreter, menschen­grosser Recherche-Schritt mit Link
+ins vorausgefüllte „Opportunity aus Quelle"-Formular), **heisse Chancen** mit
+**Erstkontakt-Entwürfen** (E-Mail / WhatsApp-SMS / Telefon-Skript / Follow-up),
+**offene Leads** mit **Nachricht + Terminvorschlag/-bestätigung** und
+**Offerten-Nachfass**. Alle Texte sind **reine Kopier-Entwürfe** in
+Schweizerdeutsch – **nichts wird gesucht, gesendet oder gebucht**. Reine,
+deterministische Helper (`components/revenue-autopilot/*`: `source-queue.ts`,
+`outreach.ts`, `appointment.ts`, `DraftChannels.tsx`), additive Read-Funktion
+`getCompanySettings`, **keine neue Migration**, kein Service-Role, keine externe
+API/KI/Scraping, kein Versand/keine Buchung. Der Autopilot ist in der Navigation,
+im Cockpit und im CEO-Briefing verlinkt (Anzahl offener Aktionen). Menschliche
+Freigabe ist erzwungen: jeder Schritt = **vorbereitet → kopieren → prüfen → selbst
+senden**. Neu: `docs/clean24-revenue-autopilot-foundation.md`. Der **kontrollierte
+Clean24-Produktionsstart bleibt LIMITED GO** – echte Daten ausschliesslich über die
+App-UI. **001–006 unverändert; `004` unangetastet.** lint/build grün.
+
+> **v0.4.3:** Produktions-UX- & Radar-Sichtbarkeits-Politur — `AppShellNav`
+> (persistente Navigation über die ganze Umsatz-Kette), **Schweiz-Radar immer
+> sichtbar** (auch bei 0 Opportunities; premium dunkler Radar mit
+> CH-Silhouette/Sweep + ehrlicher „Erste Opportunity erfassen"-CTA), Cockpit mit
+> Autopilot-Nächste-Aktionen + Umsatz-Kette, premium Empty-States, CEO Geld-/
+> Next-Action-Fokus, UI-only Autopilot-Helper. Keine neue Migration, kein
+> Service-Role/Secrets/Scraping/Versand/Buchung — `docs/clean24-revenue-autopilot-roadmap.md`.
+
+> **v0.4.2:** Kontrollierter Clean24-Produktionsstart (LIMITED GO — nur
+> Inhaber-Nutzung via UI, Restore-Test aufgeschoben/Risiko akzeptiert; kein
+> breiter Rollout/SQL-Import/Kunden-PII) — `docs/clean24-controlled-production-start.md`.
 
 > **v0.4.1/.1.1:** Clean24 Production-Tenant-Bootstrap
 > (`supabase/production/001…`, idempotent, Platzhalter-UID, **Config-only**) +
@@ -153,10 +166,12 @@ breiterem Rollout (Workflow aus v0.4.2-prep vorbereitet). Die Verkaufs-Demo
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** v0.3.2 — **Offer Draft-Fundament** (Offerten-Entwürfe zu
-> Leads; manuell, RLS-gescopt, keine externen Integrationen). Echte Daten erst
-> nach Backup/Restore, sauberer **Staging-/Produktions-Trennung** und validiertem
-> Auth/RLS/Security.
+> **Nächster Schritt:** erste **kontrollierte Produktionsnutzung mit echten
+> Clean24-Leads über die App-UI** (Revenue Autopilot täglich nutzen) – danach
+> **v0.5.1**: Source-Execution-Status (optional „erledigt/zurückgestellt") und,
+> nur bei expliziter Freigabe, **konforme/freigegebene Discovery-Integration**
+> (z. B. SIMAP-Ausschreibungen) sowie Gmail/Calendar-Anbindung. Bis dahin bleibt
+> alles **vorbereiten → kopieren → selbst senden** (kein Auto-Versand/keine Buchung).
 
 ### Strategie
 
@@ -201,7 +216,8 @@ npm run start    # Produktionsserver (nach build)
 | `/video-script` | **Intern** (noindex): 60-Sekunden-Storyboard mit deutschem Voiceover für das geplante Erklärvideo |
 | `/workspace`    | **Intern** (noindex): Klarsa App Foundation – Architektur-Plan, Clean24 als erster Tenant, geplante Module, Auth-Fundament-Hinweis |
 | `/login`        | **Intern** (noindex): Login-Skelett (Supabase Auth). Inaktiv ohne Staging-Env, keine echten Daten |
-| `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): authentifizierter Tenant-Arbeitsbereich – Redirect ohne Session, RLS-gefilterte Staging-Zähler, kein Service-Role-Lesen, CEO-Briefing-Karte. Ohne Env: „Setup erforderlich" |
+| `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): authentifizierter Tenant-Cockpit – Redirect ohne Session, RLS-gefilterte Zähler, kein Service-Role-Lesen, **Autopilot-Nächste-Aktionen + Umsatz-Kette + CEO-Briefing-Karte**, Link zum Revenue Autopilot. Ohne Env: „Setup erforderlich" |
+| `/app-shell/revenue-autopilot` | **Intern** (noindex, **dynamisch/geschützt**): **Revenue Autopilot** – Command Center „Heute Geld holen": priorisierte Umsatz-Aktionen, **Source Execution Queue** (Recherche-Schritte je aktiver Quelle, Link ins vorausgefüllte Formular), **heisse Chancen** mit **Erstkontakt-Entwürfen** (E-Mail/WhatsApp/Telefon-Skript/Follow-up), **Leads** mit **Nachricht + Terminvorschlag**, **Offerten-Nachfass**. Reine Kopier-Entwürfe (Schweizerdeutsch), nur Lesen (Session-Client/RLS). **Kein Scraping/Suche/Versand/Buchung/externe API**, keine neue Migration |
 | `/app-shell/ceo` | **Intern** (noindex, **dynamisch/geschützt**): **CEO-Briefing** – **read-only** KPI-Überblick über die Kette (Geld-Wirkung CHF, KPI-Kacheln, Trichter Opportunity→Lead→Offerte→Auftrag→bexio, Letzte 7 Tage, Achtung-Karten) aus vorhandenen RLS-Daten. Keine Schreibvorgänge/KI/externe API/bexio-API/Scraping |
 | `/app-shell/leads` | **Intern** (noindex, **dynamisch/geschützt**): Lead Inbox – Tenant-Leads anzeigen, manuell erfassen, **Status pflegen** und **Follow-ups planen** (Server-Actions, Session-Client/RLS). Kein Versand, keine externen Integrationen |
 | `/app-shell/lead-hunter` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter / Opportunity Radar – Opportunities **manuell erfassen** + Radar-Übersicht + **deterministisches Service-Matching/Scoring** (live) + **„In Lead Inbox übernehmen"** (Promotion zu `leads`) + **„Opportunity aus Quelle"** (vorausgefülltes Formular via `?source=<id>`, verknüpft `prospects.source_id`) + Links zur **Quellen-Registry** und zum **Schweiz-Radar** (Server-Actions, Session-Client/RLS). Kein Scraping/Auto-Suche/KI/externe Quellen |
@@ -284,6 +300,15 @@ components/          # Wiederverwendbare UI-Bausteine
   bexio/PrepareHandoffButton.tsx # „Für bexio vorbereiten" (Server-Action, owner/admin) (v0.3.12)
   bexio/MarkInvoicedButton.tsx # „Als verrechnet markieren" (Server-Action, owner/admin) (v0.3.12)
   ceo/kpi.ts              # reiner, deterministischer KPI-Helper (Volumen/Geld/Trichter/Conversions/Achtung/7-Tage; nowIso vom Aufrufer, keine KI) (v0.3.13)
+  app-shell/AppShellNav.tsx # persistente App-Navigation über die ganze Umsatz-Kette (Client, usePathname, aktiver Status) (v0.4.3, Autopilot ergänzt v0.5.0)
+  app-shell/AutopilotCard.tsx # „Nächste Schritte für Umsatz" (reine Helper-Ableitung aus CeoKpis; optionaler ctaHref zum Revenue Autopilot) (v0.4.3/v0.5.0)
+  app-shell/autopilot.ts  # reiner Helper: priorisierte Umsatz-Aktionen aus CeoKpis (keine externe API/Versand/Scraping/Buchung) (v0.4.3)
+  app-shell/ChainStepper.tsx # Umsatz-Kette als geordnete Stationen über die RLS-Zähler (v0.4.3)
+  app-shell/EmptyState.tsx # geteilter Premium-Empty-State (Icon/Titel/Beschreibung/CTA) (v0.4.3)
+  revenue-autopilot/source-queue.ts # reine Funktion: Source Execution Queue (aktive lead_sources → Recherche-Schritt + Link), kein Lookup/Scraping/API (v0.5.0)
+  revenue-autopilot/outreach.ts # reine Funktion: Schweizerdeutsche Outreach-Entwürfe (E-Mail/WhatsApp/Telefon-Skript/Follow-up), nur Text, kein Versand (v0.5.0)
+  revenue-autopilot/appointment.ts # reine Funktion: Termin-Entwürfe (Vorschlag/Bestätigung, Platzhalter-Zeitfenster), kein Kalender/keine Buchung (v0.5.0)
+  revenue-autopilot/DraftChannels.tsx # Client: Kopier-Only Mehrkanal-Entwurfsansicht (Kanalwechsel + „Kopieren"; nur Clipboard, kein Netzwerk) (v0.5.0)
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
@@ -302,7 +327,8 @@ app/
     jobs/            # Aufträge: page.tsx (Liste, Status, Termin) + actions.ts (createJobFromOffer, updateJobStatus, updateJobSchedule; Ops-Domäne)
       [id]/ics/route.ts  # geschützter Route-Handler: Termin-.ics (Session-Client/RLS, sonst 404) (v0.3.5)
     bexio/           # bexio-Übergabe: page.tsx (Bereit/Vorbereitet/Verrechnet, kopierbare Zusammenfassung) + actions.ts (prepareHandoff, markHandoffInvoiced; Manage-Domäne, keine echte bexio-API) (v0.3.12)
-    ceo/             # CEO-Briefing: page.tsx (read-only KPI-Überblick, Geld-Wirkung, Trichter, Achtung-Karten; keine Actions) (v0.3.13)
+    ceo/             # CEO-Briefing: page.tsx (read-only KPI-Überblick, Geld-Wirkung, Trichter, Achtung-Karten; Autopilot-Nächste-Aktionen + Link) (v0.3.13/v0.5.0)
+    revenue-autopilot/ # Revenue Autopilot: page.tsx (Command Center – Umsatz-Aktionen, Source Execution Queue, heisse Chancen + Outreach-Entwürfe, Leads + Termin-Entwürfe, Offerten-Nachfass; nur Lesen/Session-Client/RLS, kein Versand/keine Buchung/kein Scraping) (v0.5.0)
   login/             # Login-Seite (noindex, Skelett)
   auth/callback/  logout/                        # Auth-Route-Handler (force-dynamic)
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
@@ -359,6 +385,8 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-production-bootstrap-results.md # Ergebnis: Bootstrap + Vercel-Produktions-Login auf klarsa-production verifiziert (Verifikationszähler, Env ohne Secret-Werte, Owner-Login), real-data weiter NO-GO bis Restore-Test + GO (v0.4.1.1)
   production-restore-test-github-actions.md # Low-Cost-Restore-Test via manuellem GitHub-Actions-Workflow (.github/workflows/production-restore-test.yml): Dump→throwaway-Postgres→Verify, kein neues Projekt/keine lokalen Tools/kein Prod-Overwrite/kein Artefakt/keine Secrets; nur public-Schema (Limitation dokumentiert) (v0.4.2-prep)
   clean24-controlled-production-start.md # Kontrollierter Produktionsstart: LIMITED GO (nur Inhaber-Nutzung via UI), Restore-Test aufgeschoben/Risiko akzeptiert, kein SQL-Import/kein breiter Rollout/keine Kunden-PII, Entscheidungs-Record (v0.4.2)
+  clean24-revenue-autopilot-roadmap.md # Revenue-Autopilot-Roadmap: Source Execution Queue, Discovery/Outreach/Follow-up/Termin-Assistenten, Human-Approval-Regeln, Legal-Guardrails, freigegebene Quellen, gated Gmail/Calendar/Google/ZEFIX/SIMAP-Pfade (v0.4.3)
+  clean24-revenue-autopilot-foundation.md # Revenue-Autopilot-Fundament: was v0.5.0 hinzufügt, was manuell bleibt, Human-Approval-Durchsetzung, Guardrails, tägliche Clean24-Nutzung, gated nächste Phase (v0.5.0)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
+  Rocket,
   Radar,
   Map as MapIcon,
   Inbox,
@@ -42,6 +43,12 @@ const NAV_ITEMS: NavItem[] = [
     href: "/app-shell",
     icon: LayoutGrid,
     isActive: (p) => p === "/app-shell",
+  },
+  {
+    label: "Autopilot",
+    href: "/app-shell/revenue-autopilot",
+    icon: Rocket,
+    isActive: (p) => p.startsWith("/app-shell/revenue-autopilot"),
   },
   {
     label: "Lead Hunter",

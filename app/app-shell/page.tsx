@@ -237,7 +237,11 @@ function TenantCockpit({
 
         {/* Autopilot — the daily hero: where the money is + what to do next */}
         <div className="mt-7">
-          <AutopilotCard kpis={kpis} hasData={hasData} />
+          <AutopilotCard
+            kpis={kpis}
+            hasData={hasData}
+            ctaHref="/app-shell/revenue-autopilot"
+          />
         </div>
 
         {/* The money chain, in order */}

@@ -69,6 +69,39 @@ export async function getCompanySummary(
   };
 }
 
+export interface CompanySettingsInfo {
+  /** Person who signs outbound messages (company_settings.sender_name), or null. */
+  senderName: string | null;
+  /** Reply-to address shown in drafts (company_settings.sender_email), or null. */
+  senderEmail: string | null;
+}
+
+/**
+ * The active company's settings relevant to outreach drafts (sender identity).
+ * RLS-scoped via the session client (never service-role). Returns nulls if no
+ * settings row or no values — drafts then fall back to the brand name. This is
+ * read-only and used only to personalise copy-and-paste drafts (no sending).
+ */
+export async function getCompanySettings(
+  companyId: string,
+): Promise<CompanySettingsInfo> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("company_settings")
+    .select("sender_name, sender_email")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  if (error) {
+    console.error("[tenant-data] getCompanySettings failed:", error.message);
+    return { senderName: null, senderEmail: null };
+  }
+  const row = data as { sender_name: string | null; sender_email: string | null } | null;
+  return {
+    senderName: row?.sender_name ?? null,
+    senderEmail: row?.sender_email ?? null,
+  };
+}
+
 /** Row counts per module for the active company. Each value is RLS-scoped. */
 export async function getTenantCounts(companyId: string): Promise<TenantCounts> {
   const supabase = await createClient();

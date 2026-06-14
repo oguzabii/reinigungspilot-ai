@@ -42,12 +42,14 @@ export interface AdapterRunInput {
   limit?: number;
 }
 
-export type AdapterStatus = "ok" | "not_configured" | "error";
+export type AdapterStatus = "ok" | "not_configured" | "error" | "unsupported_schema";
 
 export interface AdapterRunResult {
   status: AdapterStatus;
   signals: RawSignal[];
   message?: string;
+  /** Safe diagnostics (e.g. detected column names) — never values/secrets. */
+  diagnostics?: { columns?: string[] };
 }
 
 export interface SignalAdapter {

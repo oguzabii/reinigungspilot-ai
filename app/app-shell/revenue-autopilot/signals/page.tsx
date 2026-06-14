@@ -64,6 +64,7 @@ export default async function SignalsPage() {
   const baugesucheAdapter = SIGNAL_ADAPTERS.find((a) => a.key === "baugesuche");
   let baugesucheSignals: OpportunitySignal[] = [];
   let baugesucheError: string | null = null;
+  let baugesucheColumns: string[] | null = null;
   if (baugesucheAdapter && baugesucheAdapter.isConfigured()) {
     const result = await baugesucheAdapter.run({ query: "", limit: 10 });
     if (result.status === "ok") {
@@ -77,6 +78,10 @@ export default async function SignalsPage() {
           nowIso,
         }),
       );
+    } else if (result.status === "unsupported_schema") {
+      baugesucheError =
+        result.message ?? "Schema der Quelle nicht erkannt.";
+      baugesucheColumns = result.diagnostics?.columns ?? null;
     } else if (result.status === "error") {
       baugesucheError = result.message ?? "Baugesuche-Quelle nicht erreichbar.";
     }
@@ -188,9 +193,17 @@ export default async function SignalsPage() {
               kein Scraping). Timing nur exakt, wenn die Quelle ein Datum liefert.
             </p>
             {baugesucheError ? (
-              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                Quelle aktuell nicht erreichbar: {baugesucheError}
-              </p>
+              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                <p>{baugesucheError}</p>
+                {baugesucheColumns && baugesucheColumns.length > 0 && (
+                  <p className="mt-1.5 text-xs text-amber-700">
+                    Erkannte Spalten:{" "}
+                    <span className="font-mono">{baugesucheColumns.join(", ")}</span>{" "}
+                    – passende Feldnamen (z. B. Bauvorhaben/Gemeinde/Publikationsdatum)
+                    prüfen.
+                  </p>
+                )}
+              </div>
             ) : baugesucheSignals.length === 0 ? (
               <p className="mt-3 text-sm text-slate-500">
                 Keine aktuellen Bau-Signale aus der Quelle.

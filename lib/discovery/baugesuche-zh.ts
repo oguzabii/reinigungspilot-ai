@@ -1,42 +1,38 @@
 /**
- * Baugesuche Zürich signal adapter (v0.5.4). SERVER-ONLY.
+ * Baugesuche Zürich signal adapter (v0.5.4, CSV support v0.5.4.1). SERVER-ONLY.
  *
  * Turns official building-permit / construction-project records into opportunity
  * signals ("this project suggests cleaning potential — Baureinigung,
  * Fensterreinigung, …").
  *
  * SOURCE RULES (hard):
- *   - OFFICIAL open-data / API JSON ONLY. The endpoint is OWNER-CONFIGURED via
- *     `BAUGESUCHE_ZH_SIGNAL_URL` (and optional `BAUGESUCHE_ZH_API_KEY`). We do NOT
- *     hardcode/guess an endpoint — the owner points this at a *validated* official
- *     feed (e.g. an opendata.swiss / Kanton Zürich / Stadt Zürich Bauprojekt-/
- *     Baugesuch-Dataset or OGC API Features / GeoJSON endpoint).
+ *   - OFFICIAL open-data feed ONLY, OWNER-CONFIGURED via `BAUGESUCHE_ZH_SIGNAL_URL`
+ *     (and optional `BAUGESUCHE_ZH_API_KEY`). We do NOT hardcode/guess an endpoint.
+ *     The validated official Kanton Zürich dataset is a **CSV** download, e.g.
+ *     `https://daten.statistik.zh.ch/ogd/daten/ressourcen/KTZH_00002982_00006183.csv`.
+ *   - Supports **CSV** (semicolon/comma, quoted values) AND **JSON** (GeoJSON
+ *     FeatureCollection / array / `{records}` / `{results}`), auto-detected by
+ *     content-type or a `.csv` URL.
  *   - NO website scraping, NO HTML parsing, NO PDF parsing, NO headless browser.
- *   - Missing URL → `not_configured`; the app keeps working.
- *   - Hard result cap, request timeout, key never logged / never to the client.
+ *   - Missing URL → `not_configured`; unknown schema → `unsupported_schema` (with
+ *     detected column names as a safe diagnostic — never values/secrets).
+ *   - Hard caps (rows scanned + text size + result count), 8 s timeout, key never
+ *     logged / never to the client.
  *
- * HONESTY: timing is `exact` only when a record carries a real date (labelled as
- * what it is — a permit/publication date, NOT a fabricated completion date);
- * otherwise it is inferred. We never invent project-completion dates.
- *
- * Expected response shape (documented contract). The configured endpoint should
- * return JSON as one of:
- *   - a GeoJSON `FeatureCollection` (`features[].properties`), or
- *   - a plain array of record objects, or
- *   - `{ records: [...] }` / `{ results: [...] }`.
- * Per record we read these keys (with common German aliases):
- *   title:  title | bezeichnung | projekt | zweck | beschreibung
- *   region: gemeinde | ort | region | plz_ort
- *   place:  adresse | strasse | standort
- *   type:   art | kategorie | projekttyp | bauart
- *   date:   datum | eingangsdatum | publikationsdatum | entscheiddatum | date
- *   url:    url | link | permalink
+ * HONESTY: a record's source date (a Baugesuch/publication date) is treated as
+ * exact and labelled as what it IS — NOT a project-completion date. Completion
+ * timing stays inferred unless an actual completion date is present. We never
+ * fabricate a completion date.
  */
 
 import type { RawSignal, AdapterRunInput, AdapterRunResult } from "@/lib/discovery/adapters";
 
 const MAX_RESULTS = 10;
 const REQUEST_TIMEOUT_MS = 8000;
+/** Cap on data rows parsed from a CSV (bounds work on large official files). */
+const MAX_ROWS_SCAN = 2000;
+/** Cap on characters parsed from a CSV body (memory guard). */
+const MAX_TEXT_CHARS = 4_000_000;
 
 function readEnv(name: string): string | undefined {
   if (typeof window !== "undefined") return undefined;
@@ -51,6 +47,13 @@ export function isBaugesucheConfigured(): boolean {
 
 type Rec = Record<string, unknown>;
 
+/** Lowercase + trim object keys so alias lookups work for CSV and JSON alike. */
+function normaliseKeys(rec: Rec): Rec {
+  const out: Rec = {};
+  for (const k of Object.keys(rec)) out[k.trim().toLowerCase()] = rec[k];
+  return out;
+}
+
 function pickString(rec: Rec, keys: string[]): string | null {
   for (const k of keys) {
     const v = rec[k];
@@ -63,9 +66,9 @@ function pickString(rec: Rec, keys: string[]): string | null {
 /** Normalise common date strings to YYYY-MM-DD; return null if not a date. */
 function normaliseDate(s: string | null): string | null {
   if (!s) return null;
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const iso = s.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
-  const ch = s.match(/^(\d{2})\.(\d{2})\.(\d{4})/); // DD.MM.YYYY
+  const ch = s.match(/(\d{2})\.(\d{2})\.(\d{4})/); // DD.MM.YYYY
   if (ch) return `${ch[3]}-${ch[2]}-${ch[1]}`;
   return null;
 }
@@ -83,33 +86,101 @@ function servicesForProject(typeText: string): string[] {
   return ["Bauendreinigung", "Fensterreinigung", "Hauswartung"];
 }
 
-/** Pull a record list out of the documented response shapes. */
-function extractRecords(data: unknown): Rec[] {
-  if (Array.isArray(data)) return data as Rec[];
-  if (data && typeof data === "object") {
+/** Pull a record list out of the documented JSON response shapes. */
+function extractJsonRecords(data: unknown): Rec[] {
+  let raw: Rec[] = [];
+  if (Array.isArray(data)) raw = data as Rec[];
+  else if (data && typeof data === "object") {
     const o = data as Rec;
     if (o.type === "FeatureCollection" && Array.isArray(o.features)) {
-      return (o.features as Rec[])
+      raw = (o.features as Rec[])
         .map((f) => (f && typeof f === "object" ? ((f.properties as Rec) ?? {}) : {}))
         .filter((p) => Object.keys(p).length > 0);
-    }
-    if (Array.isArray(o.records)) return o.records as Rec[];
-    if (Array.isArray(o.results)) return o.results as Rec[];
+    } else if (Array.isArray(o.records)) raw = o.records as Rec[];
+    else if (Array.isArray(o.results)) raw = o.results as Rec[];
   }
-  return [];
+  return raw.map(normaliseKeys);
 }
 
+/**
+ * Minimal, dependency-free CSV parser. Detects `;` or `,` delimiter, supports
+ * quoted values (with `""` escapes and embedded newlines), CRLF, and stops after
+ * MAX_ROWS_SCAN data rows. Returns the raw header names (for diagnostics) and
+ * records keyed by lowercased headers.
+ */
+function parseCsv(text: string): { columns: string[]; records: Rec[] } {
+  const firstNl = text.indexOf("\n");
+  const headerLine = firstNl === -1 ? text : text.slice(0, firstNl);
+  const semis = (headerLine.match(/;/g) ?? []).length;
+  const commas = (headerLine.match(/,/g) ?? []).length;
+  const delim = semis >= commas ? ";" : ",";
+
+  const rows: string[][] = [];
+  let field = "";
+  let row: string[] = [];
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === delim) {
+      row.push(field);
+      field = "";
+    } else if (c === "\n") {
+      row.push(field);
+      field = "";
+      rows.push(row);
+      row = [];
+      if (rows.length > MAX_ROWS_SCAN + 1) break;
+    } else if (c !== "\r") {
+      field += c;
+    }
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  if (rows.length === 0) return { columns: [], records: [] };
+
+  const columns = rows[0].map((h) => h.trim());
+  const norm = columns.map((h) => h.toLowerCase());
+  const records: Rec[] = [];
+  for (let r = 1; r < rows.length; r++) {
+    const cells = rows[r];
+    if (cells.length === 1 && cells[0].trim() === "") continue; // blank line
+    const rec: Rec = {};
+    for (let k = 0; k < norm.length; k++) rec[norm[k]] = (cells[k] ?? "").trim();
+    records.push(rec);
+    if (records.length >= MAX_ROWS_SCAN) break;
+  }
+  return { columns, records };
+}
+
+/** Defensive German field mapping (works for CSV + JSON; keys are lowercased). */
 function mapRecord(rec: Rec): RawSignal | null {
-  const title = pickString(rec, ["title", "bezeichnung", "projekt", "zweck", "beschreibung"]);
+  const title = pickString(rec, [
+    "title", "bauvorhaben", "vorhaben", "beschreibung", "projekt", "bezeichnung", "zweck",
+  ]);
   if (!title) return null;
 
-  const region = pickString(rec, ["gemeinde", "ort", "region", "plz_ort"]);
-  const place = pickString(rec, ["adresse", "strasse", "standort"]);
+  const region = pickString(rec, ["gemeinde", "ort", "municipality", "region", "plz_ort"]);
+  const place = pickString(rec, ["strasse", "adresse", "lage", "address", "standort"]);
   const typeText = [
-    pickString(rec, ["art", "kategorie", "projekttyp", "bauart"]) ?? "",
+    pickString(rec, ["art", "kategorie", "type", "bauart", "projekttyp"]) ?? "",
     title,
   ].join(" ");
-  const date = normaliseDate(pickString(rec, ["datum", "eingangsdatum", "publikationsdatum", "entscheiddatum", "date"]));
+  const date = normaliseDate(
+    pickString(rec, [
+      "publikationsdatum", "publikation", "eingangsdatum", "datum", "date", "entscheiddatum",
+    ]),
+  );
   const url = pickString(rec, ["url", "link", "permalink"]);
 
   return {
@@ -128,10 +199,20 @@ function mapRecord(rec: Rec): RawSignal | null {
   };
 }
 
+/** Newest source date first; dated records before undated ones. */
+function byDateDesc(a: RawSignal, b: RawSignal): number {
+  const da = a.timingDate ?? "";
+  const db = b.timingDate ?? "";
+  if (da && db) return db.localeCompare(da);
+  if (da) return -1;
+  if (db) return 1;
+  return 0;
+}
+
 /**
- * Fetch a capped number of recent building/permit/project records from the
- * configured official endpoint and normalise them to `RawSignal`s. Never throws
- * (failures map to `status: "error"`); fetches JSON only.
+ * Fetch a capped number of recent records from the configured official endpoint
+ * (CSV or JSON) and normalise them to `RawSignal`s. Never throws (failures map to
+ * `status: "error"`); fetches CSV/JSON only — no scraping/HTML/PDF.
  */
 export async function runBaugesucheZh(input: AdapterRunInput): Promise<AdapterRunResult> {
   const url = readEnv("BAUGESUCHE_ZH_SIGNAL_URL");
@@ -145,7 +226,7 @@ export async function runBaugesucheZh(input: AdapterRunInput): Promise<AdapterRu
     const res = await fetch(url, {
       signal: controller.signal,
       headers: {
-        Accept: "application/json",
+        Accept: "text/csv, application/json;q=0.9, */*;q=0.5",
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
       },
       cache: "no-store",
@@ -153,10 +234,39 @@ export async function runBaugesucheZh(input: AdapterRunInput): Promise<AdapterRu
     if (!res.ok) {
       return { status: "error", signals: [], message: `Baugesuche-Quelle antwortete mit Status ${res.status}.` };
     }
-    const data = (await res.json()) as unknown;
-    const records = extractRecords(data).slice(0, limit);
+
+    const contentType = (res.headers.get("content-type") ?? "").toLowerCase();
+    const urlPath = url.split("?")[0].toLowerCase();
+    const isCsv = contentType.includes("csv") || urlPath.endsWith(".csv");
+
+    let records: Rec[];
+    let columns: string[];
+    if (isCsv) {
+      let text = await res.text();
+      if (text.length > MAX_TEXT_CHARS) text = text.slice(0, MAX_TEXT_CHARS);
+      const parsed = parseCsv(text);
+      records = parsed.records;
+      columns = parsed.columns;
+    } else {
+      const data = (await res.json()) as unknown;
+      records = extractJsonRecords(data);
+      columns = records[0] ? Object.keys(records[0]) : [];
+    }
+
     const signals = records.map(mapRecord).filter((s): s is RawSignal => s !== null);
-    return { status: "ok", signals };
+
+    if (signals.length === 0) {
+      return {
+        status: "unsupported_schema",
+        signals: [],
+        message:
+          "Keine Signale aus der Quelle – Schema/Spalten nicht erkannt (kein Titel-/Bauvorhaben-Feld gefunden).",
+        diagnostics: { columns: columns.slice(0, 40) },
+      };
+    }
+
+    signals.sort(byDateDesc);
+    return { status: "ok", signals: signals.slice(0, limit) };
   } catch (err) {
     const aborted = err instanceof Error && err.name === "AbortError";
     return {

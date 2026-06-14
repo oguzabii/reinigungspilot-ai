@@ -7,7 +7,26 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.5.4** — **Baugesuche Zürich Signal-Adapter (erste reale Quelle, env-gated).**
+**v0.5.4.1** — **Baugesuche Zürich-Adapter: offizieller CSV-Feed unterstützt.** Die
+validierte offizielle Kanton-Zürich-Quelle „Baugesuche im Kanton Zürich" ist ein
+**CSV-Download**; der Adapter (`lib/discovery/baugesuche-zh.ts`) unterstützt nun
+**CSV zusätzlich zu JSON**: Auto-Erkennung via `content-type`/`.csv`-Endung,
+**dependency-freier** Server-CSV-Parser (Delimiter `;`/`,` automatisch, Quotes mit
+`""`-Escapes, eingebettete Zeilenumbrüche, CRLF), Caps (≈2000 Zeilen, 4-MB-Text-
+Schutz, 8 s Timeout, max. 10 Signale, neuestes Quelldatum zuerst). **Flexibles,
+defensives Feld-Mapping** deutscher Spalten (Bauvorhaben/Vorhaben/Beschreibung,
+Gemeinde/Ort, Strasse/Adresse/Lage, Art/Kategorie, Publikationsdatum/Eingangsdatum,
+URL). Unbekanntes Schema → **`unsupported_schema`** mit **erkannten Spaltennamen**
+als sicherer Diagnose (nur Spaltennamen, keine Werte/Secrets) auf der Signals-Seite.
+Konfiguration via **`BAUGESUCHE_ZH_SIGNAL_URL`** (z. B.
+`https://daten.statistik.zh.ch/ogd/daten/ressourcen/KTZH_00002982_00006183.csv`).
+**Timing ehrlich:** Quelldatum = Baugesuch-/Publikationsdatum (exakt, als das
+beschriftet, was es ist), **kein erfundenes Fertigstellungsdatum** – Fertigstellung
+bleibt geschätzt. **Kein Scraping/HTML/PDF/Headless, kein Service-Role, keine neue
+Migration, kein Schlüssel/Secret im Repo.** **001–006 unverändert; `004`
+unangetastet.** lint/build grün.
+
+**v0.5.4 Fundament — Baugesuche Zürich Signal-Adapter (erste reale Quelle, env-gated).**
 Der erste **echte** offizielle Signal-Quellen-Adapter: **Baugesuche Zürich**
 (`lib/discovery/baugesuche-zh.ts`, **server-only**). Er macht aus offiziellen
 Bauprojekt-/Baugesuch-Datensätzen Opportunity-Signale (Bauprojekt → Service-
@@ -416,7 +435,7 @@ lib/
   auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Zähler, Leads, Follow-ups [inkl. leadId], Offerten, Jobs, Opportunities/getProspects, Quellen/getLeadSources + getLeadSourceById, bexio-Übergaben/getInvoiceHandoffJobs, getCompanySettings, getAutopilotPolicy, getDiscoveryRuns) via Session-Client
   discovery/google-places.ts # SERVER-ONLY: offizielle Google-Places-Text-Search (env-gated GOOGLE_PLACES_API_KEY, lazy/Build-sicher, Timeout, Trefferlimit, kein Scraping, Key nie geloggt/im Client) (v0.5.2)
   discovery/adapters.ts # Signal-Quellen-Adapter: SignalAdapter-Interface + Registry; google_places + baugesuche live, SIMAP/ZEFIX = Stubs (phase 'planned'/not_configured); offizielle Quellen + GO erforderlich (v0.5.3, baugesuche live v0.5.4)
-  discovery/baugesuche-zh.ts # SERVER-ONLY: Baugesuche-Zürich-Adapter – offizieller JSON-Open-Data-Endpoint (env BAUGESUCHE_ZH_SIGNAL_URL, kein hardcodierter Endpoint), GeoJSON/Records→RawSignal, Service-Mapping, Timing exakt-nur-mit-Quelldatum; kein Scraping/HTML/PDF, Timeout/Limit, Key nie geloggt (v0.5.4)
+  discovery/baugesuche-zh.ts # SERVER-ONLY: Baugesuche-Zürich-Adapter – offizieller Open-Data-Endpoint (env BAUGESUCHE_ZH_SIGNAL_URL, kein hardcodierter Endpoint), CSV (dependency-freier Parser, ;/,-Delimiter/Quotes/Caps) + JSON/GeoJSON → RawSignal, defensives Feld-Mapping, unsupported_schema-Diagnose (Spaltennamen), Timing exakt-nur-mit-Quelldatum; kein Scraping/HTML/PDF/Headless, Timeout/Limit, Key nie geloggt (v0.5.4, CSV v0.5.4.1)
   pdf/offer-pdf.ts     # abhängigkeitsfreier PDF-1.4-Generator (Standard-Helvetica/WinAnsi, keine Assets) (v0.3.3)
   ics/job-ics.ts       # abhängigkeitsfreier iCalendar-(.ics)-Generator (RFC 5545 VEVENT, keine Assets/Sync) (v0.3.5)
 
@@ -557,7 +576,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-automatic-discovery-autopilot-rules.md # Automatic Discovery + Autopilot Rules: Lead-Kategorien, Policy-Matrix, Hard-Blocks (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), offizielle Places-API (env-gated/owner-initiiert/kein Cron), Auto-Erstellung kalter Kandidaten, Message-/Termin-Architektur (kein Versand/Buchung), Audit, gated Provider-Phase (v0.5.2)
   clean24-opportunity-signal-engine.md # Opportunity Signal Engine „Warum jetzt?": Signal-Modell (Typ/Warum-jetzt/Service/Konfidenz/Timing exakt-geschätzt-unbekannt/nächste Aktion), Klassifizierung + Service-Vorschlag, inferred-vs-exakt, Adapter-Architektur (Baugesuche/SIMAP/ZEFIX-Stubs), vorbereiteter deaktivierter Cron, Promote via bestehende Aktion, Migration 007 dokumentiert-nicht-angewendet, gated Quell-Phase (v0.5.3; VERIFIED v0.5.3.1)
   clean24-opportunity-signal-engine-results.md # Ergebnis: Opportunity Signal Engine in Produktion verifiziert (Signal-Karten aus Prospects: Quelle/Typ/Warum-jetzt/Service/Konfidenz/Timing-Güte/nächste Aktion, Cross-Links, ehrliches Timing, kein Auto-Outreach/Scraping, keine echten Kundendaten) (v0.5.3.1)
-  clean24-baugesuche-signal-adapter.md # Baugesuche-Zürich-Adapter: erste reale Signal-Quelle (env-gated/owner-konfiguriert, kein geratener Endpoint), welche offiziellen Quellen, exakt-nur-mit-Quelldatum (kein erfundenes Fertigstellungsdatum), Service-Mapping, Response-Shape-Vertrag, kein Scraping/HTML/PDF, „Als Opportunity erstellen", Migration 007 dokumentiert-nicht-angewendet (v0.5.4)
+  clean24-baugesuche-signal-adapter.md # Baugesuche-Zürich-Adapter: erste reale Signal-Quelle (env-gated/owner-konfiguriert, kein geratener Endpoint), **offizieller CSV-Feed** (KTZH_…csv) + JSON, dependency-freier CSV-Parser, defensives Feld-Mapping, unsupported_schema-Diagnose, exakt-nur-mit-Quelldatum (kein erfundenes Fertigstellungsdatum), kein Scraping/HTML/PDF, „Als Opportunity erstellen", Migration 007 dokumentiert-nicht-angewendet (v0.5.4; CSV v0.5.4.1)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)

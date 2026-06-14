@@ -1,9 +1,32 @@
-# Clean24 Baugesuche Zürich Signal Adapter (v0.5.4)
+# Clean24 Baugesuche Zürich Signal Adapter (v0.5.4 · CSV support v0.5.4.1)
 
-> Status: **adapter implemented, `not_configured` by default** (v0.5.4). Extends
-> the Opportunity Signal Engine (`docs/clean24-opportunity-signal-engine.md`).
-> Guardrail level: **maximum** — first real external signal source; official API
-> only, owner-configured, no scraping, no fabricated dates.
+> Status: **adapter implemented, `not_configured` by default** (v0.5.4); **official
+> CSV feed supported** (v0.5.4.1). Extends the Opportunity Signal Engine
+> (`docs/clean24-opportunity-signal-engine.md`).
+> Guardrail level: **maximum** — first real external signal source; official feed
+> only (CSV or JSON), owner-configured, no scraping, no fabricated dates.
+
+## 0. v0.5.4.1 — official CSV feed
+
+The validated official Kanton Zürich dataset ("Baugesuche im Kanton Zürich") is a
+**CSV download**. The adapter now supports **CSV in addition to JSON**:
+
+- Configure it via the env var **`BAUGESUCHE_ZH_SIGNAL_URL`** (server-only). The
+  validated official CSV URL is, for example:
+  `https://daten.statistik.zh.ch/ogd/daten/ressourcen/KTZH_00002982_00006183.csv`
+- The adapter **auto-detects** CSV by the response `content-type` (contains `csv`)
+  or a `.csv` URL ending; otherwise it parses JSON.
+- CSV is parsed **server-side**, dependency-free: delimiter auto-detected
+  (`;` or `,`), quoted values with `""` escapes and embedded newlines, CRLF.
+- **Caps:** at most ~2000 data rows scanned, a 4 MB text guard, the 8 s request
+  timeout, and at most 10 signals returned (newest source date first).
+- If the schema is not recognised (no title/Bauvorhaben field), the adapter
+  returns **`unsupported_schema`** and the Signals page shows the **detected
+  column names** as a safe diagnostic (column names only — never row values or
+  secrets) so the owner can verify the field mapping.
+
+**No scraping, no HTML parsing, no PDF parsing, no headless browser** — only the
+official CSV/JSON body is read.
 
 ## 1. What v0.5.4 adds
 
@@ -56,15 +79,19 @@ JSON, and its terms of service permit this use** before configuring it.
 
 ## 4. How Baugesuche signals are generated
 
-1. The adapter fetches the configured endpoint (JSON, capped, timed out).
-2. It accepts a **documented response shape**: a GeoJSON `FeatureCollection`
-   (`features[].properties`), a plain array of records, or `{ records }` /
-   `{ results }`.
-3. Per record it reads documented keys (with common German aliases): `title`
-   (bezeichnung/projekt/zweck/beschreibung), `region` (gemeinde/ort/region),
-   `place` (adresse/strasse/standort), `type` (art/kategorie/projekttyp), `date`
-   (datum/eingangsdatum/publikationsdatum/entscheiddatum), `url` (url/link).
-   Records without a title are skipped.
+1. The adapter fetches the configured endpoint (CSV **or** JSON, capped, timed
+   out), auto-detecting CSV by content-type / `.csv` URL.
+2. It accepts either **CSV** (semicolon/comma, quoted values) or a **documented
+   JSON shape**: a GeoJSON `FeatureCollection` (`features[].properties`), a plain
+   array of records, or `{ records }` / `{ results }`. Keys are lowercased so the
+   same mapping works for both.
+3. Per record it reads documented keys defensively (common German aliases):
+   `title` (bauvorhaben/vorhaben/beschreibung/projekt/bezeichnung/zweck), `region`
+   (gemeinde/ort/municipality/region), `place` (strasse/adresse/lage/standort),
+   `type` (art/kategorie/bauart/projekttyp), `date` (publikationsdatum/publikation/
+   eingangsdatum/datum/entscheiddatum), `url` (url/link). Records without a title
+   are skipped; if nothing maps, the run is `unsupported_schema` with the detected
+   column names surfaced safely.
 4. Each record → `RawSignal` (`signalType: "construction"`, suggested services,
    timing). The pure engine (`signals.ts → signalFromRawSignal`) adds the why-now
    framing, a deterministic confidence and the timing güte.

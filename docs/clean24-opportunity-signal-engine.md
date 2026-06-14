@@ -1,9 +1,27 @@
 # Clean24 Opportunity Signal Engine — "Why now?" (v0.5.3)
 
-> Status: **shipped foundation** (v0.5.3). Builds on Automatic Discovery
-> (`docs/clean24-automatic-discovery-autopilot-rules.md`) and the roadmap
-> (`docs/clean24-revenue-autopilot-roadmap.md`).
+> Status: **shipped foundation** (v0.5.3) · **VERIFIED in production** (v0.5.3.1).
+> Builds on Automatic Discovery (`docs/clean24-automatic-discovery-autopilot-rules.md`)
+> and the roadmap (`docs/clean24-revenue-autopilot-roadmap.md`).
 > Guardrail level: **high** — intelligence + framing only; no outreach, no booking.
+
+## 0. VERIFIED in production (v0.5.3.1, 2026-06-14)
+
+The Clean24 owner logged in to production (`https://klarsa.vercel.app`) and opened
+`/app-shell/revenue-autopilot/signals`. Confirmed:
+
+- ✅ The route opens after login; signal cards render from existing production
+  candidates/prospects.
+- ✅ Each card shows **source**, **signal type**, **"Warum jetzt?"**, **suggested
+  service(s)**, **confidence**, **timing window + güte** (exakt/geschätzt/unbekannt)
+  and the **next action / Lead Hunter link**.
+- ✅ Links to Signals from Revenue Autopilot / Discovery / Radar / Lead Hunter work.
+- ✅ Inferred/unknown timing is honestly labelled; **no fabricated exact dates**.
+- ✅ No automatic outreach/calls/booking/scraping; **no real customer data entered**.
+
+Full record: [`clean24-opportunity-signal-engine-results.md`](./clean24-opportunity-signal-engine-results.md).
+This reaffirms the LIMITED GO: real data only via the app UI; the first official
+Baugesuche/SIMAP/ZEFIX timing adapter (+ migration 007) remains a gated next step.
 
 ## 1. What v0.5.3 adds
 

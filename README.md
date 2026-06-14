@@ -7,7 +7,24 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.5.3** — **Opportunity Signal Engine – „Warum jetzt?" (Fundament).** Klarsa geht
+**v0.5.3.1** — **Opportunity Signal Engine in Produktion verifiziert.** Der Inhaber
+hat sich in der Produktion (`https://klarsa.vercel.app`) angemeldet und
+`/app-shell/revenue-autopilot/signals` geöffnet: Signal-Karten rendern aus den
+bestehenden Produktions-Kandidaten/Prospects und zeigen **Quelle, Signal-Typ,
+„Warum jetzt?", Service-Potenzial, Konfidenz, Timing-Fenster + Güte
+(exakt/geschätzt/unbekannt) und nächste Aktion / Lead-Hunter-Link**; die Links zu
+Signals aus **Revenue Autopilot / Discovery / Radar / Lead Hunter** funktionieren.
+**Inferred/unbekanntes Timing ist ehrlich beschriftet, keine exakten
+Bauabschluss-Daten erfunden, kein Auto-Outreach/Anruf/Buchung/Scraping, keine echten
+Kundendaten erfasst.** **Docs-only** (neu
+`docs/clean24-opportunity-signal-engine-results.md`;
+`clean24-opportunity-signal-engine.md` mit **VERIFIED**-Abschnitt). Ehrlicher Scope:
+die „Warum jetzt?"-Intelligenz läuft über **bestehende Kandidaten** – echte
+offizielle **Baugesuche/SIMAP/ZEFIX**-Timing-Adapter (+ Migration 007) bleiben die
+**nächste, gated Phase**. **LIMITED GO bleibt. 001–006 unverändert; `004`
+unangetastet.**
+
+**v0.5.3 Fundament — Opportunity Signal Engine „Warum jetzt?".** Klarsa geht
 von „hier sind Firmen" zu „hier sind zeitkritische Umsatz-Chancen und warum sie
 zählen". Neu: (1) eine **Opportunity Signal Engine**
 (`components/revenue-autopilot/signals.ts`, rein/deterministisch) macht aus jedem
@@ -505,7 +522,8 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-controlled-source-execution.md # Controlled Source Execution: geführtes Cockpit (/sources/[id]/execute), Ziel/Recherche-Links (vom Nutzer geöffnet, kein fetch/Scraping)/Qualifizierung/Erfassen (nicht-PII)/Kontakt-Entwürfe, warum kein Scraping/Versand, real-data nur über UI, gated nächste Phase (v0.5.1; VERIFIED v0.5.1.1)
   clean24-controlled-source-execution-results.md # Ergebnis: Controlled Source Execution in Produktion verifiziert (Cockpit/Worklist, Recherche-Links = eigene Suche, Capture nicht-PII, „Quelle aktiv", kein Auto-Versand/Buchung, keine echten Kundendaten) (v0.5.1.1)
   clean24-automatic-discovery-autopilot-rules.md # Automatic Discovery + Autopilot Rules: Lead-Kategorien, Policy-Matrix, Hard-Blocks (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), offizielle Places-API (env-gated/owner-initiiert/kein Cron), Auto-Erstellung kalter Kandidaten, Message-/Termin-Architektur (kein Versand/Buchung), Audit, gated Provider-Phase (v0.5.2)
-  clean24-opportunity-signal-engine.md # Opportunity Signal Engine „Warum jetzt?": Signal-Modell (Typ/Warum-jetzt/Service/Konfidenz/Timing exakt-geschätzt-unbekannt/nächste Aktion), Klassifizierung + Service-Vorschlag, inferred-vs-exakt, Adapter-Architektur (Baugesuche/SIMAP/ZEFIX-Stubs), vorbereiteter deaktivierter Cron, Promote via bestehende Aktion, Migration 007 dokumentiert-nicht-angewendet, gated Quell-Phase (v0.5.3)
+  clean24-opportunity-signal-engine.md # Opportunity Signal Engine „Warum jetzt?": Signal-Modell (Typ/Warum-jetzt/Service/Konfidenz/Timing exakt-geschätzt-unbekannt/nächste Aktion), Klassifizierung + Service-Vorschlag, inferred-vs-exakt, Adapter-Architektur (Baugesuche/SIMAP/ZEFIX-Stubs), vorbereiteter deaktivierter Cron, Promote via bestehende Aktion, Migration 007 dokumentiert-nicht-angewendet, gated Quell-Phase (v0.5.3; VERIFIED v0.5.3.1)
+  clean24-opportunity-signal-engine-results.md # Ergebnis: Opportunity Signal Engine in Produktion verifiziert (Signal-Karten aus Prospects: Quelle/Typ/Warum-jetzt/Service/Konfidenz/Timing-Güte/nächste Aktion, Cross-Links, ehrliches Timing, kein Auto-Outreach/Scraping, keine echten Kundendaten) (v0.5.3.1)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)

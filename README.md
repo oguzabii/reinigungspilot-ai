@@ -7,7 +7,31 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.5.2** — **Automatic Discovery + Safe Autopilot Rules (Fundament).** Klarsa wird
+**v0.5.3** — **Opportunity Signal Engine – „Warum jetzt?" (Fundament).** Klarsa geht
+von „hier sind Firmen" zu „hier sind zeitkritische Umsatz-Chancen und warum sie
+zählen". Neu: (1) eine **Opportunity Signal Engine**
+(`components/revenue-autopilot/signals.ts`, rein/deterministisch) macht aus jedem
+Kandidaten ein **Signal** mit **Signal-Typ** (Bauprojekt/Verwaltung/Ausschreibung/
+Neugründung/Betrieb), **Warum-jetzt**, **Service-Potenzial**, **Konfidenz**,
+**Timing-Fenster + Güte (exakt/geschätzt/unbekannt)** und **nächster Aktion**; (2)
+neue Route `/app-shell/revenue-autopilot/signals` (Signal-Karten + Quellen-
+Bereitschaft); (3) **Adapter-Architektur** (`lib/discovery/adapters.ts`): saubere
+Schnittstelle für künftige offizielle Quellen – **Stubs** Baugesuche/SIMAP/ZEFIX
+(`phase:"planned"`, `not_configured`, **kein Scraping**), Google Places als einzige
+**live** Stützquelle; (4) **vorbereiteter Cron** (`app/api/autopilot/discovery-cron`),
+**standardmässig deaktiviert** (ohne `CRON_SECRET` 404, secret-gated, **keine
+Schreibvorgänge** – autonome Schreibvorgänge bräuchten Service-Role, der gesperrt
+ist; kein `vercel.json`-Cron). **Ehrliches Timing:** ohne offizielle Datumsquelle ist
+das Timing **geschätzt** oder **unbekannt** – nie als exakter Fertigstellungs-/
+Fristtermin. **Aus Signalen entsteht KEIN automatischer Kontakt/Versand/Buchung** –
+Übernahme im Lead Hunter. Integriert (Banner „Neue Signale gefunden" + Links von
+Discovery/Radar/Lead Hunter). **KEINE neue Migration** (Signale aus `prospects`
+berechnet; `opportunity_signals`/Migration 007 erst mit erster live Quelle, dokumentiert).
+Kein Service-Role, kein Key/Secret im Repo (`GOOGLE_PLACES_API_KEY`/`CRON_SECRET`
+leere Platzhalter). Neu: `docs/clean24-opportunity-signal-engine.md`. **LIMITED GO
+bleibt. 001–006 unverändert; `004` unangetastet.** lint/build grün.
+
+**v0.5.2 Fundament — Automatic Discovery + Safe Autopilot Rules.** Klarsa wird
 automatischer – **kontrolliert per Richtlinie**, keine Spam-Maschine. Neu: (1) eine
 **Autopilot Rules Engine** (`components/revenue-autopilot/policy.ts`, rein/
 deterministisch) entscheidet pro **Kontakt-Kategorie** (Inbound/Opt-in, Bestandskunde,
@@ -237,15 +261,15 @@ App-UI. **001–006 unverändert; `004` unangetastet.** lint/build grün.
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** **kontrollierte Produktionsnutzung** der Automatik (v0.5.2)
-> – der Inhaber setzt (optional) `GOOGLE_PLACES_API_KEY` in der Umgebung, testet
-> einen Discovery-Lauf und die Richtlinien-Toggles über die App-UI; danach
-> **v0.5.2.1** (Produktionsverifikation). Erst **nach expliziter Freigabe**:
-> konformer **Versand-Provider** (Gmail/SMTP/Resend mit Absender-Identität +
-> Opt-out + menschlicher Freigabe), **Kalender**-Anbindung (Vorschläge, Buchung nur
-> nach Bestätigung) und ein **Inbound-Kanal** (Website-Formular → Inbound-Lead).
-> Bis dahin: **Cold-Outreach/Auto-Anrufe/stille Buchung gesperrt**, Auto-Nachrichten
-> nur als Entwurf.
+> **Nächster Schritt:** **kontrollierte Produktionsnutzung** von Discovery (v0.5.2)
+> + Opportunity Signals (v0.5.3) über die App-UI (optional `GOOGLE_PLACES_API_KEY`
+> setzen), danach **v0.5.3.1** (Produktionsverifikation der Signale). Erst **nach
+> expliziter Freigabe + Quellenprüfung**: erste **offizielle Signal-Quelle**
+> (Baugesuche/Bauprojekt-Open-Data oder SIMAP) → dann **additive Migration 007**
+> (`opportunity_signals`) mit echtem (teils exaktem) Timing; danach konformer
+> **Versand-Provider**, **Kalender** (Buchung nur nach Bestätigung) und ein
+> **Inbound-Kanal**. Bis dahin: **Cold-Outreach/Auto-Anrufe/stille Buchung
+> gesperrt**, Timing nur **geschätzt/unbekannt**, kein Auto-Versand aus Signalen.
 
 ### Strategie
 
@@ -294,6 +318,8 @@ npm run start    # Produktionsserver (nach build)
 | `/app-shell/revenue-autopilot` | **Intern** (noindex, **dynamisch/geschützt**): **Revenue Autopilot** – Command Center „Heute Geld holen": priorisierte Umsatz-Aktionen, **Automatik-Sektion** (Discovery/Richtlinien + Safe-Mode-Banner), **Source Execution Queue**, **heisse Chancen** mit **Erstkontakt-Entwürfen**, **Leads** mit **Nachricht + Terminvorschlag**, **Offerten-Nachfass**. Reine Kopier-Entwürfe (Schweizerdeutsch), nur Lesen (Session-Client/RLS). **Kein Auto-Versand/Buchung**, keine neue Migration |
 | `/app-shell/revenue-autopilot/discovery` | **Intern** (noindex, **dynamisch/geschützt**): **Automatische Discovery** – owner/admin-initiierter Lauf über die **offizielle** Google-Places-API (env-gated `GOOGLE_PLACES_API_KEY`, **kein Cron**, Trefferlimit 10, **kein Scraping**), Dedupe, optional Auto-Erstellung **kalter** Prospects (`source_type='google'`, Outreach gesperrt), entdeckte Kandidaten, Lauf-Audit. Fehlender Key → „nicht konfiguriert". Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/policy` | **Intern** (noindex, **dynamisch/geschützt**): **Autopilot-Richtlinien** – Policy-Matrix je Kontakt-Kategorie (was automatisch erlaubt/gesperrt + warum), Hard-Blocked-Liste (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), Provider-Status, **Owner-Toggles** für sichere Modi (in `company_settings.settings` jsonb, `can_write_settings` = owner/admin). Session-Client/RLS, kein Service-Role |
+| `/app-shell/revenue-autopilot/signals` | **Intern** (noindex, **dynamisch/geschützt**): **Opportunity Signals** „Warum jetzt?" – aus erfassten/entdeckten Kandidaten berechnete Signale (Typ, Warum-jetzt, Service-Potenzial, Konfidenz, **Timing-Güte exakt/geschätzt/unbekannt**, nächste Aktion) + Quellen-Bereitschaft (Adapter-Stubs). Nur Lesen (Session-Client/RLS), **kein Auto-Versand/Buchung/Scraping**, keine neue Migration |
+| `/api/autopilot/discovery-cron` | **Intern** (Route-Handler, **dynamisch**): **vorbereiteter** Discovery/Signal-Cron – **standardmässig deaktiviert**: ohne `CRON_SECRET` → 404, sonst `Authorization: Bearer`-geprüft; führt **keine** Discovery/**keine Schreibvorgänge** aus (autonome Writes bräuchten Service-Role = gesperrt). Kein `vercel.json`-Cron, nichts geplant |
 | `/app-shell/ceo` | **Intern** (noindex, **dynamisch/geschützt**): **CEO-Briefing** – **read-only** KPI-Überblick über die Kette (Geld-Wirkung CHF, KPI-Kacheln, Trichter Opportunity→Lead→Offerte→Auftrag→bexio, Letzte 7 Tage, Achtung-Karten) aus vorhandenen RLS-Daten. Keine Schreibvorgänge/KI/externe API/bexio-API/Scraping |
 | `/app-shell/leads` | **Intern** (noindex, **dynamisch/geschützt**): Lead Inbox – Tenant-Leads anzeigen, manuell erfassen, **Status pflegen** und **Follow-ups planen** (Server-Actions, Session-Client/RLS). Kein Versand, keine externen Integrationen |
 | `/app-shell/lead-hunter` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter / Opportunity Radar – Opportunities **manuell erfassen** + Radar-Übersicht + **deterministisches Service-Matching/Scoring** (live) + **„In Lead Inbox übernehmen"** (Promotion zu `leads`) + **„Opportunity aus Quelle"** (vorausgefülltes Formular via `?source=<id>`, verknüpft `prospects.source_id`) + Links zur **Quellen-Registry** und zum **Schweiz-Radar** (Server-Actions, Session-Client/RLS). Kein Scraping/Auto-Suche/KI/externe Quellen |
@@ -340,6 +366,7 @@ lib/
   auth/session.ts      # Server-Session-Helfer: getCurrentUser/Profile/Memberships/CompanyContext
   auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Zähler, Leads, Follow-ups [inkl. leadId], Offerten, Jobs, Opportunities/getProspects, Quellen/getLeadSources + getLeadSourceById, bexio-Übergaben/getInvoiceHandoffJobs, getCompanySettings, getAutopilotPolicy, getDiscoveryRuns) via Session-Client
   discovery/google-places.ts # SERVER-ONLY: offizielle Google-Places-Text-Search (env-gated GOOGLE_PLACES_API_KEY, lazy/Build-sicher, Timeout, Trefferlimit, kein Scraping, Key nie geloggt/im Client) (v0.5.2)
+  discovery/adapters.ts # Signal-Quellen-Adapter: SignalAdapter-Interface + Registry; google_places live (Stützdaten), Baugesuche/SIMAP/ZEFIX = Stubs (phase 'planned'/not_configured, kein Scraping/Fetch); offizielle Quellen + GO erforderlich (v0.5.3)
   pdf/offer-pdf.ts     # abhängigkeitsfreier PDF-1.4-Generator (Standard-Helvetica/WinAnsi, keine Assets) (v0.3.3)
   ics/job-ics.ts       # abhängigkeitsfreier iCalendar-(.ics)-Generator (RFC 5545 VEVENT, keine Assets/Sync) (v0.3.5)
 
@@ -390,6 +417,7 @@ components/          # Wiederverwendbare UI-Bausteine
   revenue-autopilot/ResearchTools.tsx # Client: Suchbegriff/Region-Inputs → vom Nutzer geöffnete Such-Links (Google/Maps/ZEFIX/Website) + Capture-CTA (nicht-PII source/service/region); kein fetch/Scraping/API/Server-Sammeln (v0.5.1)
   revenue-autopilot/policy.ts # reine Autopilot Rules Engine: Lead-Kategorien + Safe-Mode-Toggles + Provider-Status → Policy-Verdikte (Cold-Outreach/Auto-Buchung hart gesperrt); keine Aktion, nur Entscheidung (v0.5.2)
   revenue-autopilot/SafeModeBanner.tsx # „Autopilot Safe-Mode aktiv"-Banner (Cold-Outreach/Anrufe/stille Buchung/Scraping gesperrt) (v0.5.2)
+  revenue-autopilot/signals.ts # reine Opportunity Signal Engine: Kandidat → Signal (Typ/Warum-jetzt/Service/Konfidenz/Timing-Güte exakt-geschätzt-unbekannt/nächste Aktion), buildSignalsFromProspects; keine KI/API/Netzwerk, ehrliches Timing (v0.5.3)
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
@@ -413,6 +441,8 @@ app/
     revenue-autopilot/ # Revenue Autopilot: page.tsx (Command Center – Umsatz-Aktionen, Automatik-Sektion, Source Execution Queue, heisse Chancen + Outreach-Entwürfe, Leads + Termin-Entwürfe, Offerten-Nachfass; nur Lesen/Session-Client/RLS, kein Versand/keine Buchung/kein Scraping) (v0.5.0)
       discovery/ # Automatische Discovery: page.tsx (Lauf/Kandidaten/Audit) + RunDiscoveryForm.tsx (Client) + actions.ts (runDiscovery; owner/admin, offizielle Places-API, Dedupe, optional kalte Prospects, audit_logs) (v0.5.2)
       policy/    # Autopilot-Richtlinien: page.tsx (Policy-Matrix/Hard-Blocked/Provider/Toggles) + PolicyToggles.tsx (Client) + actions.ts (updateAutopilotPolicy; owner/admin, company_settings.settings jsonb) (v0.5.2)
+      signals/   # Opportunity Signals: page.tsx (Signal-Karten + Quellen-Bereitschaft; aus prospects berechnet, nur Lesen, kein Auto-Versand/Buchung) (v0.5.3)
+  api/autopilot/discovery-cron/ # route.ts: vorbereiteter, secret-gated, standardmässig deaktivierter Cron (404 ohne CRON_SECRET, keine Writes/Discovery) (v0.5.3)
   login/             # Login-Seite (noindex, Skelett)
   auth/callback/  logout/                        # Auth-Route-Handler (force-dynamic)
   globals.css        # Tailwind v4 Theme (navy-Palette), Basis-Stile
@@ -475,6 +505,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-controlled-source-execution.md # Controlled Source Execution: geführtes Cockpit (/sources/[id]/execute), Ziel/Recherche-Links (vom Nutzer geöffnet, kein fetch/Scraping)/Qualifizierung/Erfassen (nicht-PII)/Kontakt-Entwürfe, warum kein Scraping/Versand, real-data nur über UI, gated nächste Phase (v0.5.1; VERIFIED v0.5.1.1)
   clean24-controlled-source-execution-results.md # Ergebnis: Controlled Source Execution in Produktion verifiziert (Cockpit/Worklist, Recherche-Links = eigene Suche, Capture nicht-PII, „Quelle aktiv", kein Auto-Versand/Buchung, keine echten Kundendaten) (v0.5.1.1)
   clean24-automatic-discovery-autopilot-rules.md # Automatic Discovery + Autopilot Rules: Lead-Kategorien, Policy-Matrix, Hard-Blocks (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), offizielle Places-API (env-gated/owner-initiiert/kein Cron), Auto-Erstellung kalter Kandidaten, Message-/Termin-Architektur (kein Versand/Buchung), Audit, gated Provider-Phase (v0.5.2)
+  clean24-opportunity-signal-engine.md # Opportunity Signal Engine „Warum jetzt?": Signal-Modell (Typ/Warum-jetzt/Service/Konfidenz/Timing exakt-geschätzt-unbekannt/nächste Aktion), Klassifizierung + Service-Vorschlag, inferred-vs-exakt, Adapter-Architektur (Baugesuche/SIMAP/ZEFIX-Stubs), vorbereiteter deaktivierter Cron, Promote via bestehende Aktion, Migration 007 dokumentiert-nicht-angewendet, gated Quell-Phase (v0.5.3)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)

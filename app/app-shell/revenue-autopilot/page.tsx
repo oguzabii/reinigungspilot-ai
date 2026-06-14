@@ -20,6 +20,7 @@ import {
   BellRing,
   Globe,
   SlidersHorizontal,
+  Activity,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
@@ -166,6 +167,8 @@ export default async function RevenueAutopilotPage() {
   const senderPerson = settings.senderName;
   const discoveryConfigured = isDiscoveryConfigured();
   const discoveredCount = prospects.filter((p) => p.sourceType === "google").length;
+  // Signals = open (not-yet-promoted) candidates with a "why now" reading.
+  const signalsCount = prospects.filter((p) => p.promotedLeadId === null).length;
 
   const now = new Date();
   const kpis = computeCeoKpis({
@@ -263,6 +266,28 @@ export default async function RevenueAutopilotPage() {
         <div className="mt-3">
           <SafeModeBanner />
         </div>
+        {/* Opportunity Signals — "Warum jetzt?" */}
+        <Link
+          href="/app-shell/revenue-autopilot/signals"
+          className="mt-3 flex items-center gap-3 rounded-2xl border border-navy-900 bg-navy-900 p-4 text-white shadow-sm transition-colors hover:bg-navy-800"
+        >
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-inset ring-white/20">
+            <Activity className="h-4 w-4" strokeWidth={2} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2">
+              <span className="text-sm font-semibold">Neue Signale gefunden</span>
+              <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold tabular-nums">
+                {signalsCount}
+              </span>
+            </span>
+            <span className="block text-sm text-blue-100">
+              Opportunity Signals · Warum jetzt? – Service-Potenzial, Timing,
+              Konfidenz und nächste Aktion je Kandidat.
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-blue-200" />
+        </Link>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <Link
             href="/app-shell/revenue-autopilot/discovery"

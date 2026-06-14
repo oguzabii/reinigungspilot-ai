@@ -14,6 +14,8 @@ import {
   Tag,
   Library,
   ArrowRight,
+  Activity,
+  ChevronRight,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { matchServices } from "@/components/lead-hunter/scoring";
@@ -206,6 +208,26 @@ export default async function AppShellLeadRadarPage() {
             </p>
           </div>
         </div>
+
+        {/* Opportunity Signals — "Warum jetzt?" per region/service */}
+        <Link
+          href="/app-shell/revenue-autopilot/signals"
+          className="mt-6 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+        >
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
+            <Activity className="h-4 w-4 text-blue-600" strokeWidth={2} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-navy-900">
+              Opportunity Signals · Warum jetzt?
+            </span>
+            <span className="block text-sm text-slate-500">
+              Zeitkritische Chancen mit Service-Potenzial, Timing und Konfidenz –
+              je Kandidat.
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+        </Link>
 
         {/* Stat cards — always shown (zeros read as "armed", not broken) */}
         <section className="mt-8">

@@ -15,6 +15,15 @@
 > Appointment **assistants** (§3.3–§3.5) remain copy-only until that provider
 > phase.
 
+> **Progress update (v0.5.3):** the **Opportunity Signal Engine** ("why now?") has
+> shipped — see `docs/clean24-opportunity-signal-engine.md`. It turns candidates
+> into signals (type, why-now, service, confidence, timing güte, next action) with
+> **honest timing** (geschätzt/unbekannt; never a fabricated exact date) and a
+> clean **adapter seam** (Baugesuche/SIMAP/ZEFIX = planned stubs). A scheduled-run
+> endpoint is **prepared but disabled** (no service-role → no autonomous writes).
+> The first **official signal source** + persisted `opportunity_signals`
+> (migration 007) is the next gated step (source validation + GO).
+
 ## 1. Why this document exists
 
 Today Klarsa is a **manual, human-driven** sales & ops chain:

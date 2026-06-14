@@ -31,8 +31,12 @@ const MAX_RESULTS = 10;
 const REQUEST_TIMEOUT_MS = 8000;
 /** Cap on data rows parsed from a CSV (bounds work on large official files). */
 const MAX_ROWS_SCAN = 2000;
-/** Cap on characters parsed from a CSV body (memory guard). */
-const MAX_TEXT_CHARS = 4_000_000;
+/**
+ * Cap on characters kept from a CSV body (memory guard). The official Kanton
+ * Zürich Baugesuche CSV is about 8 MB; the guard is set slightly above that so
+ * the full official feed is accepted, while still bounding memory.
+ */
+const MAX_TEXT_CHARS = 12_000_000;
 
 function readEnv(name: string): string | undefined {
   if (typeof window !== "undefined") return undefined;

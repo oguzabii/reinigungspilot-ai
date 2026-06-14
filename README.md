@@ -7,13 +7,21 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.4.2** — **Baugesuche-CSV-Grössenlimit erhöht.** Die offizielle Kanton-Zürich-
+Baugesuche-CSV ist ≈8 MB, der bisherige Text-Schutz lag bei 4 MB und konnte den
+Feed abschneiden. `MAX_TEXT_CHARS` in `lib/discovery/baugesuche-zh.ts` wurde auf
+**≈12 MB** angehoben (knapp über der Dateigrösse). **Alle übrigen Caps unverändert**
+(8 s Timeout, max. ≈2000 Zeilen gescannt, max. 10 Signale), kein Scraping/HTML/PDF/
+Headless, kein Service-Role, keine Migration, keine Secrets. **001–006 unverändert;
+`004` unangetastet.** lint/build grün.
+
 **v0.5.4.1** — **Baugesuche Zürich-Adapter: offizieller CSV-Feed unterstützt.** Die
 validierte offizielle Kanton-Zürich-Quelle „Baugesuche im Kanton Zürich" ist ein
 **CSV-Download**; der Adapter (`lib/discovery/baugesuche-zh.ts`) unterstützt nun
 **CSV zusätzlich zu JSON**: Auto-Erkennung via `content-type`/`.csv`-Endung,
 **dependency-freier** Server-CSV-Parser (Delimiter `;`/`,` automatisch, Quotes mit
-`""`-Escapes, eingebettete Zeilenumbrüche, CRLF), Caps (≈2000 Zeilen, 4-MB-Text-
-Schutz, 8 s Timeout, max. 10 Signale, neuestes Quelldatum zuerst). **Flexibles,
+`""`-Escapes, eingebettete Zeilenumbrüche, CRLF), Caps (≈2000 Zeilen, ≈12-MB-Text-
+Schutz [offizielle CSV ≈8 MB], 8 s Timeout, max. 10 Signale, neuestes Quelldatum zuerst). **Flexibles,
 defensives Feld-Mapping** deutscher Spalten (Bauvorhaben/Vorhaben/Beschreibung,
 Gemeinde/Ort, Strasse/Adresse/Lage, Art/Kategorie, Publikationsdatum/Eingangsdatum,
 URL). Unbekanntes Schema → **`unsupported_schema`** mit **erkannten Spaltennamen**

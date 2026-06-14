@@ -18,8 +18,9 @@ The validated official Kanton Zürich dataset ("Baugesuche im Kanton Zürich") i
   or a `.csv` URL ending; otherwise it parses JSON.
 - CSV is parsed **server-side**, dependency-free: delimiter auto-detected
   (`;` or `,`), quoted values with `""` escapes and embedded newlines, CRLF.
-- **Caps:** at most ~2000 data rows scanned, a 4 MB text guard, the 8 s request
-  timeout, and at most 10 signals returned (newest source date first).
+- **Caps:** at most ~2000 data rows scanned, a ~12 MB text guard (the official
+  Kanton Zürich CSV is ≈ 8 MB), the 8 s request timeout, and at most 10 signals
+  returned (newest source date first).
 - If the schema is not recognised (no title/Bauvorhaben field), the adapter
   returns **`unsupported_schema`** and the Signals page shows the **detected
   column names** as a safe diagnostic (column names only — never row values or

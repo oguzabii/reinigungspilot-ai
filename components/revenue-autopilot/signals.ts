@@ -238,3 +238,93 @@ export function confidenceBadge(score: number): string {
   if (score >= 45) return "bg-blue-50 text-blue-700 ring-blue-200";
   return "bg-slate-100 text-slate-600 ring-slate-200";
 }
+
+/* -------------------------------------------------------------------------- */
+/* Adapter-sourced signals (v0.5.4)                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Structural input a source adapter (e.g. Baugesuche Zürich) provides per record.
+ * Compatible with `RawSignal` in `lib/discovery/adapters.ts`. Kept inline so the
+ * pure engine has NO dependency on the (server-side) adapter modules.
+ */
+export interface RawSignalInput {
+  title: string;
+  region: string | null;
+  locationText?: string | null;
+  signalType: SignalType;
+  suggestedServices: string[];
+  sourceUrl: string | null;
+  /** Source-provided timing (e.g. a permit/publication date), or null. */
+  timingLabel: string | null;
+  timingDate: string | null;
+  /** True when timing is inferred (no exact source date). */
+  timingIsInferred: boolean;
+}
+
+/**
+ * Convert an adapter `RawSignal` into an `OpportunitySignal`. The source already
+ * provides the type + suggested services + (optional) timing; the engine adds the
+ * why-now framing, a deterministic confidence, and the timing güte.
+ *
+ * HONESTY: timing is `exact` ONLY when the source supplies a real date (and the
+ * label says WHAT that date is — a permit/publication date, not a fabricated
+ * completion date). Otherwise it is `inferred`/`unknown`.
+ */
+export function signalFromRawSignal(
+  raw: RawSignalInput,
+  opts: { idPrefix: string; index: number; sourceType: string; sourceName: string; nowIso: string },
+): OpportunitySignal {
+  const services =
+    raw.suggestedServices.length > 0 ? raw.suggestedServices : SERVICE_BY_TYPE[raw.signalType];
+
+  let confidence = BASE_CONFIDENCE[raw.signalType];
+  if (raw.region && raw.region.trim()) confidence += 5;
+  confidence += Math.min(services.length * 3, 9);
+  if (raw.timingDate && !raw.timingIsInferred) confidence += 8; // a real source date
+  const confidenceScore = clamp(Math.round(confidence), 0, 100);
+
+  const timingConfidence: TimingConfidence =
+    raw.timingDate && !raw.timingIsInferred
+      ? "exact"
+      : raw.timingIsInferred
+        ? "inferred"
+        : "unknown";
+  const timingLabel =
+    raw.timingLabel ??
+    (timingConfidence === "exact"
+      ? `Quelldatum ${raw.timingDate} (exakt) – konkreter Zeitpunkt der Reinigung schätzen.`
+      : "Kein Zeitfenster aus der Quelle.");
+
+  return {
+    id: `${opts.idPrefix}-${opts.index}`,
+    title: raw.title,
+    signalType: raw.signalType,
+    sourceType: opts.sourceType,
+    sourceName: opts.sourceName,
+    sourceUrl: raw.sourceUrl,
+    region: raw.region,
+    suggestedServices: services,
+    whyNow: WHY_NOW[raw.signalType],
+    timingLabel,
+    timingConfidence,
+    confidenceScore,
+    nextAction: NEXT_ACTION[raw.signalType],
+    relatedProspectId: null,
+    createdAt: opts.nowIso,
+  };
+}
+
+/** Opportunity-form category for a signal type (whitelisted in OPPORTUNITY_TYPES). */
+export function categoryForSignalType(signalType: SignalType): string {
+  switch (signalType) {
+    case "construction":
+      return "Neubau";
+    case "tender":
+      return "Ausschreibung";
+    case "verwaltung":
+      return "Verwaltung";
+    default:
+      return "Firma";
+  }
+}

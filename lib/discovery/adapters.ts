@@ -18,6 +18,7 @@
 
 import type { SignalType } from "@/components/revenue-autopilot/signals";
 import { isDiscoveryConfigured } from "@/lib/discovery/google-places";
+import { isBaugesucheConfigured, runBaugesucheZh } from "@/lib/discovery/baugesuche-zh";
 
 export type AdapterPhase = "live" | "planned";
 
@@ -84,12 +85,12 @@ export const SIGNAL_ADAPTERS: SignalAdapter[] = [
   },
   {
     key: "baugesuche",
-    label: "Baugesuche / Bauprojekte (Kanton/Stadt)",
+    label: "Baugesuche / Bauprojekte Zürich",
     description:
-      "Geplant: offizielle Bau-/Projekt-Open-Data (z. B. Kanton/Stadt Zürich) für Bauend-/Fensterreinigung. Nur offizielle Quellen, kein Scraping. GO erforderlich.",
-    phase: "planned",
-    isConfigured: () => false,
-    run: notConfigured,
+      "Offizielle Bau-/Projekt-Open-Data (Kanton/Stadt Zürich), owner-konfiguriert via BAUGESUCHE_ZH_SIGNAL_URL. Nur offizielle JSON-API, kein Scraping/HTML/PDF. Ohne validierten Endpoint: nicht konfiguriert.",
+    phase: "live",
+    isConfigured: () => isBaugesucheConfigured(),
+    run: runBaugesucheZh,
   },
   {
     key: "simap",

@@ -7,7 +7,38 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
-**v0.5.3.1** — **Opportunity Signal Engine in Produktion verifiziert.** Der Inhaber
+**v0.5.4** — **Baugesuche Zürich Signal-Adapter (erste reale Quelle, env-gated).**
+Der erste **echte** offizielle Signal-Quellen-Adapter: **Baugesuche Zürich**
+(`lib/discovery/baugesuche-zh.ts`, **server-only**). Er macht aus offiziellen
+Bauprojekt-/Baugesuch-Datensätzen Opportunity-Signale (Bauprojekt → Service-
+Potenzial Bauendreinigung/Fensterreinigung/Hauswartung; MFH/Wohnbau → Umzugs-/
+Treppenhaus-/Fensterreinigung/Hauswartung; Gewerbe/Büro → Büro-/Fensterreinigung).
+**Vollständig implementiert, aber standardmässig `not_configured`**: läuft nur, wenn
+der Inhaber `BAUGESUCHE_ZH_SIGNAL_URL` auf einen **validierten offiziellen** Open-
+Data-JSON-Endpoint setzt (optional `BAUGESUCHE_ZH_API_KEY`). **Kein hardcodierter/
+geratener Endpoint, nur offizielle JSON-API – KEIN Scraping/HTML/PDF/Headless**,
+Trefferlimit 10, Timeout, Key nie geloggt/im Client. **Ehrliches Timing:** ein
+Quelldatum (Baugesuch-/Publikationsdatum) gilt als **exakt** und wird als das
+bezeichnet, was es ist (kein erfundenes Fertigstellungsdatum); ohne Datum
+**geschätzt**. Auf `/app-shell/revenue-autopilot/signals` zeigt das Quellen-
+Bereitschafts-Panel Baugesuche als **live** (Aktiv/Nicht konfiguriert); bei
+Konfiguration rendert eine **„Bau-Signale (live)"**-Sektion mit Karten (Quelle/
+Titel/Region/Warum-jetzt/Services/Konfidenz/Timing-Güte/nächste Aktion + „Quelle
+öffnen" + **„Als Opportunity erstellen"** via bestehende `createOpportunity`-RLS-
+Aktion). Revenue Autopilot zeigt die Baugesuche-Bereitschaft. **KEINE neue
+Migration** (Signale zur Laufzeit; `opportunity_signals`/007 erst wenn validierte
+Quelle live + täglich genutzt). Kein Service-Role, keine Secrets im Repo
+(Platzhalter leer). Neu: `docs/clean24-baugesuche-signal-adapter.md`. **Aus Signalen
+kein Auto-Kontakt/Versand/Buchung.** **LIMITED GO bleibt. 001–006 unverändert; `004`
+unangetastet.** lint/build grün.
+
+> **v0.5.3.1:** Opportunity Signal Engine in Produktion verifiziert — Inhaber
+> öffnete `/app-shell/revenue-autopilot/signals`, Signal-Karten rendern aus
+> bestehenden Produktions-Prospects (Quelle/Typ/Warum-jetzt/Service/Konfidenz/
+> Timing-Güte/nächste Aktion), Cross-Links funktionieren, ehrliches Timing, keine
+> echten Kundendaten — `docs/clean24-opportunity-signal-engine-results.md`.
+
+**v0.5.3.1 Detail — Opportunity Signal Engine in Produktion verifiziert.** Der Inhaber
 hat sich in der Produktion (`https://klarsa.vercel.app`) angemeldet und
 `/app-shell/revenue-autopilot/signals` geöffnet: Signal-Karten rendern aus den
 bestehenden Produktions-Kandidaten/Prospects und zeigen **Quelle, Signal-Typ,
@@ -278,15 +309,16 @@ App-UI. **001–006 unverändert; `004` unangetastet.** lint/build grün.
 > `reinigungspilot-ai`. Der alte, eigenständige **Clean24 Lead Autopilot** bleibt
 > ein **getrenntes** System und wird nicht eingebunden.
 
-> **Nächster Schritt:** **kontrollierte Produktionsnutzung** von Discovery (v0.5.2)
-> + Opportunity Signals (v0.5.3) über die App-UI (optional `GOOGLE_PLACES_API_KEY`
-> setzen), danach **v0.5.3.1** (Produktionsverifikation der Signale). Erst **nach
-> expliziter Freigabe + Quellenprüfung**: erste **offizielle Signal-Quelle**
-> (Baugesuche/Bauprojekt-Open-Data oder SIMAP) → dann **additive Migration 007**
-> (`opportunity_signals`) mit echtem (teils exaktem) Timing; danach konformer
-> **Versand-Provider**, **Kalender** (Buchung nur nach Bestätigung) und ein
-> **Inbound-Kanal**. Bis dahin: **Cold-Outreach/Auto-Anrufe/stille Buchung
-> gesperrt**, Timing nur **geschätzt/unbekannt**, kein Auto-Versand aus Signalen.
+> **Nächster Schritt:** Der Inhaber **validiert einen offiziellen Baugesuche-
+> Zürich-Open-Data-Endpoint** (Quelle + Nutzungsbedingungen prüfen), setzt
+> `BAUGESUCHE_ZH_SIGNAL_URL` in der Umgebung und testet die live Bau-Signale über
+> die App-UI; danach **v0.5.4.1** (Produktionsverifikation). Sobald die Quelle live
+> + täglich genutzt wird: **additive Migration 007** (`opportunity_signals`,
+> persistente Signale/Dedup/Status, echtes/teils exaktes Timing). Erst **nach
+> expliziter Freigabe** danach: SIMAP/ZEFIX-Adapter, konformer **Versand-Provider**,
+> **Kalender** (Buchung nur nach Bestätigung) und ein **Inbound-Kanal**. Bis dahin:
+> **Cold-Outreach/Auto-Anrufe/stille Buchung gesperrt**, kein erfundenes
+> Fertigstellungsdatum, kein Auto-Versand aus Signalen.
 
 ### Strategie
 
@@ -383,7 +415,8 @@ lib/
   auth/session.ts      # Server-Session-Helfer: getCurrentUser/Profile/Memberships/CompanyContext
   auth/tenant-data.ts  # RLS-gescopte Tenant-Reads (Firma, Zähler, Leads, Follow-ups [inkl. leadId], Offerten, Jobs, Opportunities/getProspects, Quellen/getLeadSources + getLeadSourceById, bexio-Übergaben/getInvoiceHandoffJobs, getCompanySettings, getAutopilotPolicy, getDiscoveryRuns) via Session-Client
   discovery/google-places.ts # SERVER-ONLY: offizielle Google-Places-Text-Search (env-gated GOOGLE_PLACES_API_KEY, lazy/Build-sicher, Timeout, Trefferlimit, kein Scraping, Key nie geloggt/im Client) (v0.5.2)
-  discovery/adapters.ts # Signal-Quellen-Adapter: SignalAdapter-Interface + Registry; google_places live (Stützdaten), Baugesuche/SIMAP/ZEFIX = Stubs (phase 'planned'/not_configured, kein Scraping/Fetch); offizielle Quellen + GO erforderlich (v0.5.3)
+  discovery/adapters.ts # Signal-Quellen-Adapter: SignalAdapter-Interface + Registry; google_places + baugesuche live, SIMAP/ZEFIX = Stubs (phase 'planned'/not_configured); offizielle Quellen + GO erforderlich (v0.5.3, baugesuche live v0.5.4)
+  discovery/baugesuche-zh.ts # SERVER-ONLY: Baugesuche-Zürich-Adapter – offizieller JSON-Open-Data-Endpoint (env BAUGESUCHE_ZH_SIGNAL_URL, kein hardcodierter Endpoint), GeoJSON/Records→RawSignal, Service-Mapping, Timing exakt-nur-mit-Quelldatum; kein Scraping/HTML/PDF, Timeout/Limit, Key nie geloggt (v0.5.4)
   pdf/offer-pdf.ts     # abhängigkeitsfreier PDF-1.4-Generator (Standard-Helvetica/WinAnsi, keine Assets) (v0.3.3)
   ics/job-ics.ts       # abhängigkeitsfreier iCalendar-(.ics)-Generator (RFC 5545 VEVENT, keine Assets/Sync) (v0.3.5)
 
@@ -434,7 +467,7 @@ components/          # Wiederverwendbare UI-Bausteine
   revenue-autopilot/ResearchTools.tsx # Client: Suchbegriff/Region-Inputs → vom Nutzer geöffnete Such-Links (Google/Maps/ZEFIX/Website) + Capture-CTA (nicht-PII source/service/region); kein fetch/Scraping/API/Server-Sammeln (v0.5.1)
   revenue-autopilot/policy.ts # reine Autopilot Rules Engine: Lead-Kategorien + Safe-Mode-Toggles + Provider-Status → Policy-Verdikte (Cold-Outreach/Auto-Buchung hart gesperrt); keine Aktion, nur Entscheidung (v0.5.2)
   revenue-autopilot/SafeModeBanner.tsx # „Autopilot Safe-Mode aktiv"-Banner (Cold-Outreach/Anrufe/stille Buchung/Scraping gesperrt) (v0.5.2)
-  revenue-autopilot/signals.ts # reine Opportunity Signal Engine: Kandidat → Signal (Typ/Warum-jetzt/Service/Konfidenz/Timing-Güte exakt-geschätzt-unbekannt/nächste Aktion), buildSignalsFromProspects; keine KI/API/Netzwerk, ehrliches Timing (v0.5.3)
+  revenue-autopilot/signals.ts # reine Opportunity Signal Engine: Kandidat → Signal (Typ/Warum-jetzt/Service/Konfidenz/Timing-Güte exakt-geschätzt-unbekannt/nächste Aktion), buildSignalsFromProspects + signalFromRawSignal (Adapter-Signale, v0.5.4) + categoryForSignalType; keine KI/API/Netzwerk, ehrliches Timing (v0.5.3)
 
 app/
   layout.tsx         # Root-Layout (de, Systemschrift, Metadaten)
@@ -458,7 +491,7 @@ app/
     revenue-autopilot/ # Revenue Autopilot: page.tsx (Command Center – Umsatz-Aktionen, Automatik-Sektion, Source Execution Queue, heisse Chancen + Outreach-Entwürfe, Leads + Termin-Entwürfe, Offerten-Nachfass; nur Lesen/Session-Client/RLS, kein Versand/keine Buchung/kein Scraping) (v0.5.0)
       discovery/ # Automatische Discovery: page.tsx (Lauf/Kandidaten/Audit) + RunDiscoveryForm.tsx (Client) + actions.ts (runDiscovery; owner/admin, offizielle Places-API, Dedupe, optional kalte Prospects, audit_logs) (v0.5.2)
       policy/    # Autopilot-Richtlinien: page.tsx (Policy-Matrix/Hard-Blocked/Provider/Toggles) + PolicyToggles.tsx (Client) + actions.ts (updateAutopilotPolicy; owner/admin, company_settings.settings jsonb) (v0.5.2)
-      signals/   # Opportunity Signals: page.tsx (Signal-Karten + Quellen-Bereitschaft; aus prospects berechnet, nur Lesen, kein Auto-Versand/Buchung) (v0.5.3)
+      signals/   # Opportunity Signals: page.tsx (Signal-Karten + Quellen-Bereitschaft + live Baugesuche-Sektion bei Konfiguration) + CreateSignalOpportunityButton.tsx (Client, „Als Opportunity erstellen" via bestehende createOpportunity-Aktion); nur Lesen, kein Auto-Versand/Buchung (v0.5.3, Baugesuche v0.5.4)
   api/autopilot/discovery-cron/ # route.ts: vorbereiteter, secret-gated, standardmässig deaktivierter Cron (404 ohne CRON_SECRET, keine Writes/Discovery) (v0.5.3)
   login/             # Login-Seite (noindex, Skelett)
   auth/callback/  logout/                        # Auth-Route-Handler (force-dynamic)
@@ -524,6 +557,7 @@ docs/                # Klarsa Core Architektur-Plan (Phase 2)
   clean24-automatic-discovery-autopilot-rules.md # Automatic Discovery + Autopilot Rules: Lead-Kategorien, Policy-Matrix, Hard-Blocks (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), offizielle Places-API (env-gated/owner-initiiert/kein Cron), Auto-Erstellung kalter Kandidaten, Message-/Termin-Architektur (kein Versand/Buchung), Audit, gated Provider-Phase (v0.5.2)
   clean24-opportunity-signal-engine.md # Opportunity Signal Engine „Warum jetzt?": Signal-Modell (Typ/Warum-jetzt/Service/Konfidenz/Timing exakt-geschätzt-unbekannt/nächste Aktion), Klassifizierung + Service-Vorschlag, inferred-vs-exakt, Adapter-Architektur (Baugesuche/SIMAP/ZEFIX-Stubs), vorbereiteter deaktivierter Cron, Promote via bestehende Aktion, Migration 007 dokumentiert-nicht-angewendet, gated Quell-Phase (v0.5.3; VERIFIED v0.5.3.1)
   clean24-opportunity-signal-engine-results.md # Ergebnis: Opportunity Signal Engine in Produktion verifiziert (Signal-Karten aus Prospects: Quelle/Typ/Warum-jetzt/Service/Konfidenz/Timing-Güte/nächste Aktion, Cross-Links, ehrliches Timing, kein Auto-Outreach/Scraping, keine echten Kundendaten) (v0.5.3.1)
+  clean24-baugesuche-signal-adapter.md # Baugesuche-Zürich-Adapter: erste reale Signal-Quelle (env-gated/owner-konfiguriert, kein geratener Endpoint), welche offiziellen Quellen, exakt-nur-mit-Quelldatum (kein erfundenes Fertigstellungsdatum), Service-Mapping, Response-Shape-Vertrag, kein Scraping/HTML/PDF, „Als Opportunity erstellen", Migration 007 dokumentiert-nicht-angewendet (v0.5.4)
   clean24-lead-hunter-results.md     # Ergebnis: Opportunity Radar auf Staging verifiziert (Capture/List, Radar-Karten) (v0.3.6.1)
   clean24-job-from-offer-results.md  # Ergebnis: Job-Erstellung auf Staging verifiziert (Migration 005, Offer→Job, Jobs-Liste, Duplikat-Guard) (v0.3.4.1)
   clean24-offer-pdf-results.md       # Ergebnis: Offer PDF auf Staging verifiziert (Route, Daten/Positionen/Summen, Versand-Entwurf) (v0.3.3.1)

@@ -139,9 +139,12 @@ We never overpromise a construction-completion or tender date.
 
 - **google_places** — `phase: "live"`, configured iff `GOOGLE_PLACES_API_KEY` set
   (supporting data; discovery itself runs from the Discovery page).
-- **baugesuche / simap / zefix** — `phase: "planned"` **stubs**:
-  `isConfigured() === false`, `run()` returns `not_configured`, **no fetch, no
-  scraping**.
+- **baugesuche** — `phase: "live"` since **v0.5.4** (real adapter,
+  `lib/discovery/baugesuche-zh.ts`), configured iff `BAUGESUCHE_ZH_SIGNAL_URL` is
+  set to a validated official endpoint; official JSON only, **no scraping**. See
+  `docs/clean24-baugesuche-signal-adapter.md`.
+- **simap / zefix** — `phase: "planned"` **stubs**: `isConfigured() === false`,
+  `run()` returns `not_configured`, **no fetch, no scraping**.
 
 Any future adapter must use **official API / approved open data only** (no HTML
 scraping), be **env-gated**, **result-capped**, **timeout-bounded**, and ship

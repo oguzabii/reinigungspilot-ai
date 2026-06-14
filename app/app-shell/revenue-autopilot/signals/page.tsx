@@ -13,18 +13,23 @@ import {
   ChevronRight,
   Radar,
   CheckCircle2,
+  Building2,
+  ExternalLink,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { SafeModeBanner } from "@/components/revenue-autopilot/SafeModeBanner";
 import { EmptyState } from "@/components/app-shell/EmptyState";
 import {
   buildSignalsFromProspects,
+  signalFromRawSignal,
+  categoryForSignalType,
   SIGNAL_TYPE_META,
   TIMING_META,
   confidenceBadge,
   type OpportunitySignal,
 } from "@/components/revenue-autopilot/signals";
 import { SIGNAL_ADAPTERS } from "@/lib/discovery/adapters";
+import { CreateSignalOpportunityButton } from "./CreateSignalOpportunityButton";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import { getCompanySummary, getProspects } from "@/lib/auth/tenant-data";
@@ -53,6 +58,29 @@ export default async function SignalsPage() {
   ]);
 
   const signals = buildSignalsFromProspects(prospects);
+
+  // Live adapter signals (Baugesuche Zürich) — only when the owner configured an
+  // official endpoint. Capped + timeout inside the adapter; no scraping.
+  const baugesucheAdapter = SIGNAL_ADAPTERS.find((a) => a.key === "baugesuche");
+  let baugesucheSignals: OpportunitySignal[] = [];
+  let baugesucheError: string | null = null;
+  if (baugesucheAdapter && baugesucheAdapter.isConfigured()) {
+    const result = await baugesucheAdapter.run({ query: "", limit: 10 });
+    if (result.status === "ok") {
+      const nowIso = new Date().toISOString();
+      baugesucheSignals = result.signals.map((raw, i) =>
+        signalFromRawSignal(raw, {
+          idPrefix: "bg",
+          index: i,
+          sourceType: "baugesuche",
+          sourceName: "Baugesuche Zürich",
+          nowIso,
+        }),
+      );
+    } else if (result.status === "error") {
+      baugesucheError = result.message ?? "Baugesuche-Quelle nicht erreichbar.";
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -145,11 +173,43 @@ export default async function SignalsPage() {
           </div>
         </section>
 
+        {/* Live Baugesuche signals (only when the source is configured) */}
+        {baugesucheAdapter?.isConfigured() && (
+          <section className="mt-8">
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-navy-900">
+              <Building2 className="h-4 w-4 text-blue-600" />
+              Bau-Signale · Baugesuche Zürich (live)
+              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium tabular-nums text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                {baugesucheSignals.length}
+              </span>
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Aus der offiziellen, owner-konfigurierten Bauprojekt-Quelle (max. 10,
+              kein Scraping). Timing nur exakt, wenn die Quelle ein Datum liefert.
+            </p>
+            {baugesucheError ? (
+              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                Quelle aktuell nicht erreichbar: {baugesucheError}
+              </p>
+            ) : baugesucheSignals.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">
+                Keine aktuellen Bau-Signale aus der Quelle.
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {baugesucheSignals.map((s) => (
+                  <SignalCard key={s.id} signal={s} />
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+
         {/* Signal cards */}
         <section className="mt-8">
           <h2 className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-navy-900">
             <Activity className="h-4 w-4 text-blue-600" />
-            Signale
+            Signale aus Kandidaten
           </h2>
           {signals.length === 0 ? (
             <div className="mt-3">
@@ -254,15 +314,37 @@ function SignalCard({ signal: s }: { signal: OpportunitySignal }) {
         {s.nextAction}
       </p>
 
-      <div className="mt-3 border-t border-slate-100 pt-3">
-        <Link
-          href="/app-shell/lead-hunter"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-navy-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-navy-800"
-        >
-          <Target className="h-3.5 w-3.5" strokeWidth={2.2} />
-          Im Lead Hunter prüfen & übernehmen
-          <ChevronRight className="h-3.5 w-3.5" />
-        </Link>
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-3">
+        {s.relatedProspectId ? (
+          <Link
+            href="/app-shell/lead-hunter"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-navy-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-navy-800"
+          >
+            <Target className="h-3.5 w-3.5" strokeWidth={2.2} />
+            Im Lead Hunter prüfen & übernehmen
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        ) : (
+          <CreateSignalOpportunityButton
+            title={s.title}
+            category={categoryForSignalType(s.signalType)}
+            region={s.region}
+            service={s.suggestedServices[0] ?? null}
+            reason={`${s.whyNow}\nQuelle: ${s.sourceName}${s.sourceUrl ? ` · ${s.sourceUrl}` : ""}\nTiming: ${s.timingLabel}`}
+            nextAction={s.nextAction}
+            score={s.confidenceScore}
+          />
+        )}
+        {s.sourceUrl && (
+          <a
+            href={s.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-800"
+          >
+            Quelle öffnen <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
       </div>
     </li>
   );

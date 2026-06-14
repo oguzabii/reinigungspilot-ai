@@ -42,6 +42,7 @@ import { LEAD_STATUS_META } from "@/components/leads/lead-status";
 import { formatChf } from "@/components/offers/offer-status";
 import { computeCeoKpis } from "@/components/ceo/kpi";
 import { isDiscoveryConfigured } from "@/lib/discovery/google-places";
+import { isBaugesucheConfigured } from "@/lib/discovery/baugesuche-zh";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
@@ -166,6 +167,7 @@ export default async function RevenueAutopilotPage() {
   const senderCompany = summary?.name ?? "Ihr Betrieb";
   const senderPerson = settings.senderName;
   const discoveryConfigured = isDiscoveryConfigured();
+  const baugesucheConfigured = isBaugesucheConfigured();
   const discoveredCount = prospects.filter((p) => p.sourceType === "google").length;
   // Signals = open (not-yet-promoted) candidates with a "why now" reading.
   const signalsCount = prospects.filter((p) => p.promotedLeadId === null).length;
@@ -283,7 +285,8 @@ export default async function RevenueAutopilotPage() {
             </span>
             <span className="block text-sm text-blue-100">
               Opportunity Signals · Warum jetzt? – Service-Potenzial, Timing,
-              Konfidenz und nächste Aktion je Kandidat.
+              Konfidenz und nächste Aktion je Kandidat. Bau-Signal-Quelle
+              (Baugesuche Zürich): {baugesucheConfigured ? "bereit" : "nicht konfiguriert"}.
             </span>
           </span>
           <ChevronRight className="h-5 w-5 shrink-0 text-blue-200" />

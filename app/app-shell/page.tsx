@@ -14,13 +14,27 @@ import {
   Users,
   Briefcase,
   ArrowRight,
+  Sparkles,
+  Rocket,
   type LucideIcon,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
 import { ChainStepper } from "@/components/app-shell/ChainStepper";
+import { PremiumAutopilotPanel } from "@/components/app-shell/PremiumAutopilotPanel";
+import {
+  autopilotTier,
+  isPremiumExperience,
+  type AutopilotTierInfo,
+} from "@/components/app-shell/autopilot-tier";
+import {
+  buildPremiumDigest,
+  type PremiumDigest,
+} from "@/components/app-shell/premium-digest";
 import { computeCeoKpis } from "@/components/ceo/kpi";
+import { isDiscoveryConfigured } from "@/lib/discovery/google-places";
+import { isBaugesucheConfigured } from "@/lib/discovery/baugesuche-zh";
 import { isSupabaseConfigured } from "@/lib/env";
 import {
   getCurrentProfile,
@@ -35,6 +49,7 @@ import {
   getJobs,
   getInvoiceHandoffJobs,
   getFollowups,
+  getDiscoveryRuns,
   type TenantCounts,
 } from "@/lib/auth/tenant-data";
 import type { CeoKpis } from "@/components/ceo/kpi";
@@ -77,19 +92,30 @@ export default async function AppShellPage() {
     context.memberships.find((m) => m.companyId === companyId) ??
     context.memberships[0];
 
-  const [summary, counts, opportunities, leads, offers, jobs, handoffJobs, followups] =
-    await Promise.all([
-      getCompanySummary(companyId),
-      getTenantCounts(companyId),
-      getProspects(companyId),
-      getLeads(companyId),
-      getOffers(companyId),
-      getJobs(companyId),
-      getInvoiceHandoffJobs(companyId),
-      getFollowups(companyId),
-    ]);
+  const [
+    summary,
+    counts,
+    opportunities,
+    leads,
+    offers,
+    jobs,
+    handoffJobs,
+    followups,
+    discoveryRuns,
+  ] = await Promise.all([
+    getCompanySummary(companyId),
+    getTenantCounts(companyId),
+    getProspects(companyId),
+    getLeads(companyId),
+    getOffers(companyId),
+    getJobs(companyId),
+    getInvoiceHandoffJobs(companyId),
+    getFollowups(companyId),
+    getDiscoveryRuns(companyId),
+  ]);
 
   const now = new Date();
+  const nowIso = now.toISOString();
   const kpis = computeCeoKpis({
     opportunities,
     leads,
@@ -97,10 +123,29 @@ export default async function AppShellPage() {
     jobs,
     handoffJobs,
     followupLeadIds: followups.map((f) => f.leadId),
-    nowIso: now.toISOString(),
+    nowIso,
   });
   const hasData =
     kpis.oppsTotal + kpis.leadsTotal + kpis.offersTotal + kpis.jobsTotal > 0;
+
+  // Package-aware Autopilot positioning + Premium "worked for you" digest.
+  const tier = summary?.tier ?? "starter";
+  const tierInfo = autopilotTier(tier, summary?.billingStatus);
+  const isPremium = isPremiumExperience(tier, summary?.billingStatus);
+  const providers = {
+    discovery: isDiscoveryConfigured() || isBaugesucheConfigured(),
+    send: false,
+    calendar: false,
+  };
+  const digest = buildPremiumDigest({
+    prospects: opportunities,
+    leads,
+    offers,
+    jobs,
+    discoveryRuns,
+    providers,
+    nowIso,
+  });
 
   return (
     <TenantCockpit
@@ -112,6 +157,9 @@ export default async function AppShellPage() {
       counts={counts}
       kpis={kpis}
       hasData={hasData}
+      tierInfo={tierInfo}
+      isPremium={isPremium}
+      digest={digest}
     />
   );
 }
@@ -203,6 +251,9 @@ function TenantCockpit({
   counts,
   kpis,
   hasData,
+  tierInfo,
+  isPremium,
+  digest,
 }: {
   displayName: string;
   email: string | null;
@@ -212,6 +263,9 @@ function TenantCockpit({
   counts: TenantCounts;
   kpis: CeoKpis;
   hasData: boolean;
+  tierInfo: AutopilotTierInfo;
+  isPremium: boolean;
+  digest: PremiumDigest;
 }) {
   return (
     <div className="min-h-screen bg-slate-50">
@@ -226,6 +280,11 @@ function TenantCockpit({
             {companyName}
           </h1>
           <div className="mt-3 flex flex-wrap items-center gap-2">
+            {/* Package-aware Autopilot positioning */}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-navy-900 px-3 py-1 text-xs font-semibold text-white">
+              <Sparkles className="h-3.5 w-3.5 text-blue-300" />
+              {tierInfo.label}
+            </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-100">
               <KeyRound className="h-3.5 w-3.5" />
               Rolle: {role}
@@ -241,20 +300,26 @@ function TenantCockpit({
           </div>
         </div>
 
-        {/* Money hero — the one question the cockpit answers */}
-        <section className="mt-7 overflow-hidden rounded-2xl border border-navy-900 surface-hero p-6 text-white shadow-sm sm:p-7">
-          <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
-            <Banknote className="h-3.5 w-3.5" />
-            Heute Geld holen
-          </p>
-          <h2 className="mt-2 max-w-2xl text-xl font-semibold tracking-tight sm:text-2xl">
-            Klarsa zeigt die wichtigsten Umsatz-Aktionen für heute.
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-navy-100">
-            Wo liegt heute Geld – und was ist der nächste Schritt? Unten sehen Sie
-            die wichtigsten Aktionen, danach die drei Wege zu mehr Umsatz.
-          </p>
-        </section>
+        {/* Premium → "Klarsa hat für Sie gearbeitet"; others → money hero */}
+        {isPremium ? (
+          <div className="mt-7">
+            <PremiumAutopilotPanel digest={digest} />
+          </div>
+        ) : (
+          <section className="mt-7 overflow-hidden rounded-2xl border border-navy-900 surface-hero p-6 text-white shadow-sm sm:p-7">
+            <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
+              <Banknote className="h-3.5 w-3.5" />
+              Heute Geld holen
+            </p>
+            <h2 className="mt-2 max-w-2xl text-xl font-semibold tracking-tight sm:text-2xl">
+              Klarsa zeigt die wichtigsten Umsatz-Aktionen für heute.
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-navy-100">
+              Wo liegt heute Geld – und was ist der nächste Schritt? Unten sehen
+              Sie die wichtigsten Aktionen, danach die drei Wege zu mehr Umsatz.
+            </p>
+          </section>
+        )}
 
         {/* Top next actions — the most important thing, first */}
         <div className="mt-6">
@@ -287,6 +352,32 @@ function TenantCockpit({
           />
         </div>
 
+        {/* Premium teaser for non-Premium packages (never makes them feel broken) */}
+        {!isPremium && (
+          <Link
+            href="/pricing"
+            className="mt-6 flex items-center gap-3 rounded-2xl border border-violet-200 bg-violet-50/70 p-4 shadow-sm transition-colors hover:border-violet-300 hover:bg-violet-50"
+          >
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-700 ring-1 ring-inset ring-violet-200">
+              <Rocket className="h-5 w-5" strokeWidth={2} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-navy-900">
+                Mit Premium arbeitet Klarsa vollautomatisch für Sie
+              </span>
+              <span className="block text-sm text-slate-600">
+                {tierInfo.mode === "guided"
+                  ? "Im Pro-Paket vorbereitet, im Premium-Paket automatisierbar – Discovery, Erstkontakt, Nachfassen und Termine kanalweise."
+                  : "Upgrade für Vollautomatik: Klarsa findet Firmen, kontaktiert, fasst nach und koordiniert Termine."}
+              </span>
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-violet-700">
+              Upgrade
+              <ArrowRight className="h-3.5 w-3.5" />
+            </span>
+          </Link>
+        )}
+
         {/* The money chain, in order */}
         <div className="mt-6">
           <ChainStepper counts={counts} />
@@ -310,15 +401,17 @@ function TenantCockpit({
           <ChevronRight className="h-5 w-5 shrink-0 text-blue-200" />
         </Link>
 
-        {/* Honest data-protection note (production-appropriate, no fake-data claim) */}
+        {/* Automation-status note (owner-facing, non-technical) */}
         <div className="mt-6 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
           <p className="text-sm leading-relaxed text-slate-600">
-            Ihre Daten sind über <strong className="font-semibold text-navy-800">Row-Level-Security</strong>{" "}
-            streng auf Ihren Betrieb isoliert – Sie sehen ausschliesslich die
-            Klarsa-Daten Ihres Mandanten. Erfassung erfolgt nur über diese App:
-            kein automatischer Versand, keine externen Abfragen, keine
-            service-role-Zugriffe.
+            <strong className="font-semibold text-navy-800">
+              Autopilot sichtbar und kontrolliert.
+            </strong>{" "}
+            Klarsa arbeitet nach Ihrem Paket und Ihren Freigabe-Regeln –
+            Premium-Vollautomatik wird kanalweise aktiviert. Ihre Daten bleiben
+            strikt auf Ihren Betrieb getrennt, und jeder Schritt ist
+            nachvollziehbar.
           </p>
         </div>
       </main>

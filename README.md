@@ -7,6 +7,37 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.6** — **Package-aware Premium Full Autopilot (Foundation).** Klarsa bleibt
+**paket-bewusst** und zeigt drei ehrliche Autonomie-Stufen:
+**Starter = „Digitales Offert-Büro"**, **Pro = „Geführter Sales Autopilot"**,
+**Premium = „Vollautomatisches AI-Verkaufsbüro"** (`components/app-shell/autopilot-tier.ts`).
+**Reine UI/Copy/Foundation, keine neue Migration.** (1) **Cockpit `/app-shell`**:
+Premium-Tenants sehen das Panel **„Klarsa hat für Sie gearbeitet"**
+(`PremiumAutopilotPanel`) mit Status-Zeilen (Firmen geprüft, Chancen gefunden,
+Erstkontakte, Antworten, Offerten, Termine) + **nächstem Termin** – aus **echten,
+RLS-gescopten Daten** (`buildPremiumDigest`); fehlt ein Kanal, steht da ein
+**ehrlicher „Kanal nicht verbunden"-Zustand statt erfundener Zahlen**. (2)
+**Revenue Autopilot** = **Command Center** mit **Autopilot-Lanes** (Discovery ·
+Erstkontakt · Nachfassen · Offerten · Termine · Abschluss/bexio), jede mit klarem
+Status: **Aktiv · Wartet auf Freigabe · Kanal nicht verbunden · Bereit für
+Premium · Premium-Funktion · Nächste Aktion geplant**. (3) **Package-Gating**:
+auf Nicht-Premium „Premium-Funktion" / „Im Pro-Paket vorbereitet, im
+Premium-Paket automatisierbar" / „Upgrade für Vollautomatik" – Standard/Pro
+wirken **nicht kaputt**. (4) **Automation-Status-Copy** ersetzt manuelle
+Warnungen (keine technischen Begriffe in der Inhaber-UI). (5) **Discovery**:
+ruhiger Betriebsstatus bei 403 (kein roher Fehler), Hinweis, dass Premium die
+Discovery automatisch ausführt, sobald eine freigegebene Quelle verbunden ist.
+**Volle Automatik ist sichtbar, gebunden, protokolliert und paket-gated. Kein
+Spam, keine versteckte Massen-Kontaktaufnahme, keine stille Buchung, kein
+Cold-Outreach, kein Service-Role, keine Secrets, keine echten Sendungen/Buchungen
+(send/calendar heute nicht verbunden), kein echter bexio-API. 001–006 unverändert;
+`004` unangetastet.** Neu: `docs/clean24-premium-full-autopilot.md`. lint/build grün.
+**Nächster Schritt:** erster realer Automatik-Lane – am wahrscheinlichsten
+**Gmail/Kalender** oder eine **freigegebene Discovery-Quelle** (Versand-Kanal mit
+Absender-Identität + Opt-out bzw. Kalender), dann den Lane von „Bereit für
+Premium" auf „Aktiv" schalten – nur für sichere Kategorien, Cold-Outreach bleibt
+gesperrt.
+
 **v0.5.5** — **Workspace vereinfacht & Produktions-Kopie bereinigt.** Klarsa
 beantwortet jetzt sofort: „Wo ist heute Geld – und was tue ich als Nächstes?".
 **Reine UI/Copy/Navigation, keine neue Migration.** (1) **Produktions-Login**
@@ -415,8 +446,8 @@ npm run start    # Produktionsserver (nach build)
 | `/video-script` | **Intern** (noindex): 60-Sekunden-Storyboard mit deutschem Voiceover für das geplante Erklärvideo |
 | `/workspace`    | **Intern** (noindex): Klarsa App Foundation – Architektur-Plan, Clean24 als erster Tenant, geplante Module, Auth-Fundament-Hinweis |
 | `/login`        | **Intern** (noindex): Login (Supabase Auth). **Umgebungsabhängige Kopie (v0.5.5):** Produktion zeigt vertrauensvolle Texte („Zugang zum geschützten Klarsa-Arbeitsbereich" · „Mandantengetrennt. Geschützt."), **Staging-Warnung nur in Staging/Dev** (`getKlarsaEnv()`). Inaktiv ohne Env |
-| `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): **Geld-Cockpit (v0.5.5)** – Hero „Heute Geld holen", Top-Next-Actions + **3 grosse Karten** (Neue Chancen finden / Kunden nachfassen / Aufträge abschliessen & verrechnen) + Umsatz-Kette + CEO-Briefing. Redirect ohne Session, RLS-gefilterte Zähler, kein Service-Role-Lesen. Ohne Env: „Setup erforderlich". Navigation gruppiert in **6 Bereiche** (Cockpit · Chancen · Kunden · Offerten · Aufträge · Chefansicht) |
-| `/app-shell/revenue-autopilot` | **Intern** (noindex, **dynamisch/geschützt**): **Revenue Autopilot** – Command Center „Heute Geld holen": priorisierte Umsatz-Aktionen, **Automatik-Sektion** (Discovery/Richtlinien + Safe-Mode-Banner), **Source Execution Queue**, **heisse Chancen** mit **Erstkontakt-Entwürfen**, **Leads** mit **Nachricht + Terminvorschlag**, **Offerten-Nachfass**. Reine Kopier-Entwürfe (Schweizerdeutsch), nur Lesen (Session-Client/RLS). **Kein Auto-Versand/Buchung**, keine neue Migration |
+| `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): **Geld-Cockpit** – **paket-bewusst (v0.5.6)**: Premium-Tenants sehen das Panel **„Klarsa hat für Sie gearbeitet"** (Status-Zeilen + nächster Termin, echte RLS-Daten, ehrliche „Kanal nicht verbunden"-Zustände); andere sehen das Geld-Cockpit (Hero „Heute Geld holen", Top-Next-Actions, **3 grosse Karten**, Umsatz-Kette, CEO) + Premium-Teaser. Positionierungs-Chip je Paket. Ohne Env: „Setup erforderlich". Navigation in **6 Bereiche** |
+| `/app-shell/revenue-autopilot` | **Intern** (noindex, **dynamisch/geschützt**): **Revenue Autopilot · Command Center (v0.5.6)** – **Autopilot-Lanes** (Discovery · Erstkontakt · Nachfassen · Offerten · Termine · Abschluss/bexio) mit Status **Aktiv / Wartet auf Freigabe / Kanal nicht verbunden / Bereit für Premium / Premium-Funktion / Nächste Aktion geplant**; paket-bewusster Header, Automation-Status-Copy. Darunter Source-Queue, heisse Chancen, Leads, Offerten-Nachfass (Kopier-Entwürfe). **Kein Auto-Versand/Buchung** (send/calendar nicht verbunden), keine neue Migration |
 | `/app-shell/revenue-autopilot/discovery` | **Intern** (noindex, **dynamisch/geschützt**): **Automatische Discovery** – owner/admin-initiierter Lauf über die **offizielle** Google-Places-API (env-gated `GOOGLE_PLACES_API_KEY`, **kein Cron**, Trefferlimit 10, **kein Scraping**), Dedupe, optional Auto-Erstellung **kalter** Prospects (`source_type='google'`, Outreach gesperrt), entdeckte Kandidaten, Lauf-Audit. Fehlender Key → „nicht konfiguriert". Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/policy` | **Intern** (noindex, **dynamisch/geschützt**): **Autopilot-Richtlinien** – Policy-Matrix je Kontakt-Kategorie (was automatisch erlaubt/gesperrt + warum), Hard-Blocked-Liste (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), Provider-Status, **Owner-Toggles** für sichere Modi (in `company_settings.settings` jsonb, `can_write_settings` = owner/admin). Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/signals` | **Intern** (noindex, **dynamisch/geschützt**): **Opportunity Signals** „Warum jetzt?" – aus erfassten/entdeckten Kandidaten berechnete Signale (Typ, Warum-jetzt, Service-Potenzial, Konfidenz, **Timing-Güte exakt/geschätzt/unbekannt**, nächste Aktion) + Quellen-Bereitschaft (Adapter-Stubs). Nur Lesen (Session-Client/RLS), **kein Auto-Versand/Buchung/Scraping**, keine neue Migration |

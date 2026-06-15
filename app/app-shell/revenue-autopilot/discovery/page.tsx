@@ -15,9 +15,11 @@ import {
   ShieldAlert,
   Activity,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { SafeModeBanner } from "@/components/revenue-autopilot/SafeModeBanner";
+import { isPremiumExperience } from "@/components/app-shell/autopilot-tier";
 import { EmptyState } from "@/components/app-shell/EmptyState";
 import { RunDiscoveryForm } from "./RunDiscoveryForm";
 import { scoreBadgeClass } from "@/components/lead-hunter/opportunity-meta";
@@ -69,6 +71,11 @@ export default async function DiscoveryPage() {
   // Auto-discovered candidates = cold prospects from Google Places.
   const discovered = prospects.filter((p) => p.sourceType === "google");
 
+  const isPremium = isPremiumExperience(
+    summary?.tier ?? "starter",
+    summary?.billingStatus,
+  );
+
   return (
     <div className="min-h-screen bg-slate-50">
       <AppShellNav companyName={summary?.name} />
@@ -114,6 +121,29 @@ export default async function DiscoveryPage() {
             neutral
           />
         </section>
+
+        {/* Premium auto-discovery — package-aware, honest */}
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50/70 p-4">
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+          <p className="text-sm leading-relaxed text-navy-800">
+            {isPremium ? (
+              <>
+                <strong className="font-semibold">Premium:</strong> Sobald eine
+                freigegebene Discovery-Quelle verbunden ist, kann Klarsa die
+                Discovery <strong className="font-semibold">automatisch und
+                kanalweise</strong> ausführen – jeder Lauf bleibt sichtbar und
+                protokolliert. Heute läuft sie auf Ihre Auslösung.
+              </>
+            ) : (
+              <>
+                <strong className="font-semibold">Premium-Funktion:</strong> Im
+                Premium-Paket führt Klarsa die Discovery automatisch aus, sobald
+                eine freigegebene Quelle verbunden ist. In Ihrem Paket starten Sie
+                Läufe selbst.
+              </>
+            )}
+          </p>
+        </div>
 
         {/* Why now? — Opportunity Signals */}
         <Link

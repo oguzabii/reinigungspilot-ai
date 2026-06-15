@@ -79,10 +79,16 @@ export async function runDiscovery(
   const res = await runPlacesTextSearch({ query, limit: 10 });
 
   if (res.status === "not_configured") {
-    return { status: "not_configured", message: "Discovery-API nicht konfiguriert." };
+    return { status: "not_configured", message: "Discovery-Quelle noch nicht verbunden." };
   }
   if (res.status === "error") {
-    return { status: "error", message: res.message ?? "Discovery fehlgeschlagen." };
+    // Calm operational status — never surface a raw provider/HTTP error (e.g.
+    // 403 access/quota). Klarsa changed nothing; the owner can retry later.
+    return {
+      status: "error",
+      message:
+        "Discovery-Quelle ist momentan nicht erreichbar (z. B. Zugriff oder Kontingent). Klarsa hat nichts geändert – bitte später erneut versuchen.",
+    };
   }
 
   const supabase = await createClient();

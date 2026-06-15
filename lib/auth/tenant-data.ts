@@ -19,6 +19,7 @@ import type {
   JobStatus,
   ProspectStatus,
   HandoffStatus,
+  BillingStatus,
 } from "@/lib/database-types";
 import {
   DEFAULT_AUTOPILOT_TOGGLES,
@@ -46,23 +47,30 @@ export interface CompanySummary {
   name: string;
   legalName: string;
   tier: PackageTier;
+  /** Billing lifecycle (e.g. `internal_founder` for the Clean24 founder tenant). */
+  billingStatus: BillingStatus | null;
 }
 
-/** Brand/legal name + tier for the active company (RLS-scoped). */
+/** Brand/legal name + tier + billing status for the active company (RLS-scoped). */
 export async function getCompanySummary(
   companyId: string,
 ): Promise<CompanySummary | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("companies")
-    .select("legal_name, brand_name, tier")
+    .select("legal_name, brand_name, tier, billing_status")
     .eq("id", companyId)
     .maybeSingle();
   // Log read failures: an RLS/infra regression must not be silent (finding F4).
   if (error) console.error("[tenant-data] getCompanySummary failed:", error.message);
 
   const row = data as
-    | { legal_name: string; brand_name: string; tier: PackageTier }
+    | {
+        legal_name: string;
+        brand_name: string;
+        tier: PackageTier;
+        billing_status: BillingStatus | null;
+      }
     | null;
   if (!row) return null;
 
@@ -70,6 +78,7 @@ export async function getCompanySummary(
     name: row.brand_name || row.legal_name,
     legalName: row.legal_name,
     tier: row.tier,
+    billingStatus: row.billing_status ?? null,
   };
 }
 

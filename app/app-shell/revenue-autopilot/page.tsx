@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Rocket,
-  Lock,
   Library,
   Crosshair,
   Flame,
@@ -26,7 +25,13 @@ import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
 import { EmptyState } from "@/components/app-shell/EmptyState";
 import { GroupStations } from "@/components/app-shell/GroupStations";
+import {
+  autopilotTier,
+  isPremiumExperience,
+} from "@/components/app-shell/autopilot-tier";
 import { SafeModeBanner } from "@/components/revenue-autopilot/SafeModeBanner";
+import { AutopilotLanes } from "@/components/revenue-autopilot/AutopilotLanes";
+import { buildAutopilotLanes } from "@/components/revenue-autopilot/lanes";
 import { DraftChannels } from "@/components/revenue-autopilot/DraftChannels";
 import {
   buildOutreachDrafts,
@@ -173,6 +178,20 @@ export default async function RevenueAutopilotPage() {
   // Signals = open (not-yet-promoted) candidates with a "why now" reading.
   const signalsCount = prospects.filter((p) => p.promotedLeadId === null).length;
 
+  // Package-aware Autopilot positioning + command-center lanes (v0.5.6).
+  const tier = summary?.tier ?? "starter";
+  const tierInfo = autopilotTier(tier, summary?.billingStatus);
+  const isPremium = isPremiumExperience(tier, summary?.billingStatus);
+  const lanes = buildAutopilotLanes({
+    tier,
+    billingStatus: summary?.billingStatus,
+    providers: {
+      discovery: discoveryConfigured || baugesucheConfigured,
+      send: false,
+      calendar: false,
+    },
+  });
+
   const now = new Date();
   const kpis = computeCeoKpis({
     opportunities: prospects,
@@ -220,7 +239,7 @@ export default async function RevenueAutopilotPage() {
               Revenue Autopilot
             </h1>
             <p className="text-sm text-slate-500">
-              {senderCompany} · Das Command Center für Ihre Chancen
+              {senderCompany} · {tierInfo.label}
             </p>
           </div>
         </div>
@@ -252,20 +271,37 @@ export default async function RevenueAutopilotPage() {
           </p>
         </section>
 
-        {/* Honest guardrail note */}
-        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-sm leading-relaxed text-amber-800">
-            <strong className="font-semibold">Vorbereiten, nicht automatisieren.</strong>{" "}
-            Kein Scraping, keine automatische Suche, kein automatischer E-Mail-/
-            WhatsApp-Versand, keine automatische Terminbuchung, keine bexio-API.
-            Jeder Schritt wird von Ihnen geprüft, freigegeben und manuell
-            ausgeführt. Alle Daten sind RLS-gefiltert (nur Ihr Mandant).
+        {/* Autopilot lanes — the command-center overview, package-aware */}
+        <section className="mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-navy-900">
+              <Activity className="h-4 w-4 text-blue-600" strokeWidth={2} />
+              Autopilot-Status
+            </h2>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-navy-900 px-3 py-1 text-xs font-semibold text-white">
+              {tierInfo.statusLabel}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Jede Lane zeigt ihren Status: Aktiv, Wartet auf Freigabe, Kanal nicht
+            verbunden, Bereit für Premium oder Premium-Funktion. Premium-Vollautomatik
+            wird kanalweise aktiviert.
           </p>
-        </div>
+          <div className="mt-3">
+            <AutopilotLanes lanes={lanes} />
+          </div>
+          {!isPremium && (
+            <Link
+              href="/pricing"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-violet-700 hover:text-violet-800"
+            >
+              <Rocket className="h-4 w-4" /> Upgrade für Vollautomatik
+            </Link>
+          )}
+        </section>
 
         {/* Prioritised next actions */}
-        <div className="mt-6">
+        <div className="mt-8">
           <AutopilotCard kpis={kpis} hasData={hasData} />
         </div>
 

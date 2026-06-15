@@ -1,5 +1,13 @@
 # Klarsa v0.5.7 — Approved Discovery Autopilot
 
+> **Latest verification — VERIFIED in production (2026-06-15, v0.5.7.1).** The
+> owner deployed v0.5.7 and confirmed the production UI changed as expected:
+> `/app-shell/revenue-autopilot/discovery` opens as the Approved Discovery
+> Autopilot (status, freigegebene Quellen, source-aware run, result breakdown);
+> official adapters only, preview when auto-create is OFF, cold candidates created
+> when policy is ON. No outreach/email/calendar/bexio; no scraping. See
+> [`clean24-approved-discovery-autopilot-results.md`](./clean24-approved-discovery-autopilot-results.md).
+
 **Ziel:** Klarsa bekommt seinen **ersten echten Automatik-Lane**. Premium-Klarsa
 arbeitet wie ein echtes AI-Verkaufsbüro und **findet selbst** passende
 Geschäfts-Chancen – über **offizielle, freigegebene Quellen** – und erstellt,

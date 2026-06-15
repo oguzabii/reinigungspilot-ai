@@ -35,6 +35,18 @@ lint/build grün. **Nächster Schritt: v0.5.8 — Outreach Autopilot (gated):
 konformer Versand-/Kalender-Kanal für sichere Kategorien, Cold-Outreach bleibt
 gesperrt.**
 
+> **v0.5.7.1:** Approved Discovery Autopilot in Produktion **verifiziert**
+> (2026-06-15) — der Inhaber hat v0.5.7 deployed und bestätigt, dass sich die
+> Produktions-UI wie erwartet geändert hat: `/app-shell/revenue-autopilot/discovery`
+> öffnet als **Approved Discovery Autopilot** (Status · freigegebene Quellen ·
+> letzter Lauf · quellen-bewusster Lauf · Ergebnis Gefunden/Neu erstellt/Bereits
+> vorhanden/Übersprungen/Fehler). Nur offizielle Adapter; Vorschau bei
+> Auto-Erstellung AUS, kalte Kandidaten bei Richtlinie EIN (Session-Client/RLS).
+> **Kein Outreach/E-Mail/WhatsApp/Kalender/bexio-API, kein Scraping/HTML/PDF/
+> Headless, keine echten Kundendaten committed.** Docs-only —
+> `docs/clean24-approved-discovery-autopilot-results.md`. **Nächster Schritt:
+> v0.5.8 — Outreach Autopilot foundation.** 001–006 unverändert; `004` unangetastet.
+
 **v0.5.6** — **Package-aware Premium Full Autopilot (Foundation).** Klarsa bleibt
 **paket-bewusst** und zeigt drei ehrliche Autonomie-Stufen:
 **Starter = „Digitales Offert-Büro"**, **Pro = „Geführter Sales Autopilot"**,

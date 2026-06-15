@@ -1,5 +1,13 @@
 # Klarsa v0.5.6 — Package-aware Premium Full Autopilot
 
+> **Latest verification — VERIFIED in production (2026-06-15, v0.5.6.1).** The
+> owner deployed v0.5.6 and confirmed the production UI changed as expected:
+> package-aware positioning, the Premium **"Klarsa hat für Sie gearbeitet"**
+> panel and the Revenue Autopilot **lanes** render, with calmer automation-status
+> copy. No real sending/booking/bexio API; `providers.send` and
+> `providers.calendar` remain not connected. See
+> [`clean24-premium-full-autopilot-results.md`](./clean24-premium-full-autopilot-results.md).
+
 **Ziel:** Klarsa bleibt **paket-bewusst**. Dasselbe Produkt zeigt drei ehrliche
 Autonomie-Stufen, und der Inhaber versteht sofort, **was Klarsa für ihn tut**.
 Diese Version legt die **Produkt-Grundlage, UI, Copy, Docs und das interne

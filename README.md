@@ -38,6 +38,17 @@ Absender-Identität + Opt-out bzw. Kalender), dann den Lane von „Bereit für
 Premium" auf „Aktiv" schalten – nur für sichere Kategorien, Cold-Outreach bleibt
 gesperrt.
 
+> **v0.5.6.1:** Premium Full Autopilot in Produktion **verifiziert** (2026-06-15)
+> — der Inhaber hat v0.5.6 deployed und bestätigt, dass sich die Produktions-UI
+> wie erwartet geändert hat: paket-bewusste Autopilot-Positionierung, das
+> Premium-Panel **„Klarsa hat für Sie gearbeitet"** und die Revenue-Autopilot-
+> **Lanes** sind sichtbar, mit ruhigerer Automation-Status-Sprache. **Kein echtes
+> Senden/Buchen, kein echter bexio-API; `providers.send` und `providers.calendar`
+> weiterhin nicht verbunden; keine echten Kundendaten committed.** Docs-only —
+> `docs/clean24-premium-full-autopilot-results.md`. **Nächster Schritt: v0.5.7 —
+> erster realer Automatik-Lane, voraussichtlich Approved Discovery Autopilot.**
+> 001–006 unverändert; `004` unangetastet.
+
 **v0.5.5** — **Workspace vereinfacht & Produktions-Kopie bereinigt.** Klarsa
 beantwortet jetzt sofort: „Wo ist heute Geld – und was tue ich als Nächstes?".
 **Reine UI/Copy/Navigation, keine neue Migration.** (1) **Produktions-Login**

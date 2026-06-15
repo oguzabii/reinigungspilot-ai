@@ -1,5 +1,13 @@
 # Klarsa v0.5.8 — Outreach Autopilot MVP
 
+> **Latest verification — VERIFIED in production (2026-06-15, v0.5.8.1).** The
+> owner deployed v0.5.8 and confirmed `/app-shell/revenue-autopilot/outreach`
+> opens after login with the outreach queue, ready-to-use drafts (E-Mail,
+> WhatsApp/SMS, Telefon-Skript, Follow-up, Terminvorschlag) and copy + action
+> buttons; the Revenue Autopilot Erstkontakt-Lane links here. Copy-only — no real
+> sending/booking/bexio. See
+> [`clean24-outreach-autopilot-results.md`](./clean24-outreach-autopilot-results.md).
+
 **Ziel:** Klarsa macht aus entdeckten Chancen **echte Verkaufs-Aktionen**. Die
 Geld-Kette ist:
 

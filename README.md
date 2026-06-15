@@ -33,6 +33,16 @@ Kundendaten. 001–006 unverändert; `004` unangetastet.** Neu:
 v0.5.9 — echte Versandkanal-Integration für kontrollierten Outreach (sichere
 Kategorien, Cold-Outreach bleibt gesperrt).**
 
+> **v0.5.8.1:** Outreach Autopilot MVP in Produktion **verifiziert** (2026-06-15)
+> — der Inhaber hat v0.5.8 deployed und bestätigt:
+> `/app-shell/revenue-autopilot/outreach` öffnet nach Login, die Outreach-
+> Warteschlange ist sichtbar, jede Karte zeigt Entwürfe (E-Mail, WhatsApp/SMS,
+> Telefon-Skript, Follow-up, Terminvorschlag) mit Kopier- und Action-Buttons; die
+> Erstkontakt-Lane verlinkt auf `/outreach`. **Kopier-only – kein echtes Senden,
+> keine Buchung, keine bexio-API, keine echten Kundendaten committed.** Docs-only —
+> `docs/clean24-outreach-autopilot-results.md`. **Nächster Schritt: v0.5.9 — Real
+> Outreach Send Channel MVP.** 001–006 unverändert; `004` unangetastet.
+
 **v0.5.7** — **Approved Discovery Autopilot (erster echter Automatik-Lane).**
 `/app-shell/revenue-autopilot/discovery` ist jetzt der **Approved Discovery
 Autopilot**: Klarsa findet über **offizielle, freigegebene Quellen** passende

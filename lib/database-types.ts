@@ -263,6 +263,12 @@ export interface ProspectRow extends BaseColumns, TenantColumns {
   approval_status: ApprovalStatus;
   est_value_chf: number | null;
   promoted_lead_id: string | null;
+  // Contact fields for controlled outreach — added in migration 007 (v0.5.9).
+  contact_email: string | null;
+  contact_phone: string | null;
+  contact_website: string | null;
+  contact_person: string | null;
+  last_contacted_at: string | null;
   deleted_at: string | null;
 }
 

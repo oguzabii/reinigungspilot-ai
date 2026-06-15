@@ -50,6 +50,7 @@ import { formatChf } from "@/components/offers/offer-status";
 import { computeCeoKpis } from "@/components/ceo/kpi";
 import { isDiscoveryConfigured } from "@/lib/discovery/google-places";
 import { isBaugesucheConfigured } from "@/lib/discovery/baugesuche-zh";
+import { isSendConfigured } from "@/lib/outreach/send-provider";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
@@ -151,12 +152,17 @@ export default async function RevenueAutopilotPage() {
   ).length;
   // Signals = open (not-yet-promoted) candidates with a "why now" reading.
   const signalsCount = prospects.filter((p) => p.promotedLeadId === null).length;
+  // Outreach send channel (v0.5.9): connected only if the owner configured one.
+  const sendConfigured = isSendConfigured();
   // Candidates ready for first contact = unpromoted + not yet contacted.
-  const readyForOutreach = prospects.filter(
+  const outreachReadyProspects = prospects.filter(
     (p) =>
       p.promotedLeadId === null &&
       (p.status === "raw" || p.status === "scored" || p.status === "approved"),
-  ).length;
+  );
+  const readyForOutreach = outreachReadyProspects.length;
+  const readyToSend = outreachReadyProspects.filter((p) => p.contactEmail).length;
+  const missingContact = readyForOutreach - readyToSend;
 
   // Package-aware Autopilot positioning + command-center lanes (v0.5.6).
   const tier = summary?.tier ?? "starter";
@@ -173,7 +179,7 @@ export default async function RevenueAutopilotPage() {
     billingStatus: summary?.billingStatus,
     providers: {
       discovery: discoveryConfigured || baugesucheConfigured,
-      send: false,
+      send: sendConfigured,
       calendar: false,
     },
     lastDiscovery,
@@ -291,7 +297,9 @@ export default async function RevenueAutopilotPage() {
                   {readyForOutreach} Kandidaten bereit für Erstkontakt
                 </span>
                 <span className="block text-sm text-blue-100">
-                  Erstkontakte, Nachfass-Nachrichten und Terminvorschläge öffnen.
+                  {sendConfigured ? "Versandkanal verbunden" : "Kanal nicht verbunden"}
+                  {" · "}
+                  {readyToSend} bereit zum Versand · {missingContact} ohne Kontakt
                 </span>
               </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-blue-200" />

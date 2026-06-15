@@ -762,6 +762,13 @@ export interface OpportunityListItem {
   sourceId: string | null;
   /** Embedded label of that source (lead_sources.label), or null. */
   sourceLabel: string | null;
+  // Contact fields for controlled outreach (migration 007, v0.5.9).
+  contactEmail: string | null;
+  contactPhone: string | null;
+  contactWebsite: string | null;
+  contactPerson: string | null;
+  /** When the owner last contacted this candidate (set by the send action). */
+  lastContactedAt: string | null;
 }
 
 /**
@@ -776,7 +783,7 @@ export async function getProspects(
   const { data, error } = await supabase
     .from("prospects")
     .select(
-      "id, name, category, region, source_type, source_id, search_query, score, reason, suggested_message, status, created_at, promoted_lead_id, lead_sources ( label )",
+      "id, name, category, region, source_type, source_id, search_query, score, reason, suggested_message, status, created_at, promoted_lead_id, contact_email, contact_phone, contact_website, contact_person, last_contacted_at, lead_sources ( label )",
     )
     .eq("company_id", companyId)
     .is("deleted_at", null)
@@ -804,6 +811,11 @@ export async function getProspects(
     status: ProspectStatus;
     created_at: string;
     promoted_lead_id: string | null;
+    contact_email: string | null;
+    contact_phone: string | null;
+    contact_website: string | null;
+    contact_person: string | null;
+    last_contacted_at: string | null;
     lead_sources: { label: string } | Array<{ label: string }> | null;
   }>;
 
@@ -826,6 +838,11 @@ export async function getProspects(
       promotedLeadId: row.promoted_lead_id,
       sourceId: row.source_id,
       sourceLabel: source?.label ?? null,
+      contactEmail: row.contact_email,
+      contactPhone: row.contact_phone,
+      contactWebsite: row.contact_website,
+      contactPerson: row.contact_person,
+      lastContactedAt: row.last_contacted_at,
     };
   });
 }

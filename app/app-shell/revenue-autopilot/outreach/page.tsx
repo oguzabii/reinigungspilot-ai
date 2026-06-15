@@ -17,6 +17,8 @@ import {
   Tag,
   Inbox,
   Mail,
+  Phone,
+  Globe,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { EmptyState } from "@/components/app-shell/EmptyState";
@@ -38,6 +40,9 @@ import { PromoteOpportunityButton } from "@/components/lead-hunter/PromoteOpport
 import { LEAD_STATUS_META } from "@/components/leads/lead-status";
 import { formatChf } from "@/components/offers/offer-status";
 import { MarkContactedButton } from "./MarkContactedButton";
+import { SendEmailButton } from "./SendEmailButton";
+import { ProspectContactForm } from "./ProspectContactForm";
+import { isSendConfigured } from "@/lib/outreach/send-provider";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
@@ -116,8 +121,8 @@ export default async function OutreachAutopilotPage() {
   const tierInfo = autopilotTier(tier, summary?.billingStatus);
   const isPremium = isPremiumExperience(tier, summary?.billingStatus);
   const isPro = tierRank(tier) >= 1;
-  // No compliant send channel is connected yet (drafts are copy-only today).
-  const sendConnected = false;
+  // A compliant send channel is connected only when the owner configured one.
+  const sendConnected = isSendConfigured();
 
   // Outreach-ready candidates: unpromoted, not yet contacted.
   const outreachReady = prospects
@@ -205,9 +210,11 @@ export default async function OutreachAutopilotPage() {
             <strong className="font-semibold text-navy-800">
               {sendConnected ? "Versandkanal verbunden." : "Kanal nicht verbunden."}
             </strong>{" "}
-            {isPremium
-              ? "Bereit für automatische Erstkontakte, sobald ein Versandkanal verbunden ist. Heute bereitet Klarsa die Texte vor – Sie senden selbst."
-              : "Klarsa bereitet die Texte vor – Sie kopieren, prüfen und senden selbst."}
+            {!isPremium
+              ? "Klarsa bereitet die Texte vor – Sie kopieren, prüfen und senden selbst. Der direkte E-Mail-Versand ist eine Premium-Funktion."
+              : sendConnected
+                ? "Sie können Erstkontakte als E-Mail direkt senden – einzeln, nach Ihrer Freigabe. Keine Massenmails, kein Hintergrund-Versand."
+                : "Bereit für E-Mail-Versand, sobald ein Versandkanal verbunden ist. Heute: Texte vorbereiten und selbst senden."}
           </p>
         </div>
 
@@ -241,6 +248,8 @@ export default async function OutreachAutopilotPage() {
                 op={p}
                 senderPerson={senderPerson}
                 senderCompany={senderCompany}
+                isPremium={isPremium}
+                sendConfigured={sendConnected}
               />
             )}
           </ListWithMore>
@@ -272,6 +281,8 @@ export default async function OutreachAutopilotPage() {
                 op={p}
                 senderPerson={senderPerson}
                 senderCompany={senderCompany}
+                isPremium={isPremium}
+                sendConfigured={sendConnected}
               />
             )}
           </ListWithMore>
@@ -489,15 +500,19 @@ function ProspectCard({
   op,
   senderPerson,
   senderCompany,
+  isPremium,
+  sendConfigured,
 }: {
   op: OpportunityListItem;
   senderPerson: string | null;
   senderCompany: string;
+  isPremium: boolean;
+  sendConfigured: boolean;
 }) {
   const service = oppService(op);
   const drafts = buildOutreachDrafts({
     name: op.name,
-    contactName: null,
+    contactName: op.contactPerson,
     service,
     region: op.region,
     sourceLabel: op.sourceLabel,
@@ -505,6 +520,19 @@ function ProspectCard({
     senderPerson,
     senderCompany,
   });
+
+  // Gated send control: Premium + configured channel + recipient email.
+  let sendControl: React.ReactNode;
+  if (!isPremium) {
+    sendControl = <DisabledChip label="Senden ab Premium" />;
+  } else if (!sendConfigured) {
+    sendControl = <DisabledChip label="Kanal verbinden" />;
+  } else if (!op.contactEmail) {
+    sendControl = <DisabledChip label="E-Mail-Adresse fehlt" />;
+  } else {
+    sendControl = <SendEmailButton prospectId={op.id} sent={false} />;
+  }
+
   return (
     <li className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -535,15 +563,61 @@ function ProspectCard({
           </span>
         )}
       </div>
+
+      {/* Known contact details */}
+      {(op.contactEmail || op.contactPhone || op.contactWebsite) && (
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+          {op.contactEmail && (
+            <span className="inline-flex items-center gap-1.5">
+              <Mail className="h-3.5 w-3.5 text-slate-400" />
+              {op.contactEmail}
+            </span>
+          )}
+          {op.contactPhone && (
+            <span className="inline-flex items-center gap-1.5">
+              <Phone className="h-3.5 w-3.5 text-slate-400" />
+              {op.contactPhone}
+            </span>
+          )}
+          {op.contactWebsite && (
+            <span className="inline-flex items-center gap-1.5">
+              <Globe className="h-3.5 w-3.5 text-slate-400" />
+              {op.contactWebsite}
+            </span>
+          )}
+        </div>
+      )}
+
       <DraftChannels
         channels={drafts}
         summary="Erstkontakt vorbereiten (kopieren & selbst senden)"
       />
+
+      <ProspectContactForm
+        prospectId={op.id}
+        email={op.contactEmail}
+        phone={op.contactPhone}
+        website={op.contactWebsite}
+        person={op.contactPerson}
+        openByDefault={!op.contactEmail}
+      />
+
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+        {sendControl}
         <PromoteOpportunityButton opportunityId={op.id} promoted={false} />
         <MarkContactedButton prospectId={op.id} contacted={false} />
       </div>
     </li>
+  );
+}
+
+/** A muted, non-clickable chip explaining why sending is unavailable. */
+function DisabledChip({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500">
+      <Mail className="h-3.5 w-3.5 text-slate-400" />
+      {label}
+    </span>
   );
 }
 

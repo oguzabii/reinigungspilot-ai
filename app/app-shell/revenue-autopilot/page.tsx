@@ -11,6 +11,7 @@ import {
   CalendarClock,
   PlugZap,
   Crown,
+  Send,
   ChevronRight,
   ArrowRight,
   MapPin,
@@ -35,7 +36,7 @@ import { buildAutopilotLanes } from "@/components/revenue-autopilot/lanes";
 import { DraftChannels } from "@/components/revenue-autopilot/DraftChannels";
 import {
   buildOutreachDrafts,
-  type DraftChannel,
+  buildOfferFollowupDrafts,
 } from "@/components/revenue-autopilot/outreach";
 import { buildAppointmentDrafts } from "@/components/revenue-autopilot/appointment";
 import {
@@ -106,39 +107,6 @@ function isWarm(sourceType: string): boolean {
   return sourceType === "referral" || sourceType === "partner";
 }
 
-/** A short follow-up draft for a sent offer (copy-only). */
-function offerFollowupDrafts(
-  offer: OfferListItem,
-  senderPerson: string | null,
-  senderCompany: string,
-): DraftChannel[] {
-  const sig = senderPerson
-    ? `Freundliche Grüsse\n${senderPerson}\n${senderCompany}`
-    : `Freundliche Grüsse\n${senderCompany}`;
-  const who = offer.leadName ?? "Sie";
-  const email = [
-    "Guten Tag,",
-    "",
-    `gerne komme ich kurz auf unsere Offerte ${offer.reference} für ${who} zurück.`,
-    offer.validUntil ? `Sie ist gültig bis ${offer.validUntil}.` : "",
-    "",
-    "Darf ich offene Fragen beantworten oder die nächsten Schritte mit Ihnen besprechen? Ein kurzes Telefonat diese Woche genügt.",
-    "",
-    sig,
-  ]
-    .filter((l) => l !== "")
-    .join("\n");
-  const wa = [
-    `Guten Tag, kurze Rückfrage zu unserer Offerte ${offer.reference}.`,
-    "Passt das Angebot so für Sie, oder dürfen wir etwas anpassen?",
-    senderPerson ? `Freundliche Grüsse, ${senderPerson}` : "Freundliche Grüsse",
-  ].join("\n");
-  return [
-    { key: "offer_email", label: "E-Mail", subject: `Offerte ${offer.reference}`, text: email },
-    { key: "offer_wa", label: "WhatsApp / SMS", text: wa },
-  ];
-}
-
 export default async function RevenueAutopilotPage() {
   if (!isSupabaseConfigured()) redirect("/app-shell");
 
@@ -183,6 +151,12 @@ export default async function RevenueAutopilotPage() {
   ).length;
   // Signals = open (not-yet-promoted) candidates with a "why now" reading.
   const signalsCount = prospects.filter((p) => p.promotedLeadId === null).length;
+  // Candidates ready for first contact = unpromoted + not yet contacted.
+  const readyForOutreach = prospects.filter(
+    (p) =>
+      p.promotedLeadId === null &&
+      (p.status === "raw" || p.status === "scored" || p.status === "approved"),
+  ).length;
 
   // Package-aware Autopilot positioning + command-center lanes (v0.5.6).
   const tier = summary?.tier ?? "starter";
@@ -203,6 +177,7 @@ export default async function RevenueAutopilotPage() {
       calendar: false,
     },
     lastDiscovery,
+    readyForOutreach,
   });
 
   const now = new Date();
@@ -303,6 +278,25 @@ export default async function RevenueAutopilotPage() {
           <div className="mt-3">
             <AutopilotLanes lanes={lanes} />
           </div>
+          {readyForOutreach > 0 && (
+            <Link
+              href="/app-shell/revenue-autopilot/outreach"
+              className="mt-3 flex items-center gap-3 rounded-2xl border border-navy-900 bg-navy-900 p-4 text-white shadow-sm transition-colors hover:bg-navy-800"
+            >
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-inset ring-white/20">
+                <Send className="h-4 w-4" strokeWidth={2} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">
+                  {readyForOutreach} Kandidaten bereit für Erstkontakt
+                </span>
+                <span className="block text-sm text-blue-100">
+                  Erstkontakte, Nachfass-Nachrichten und Terminvorschläge öffnen.
+                </span>
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0 text-blue-200" />
+            </Link>
+          )}
           {!isPremium && (
             <Link
               href="/pricing"
@@ -746,7 +740,13 @@ function OfferRow({
   senderPerson: string | null;
   senderCompany: string;
 }) {
-  const drafts = offerFollowupDrafts(offer, senderPerson, senderCompany);
+  const drafts = buildOfferFollowupDrafts({
+    reference: offer.reference,
+    leadName: offer.leadName,
+    validUntil: offer.validUntil,
+    senderPerson,
+    senderCompany,
+  });
   return (
     <li className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">

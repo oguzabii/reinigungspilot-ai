@@ -134,3 +134,46 @@ export function buildOutreachDrafts(ctx: OutreachContext): DraftChannel[] {
     { key: "followup", label: "Follow-up", text: followupBody },
   ];
 }
+
+export interface OfferFollowupContext {
+  /** Offer reference, e.g. "OF-2026-001". */
+  reference: string;
+  /** Linked lead/customer display name, if any. */
+  leadName: string | null;
+  /** Valid-until date string, if any. */
+  validUntil: string | null;
+  senderPerson: string | null;
+  senderCompany: string;
+}
+
+/**
+ * A short follow-up draft for a sent offer that is awaiting a reply (copy-only).
+ * Deterministic Swiss-German; nothing is sent.
+ */
+export function buildOfferFollowupDrafts(ctx: OfferFollowupContext): DraftChannel[] {
+  const sig = ctx.senderPerson
+    ? `Freundliche Grüsse\n${ctx.senderPerson}\n${ctx.senderCompany}`
+    : `Freundliche Grüsse\n${ctx.senderCompany}`;
+  const who = ctx.leadName ?? "Sie";
+  const email = [
+    "Guten Tag,",
+    "",
+    `gerne komme ich kurz auf unsere Offerte ${ctx.reference} für ${who} zurück.`,
+    ctx.validUntil ? `Sie ist gültig bis ${ctx.validUntil}.` : "",
+    "",
+    "Darf ich offene Fragen beantworten oder die nächsten Schritte mit Ihnen besprechen? Ein kurzes Telefonat diese Woche genügt.",
+    "",
+    sig,
+  ]
+    .filter((l) => l !== "")
+    .join("\n");
+  const wa = [
+    `Guten Tag, kurze Rückfrage zu unserer Offerte ${ctx.reference}.`,
+    "Passt das Angebot so für Sie, oder dürfen wir etwas anpassen?",
+    ctx.senderPerson ? `Freundliche Grüsse, ${ctx.senderPerson}` : "Freundliche Grüsse",
+  ].join("\n");
+  return [
+    { key: "offer_email", label: "E-Mail", subject: `Offerte ${ctx.reference}`, text: email },
+    { key: "offer_wa", label: "WhatsApp / SMS", text: wa },
+  ];
+}

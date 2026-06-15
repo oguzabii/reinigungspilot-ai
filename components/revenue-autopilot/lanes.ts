@@ -74,6 +74,8 @@ export interface LanesInput {
   providers: { discovery: boolean; send: boolean; calendar: boolean };
   /** Most recent Approved Discovery run, if any (drives the lane's note). */
   lastDiscovery?: { found: number; created: number } | null;
+  /** Candidates currently ready for first contact (drives the Erstkontakt note). */
+  readyForOutreach?: number;
 }
 
 /** Tiny typed pair helper so each lane stays readable and type-safe. */
@@ -82,9 +84,15 @@ function sn(state: LaneState, note: string): { state: LaneState; note: string } 
 }
 
 export function buildAutopilotLanes(input: LanesInput): AutopilotLane[] {
-  const { tier, billingStatus, providers, lastDiscovery } = input;
+  const { tier, billingStatus, providers, lastDiscovery, readyForOutreach } = input;
   const premium = isPremiumExperience(tier, billingStatus);
   const isPro = tierRank(tier) >= 1;
+
+  // "X Kandidaten bereit für Erstkontakt" suffix for the Erstkontakt lane.
+  const readyNote =
+    readyForOutreach && readyForOutreach > 0
+      ? ` ${readyForOutreach} Kandidaten bereit für Erstkontakt.`
+      : "";
 
   // "Letzter Lauf: X Kandidaten" suffix when a run has happened.
   const lastRunNote =
@@ -105,12 +113,12 @@ export function buildAutopilotLanes(input: LanesInput): AutopilotLane[] {
 
   // Erstkontakt — prepare first contact, send after approval.
   const outreach = !isPro
-    ? sn("premium_feature", "Im Pro-Paket vorbereitet, im Premium-Paket automatisierbar.")
+    ? sn("premium_feature", `Im Pro-Paket vorbereitet, im Premium-Paket automatisierbar.${readyNote}`)
     : premium
       ? providers.send
-        ? sn("active", "Versand-Kanal verbunden – Klarsa kontaktiert nach Regeln.")
-        : sn("ready_premium", "Entwürfe bereit – Versand-Kanal verbinden für Vollautomatik.")
-      : sn("waiting_approval", "Entwürfe werden vorbereitet – Sie geben frei und senden.");
+        ? sn("active", `Versand-Kanal verbunden – Klarsa kontaktiert nach Regeln.${readyNote}`)
+        : sn("ready_premium", `Entwürfe bereit – Versand-Kanal verbinden für Vollautomatik.${readyNote}`)
+      : sn("waiting_approval", `Entwürfe werden vorbereitet – Sie geben frei und senden.${readyNote}`);
 
   // Nachfassen — keep leads warm, follow up at the right time.
   const followup = premium
@@ -152,7 +160,7 @@ export function buildAutopilotLanes(input: LanesInput): AutopilotLane[] {
       key: "outreach",
       title: "Erstkontakt",
       description: "Bereitet Erstkontakte vor und sendet sie nach Freigabe.",
-      href: "/app-shell/revenue-autopilot",
+      href: "/app-shell/revenue-autopilot/outreach",
       ...outreach,
     },
     {

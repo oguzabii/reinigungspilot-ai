@@ -9,6 +9,12 @@ import {
   Crown,
   ChevronRight,
   ShieldCheck,
+  Banknote,
+  Target,
+  Users,
+  Briefcase,
+  ArrowRight,
+  type LucideIcon,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
@@ -214,7 +220,7 @@ function TenantCockpit({
         {/* Greeting / tenant context */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
-            Klarsa · Arbeitsbereich
+            Klarsa · Cockpit
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-navy-900">
             {companyName}
@@ -235,12 +241,49 @@ function TenantCockpit({
           </div>
         </div>
 
-        {/* Autopilot — the daily hero: where the money is + what to do next */}
-        <div className="mt-7">
+        {/* Money hero — the one question the cockpit answers */}
+        <section className="mt-7 overflow-hidden rounded-2xl border border-navy-900 surface-hero p-6 text-white shadow-sm sm:p-7">
+          <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
+            <Banknote className="h-3.5 w-3.5" />
+            Heute Geld holen
+          </p>
+          <h2 className="mt-2 max-w-2xl text-xl font-semibold tracking-tight sm:text-2xl">
+            Klarsa zeigt die wichtigsten Umsatz-Aktionen für heute.
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-navy-100">
+            Wo liegt heute Geld – und was ist der nächste Schritt? Unten sehen Sie
+            die wichtigsten Aktionen, danach die drei Wege zu mehr Umsatz.
+          </p>
+        </section>
+
+        {/* Top next actions — the most important thing, first */}
+        <div className="mt-6">
           <AutopilotCard
             kpis={kpis}
             hasData={hasData}
             ctaHref="/app-shell/revenue-autopilot"
+          />
+        </div>
+
+        {/* Three big ways to make money today */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <BigActionCard
+            icon={Target}
+            title="Neue Chancen finden"
+            text="Revenue Autopilot, Lead Hunter, Radar und Quellen – an einem Ort."
+            href="/app-shell/revenue-autopilot"
+          />
+          <BigActionCard
+            icon={Users}
+            title="Kunden nachfassen"
+            text="Offene Leads ansprechen und Follow-ups konsequent planen."
+            href="/app-shell/leads"
+          />
+          <BigActionCard
+            icon={Briefcase}
+            title="Aufträge abschliessen & verrechnen"
+            text="Gewonnene Arbeit ausführen und an bexio übergeben."
+            href="/app-shell/jobs"
           />
         </div>
 
@@ -294,5 +337,39 @@ function LogoutButton() {
         Abmelden
       </button>
     </form>
+  );
+}
+
+/** One of the three big "make money today" routes on the cockpit. */
+function BigActionCard({
+  icon: Icon,
+  title,
+  text,
+  href,
+}: {
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+    >
+      <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
+        <Icon className="h-5 w-5 text-blue-600" strokeWidth={2} />
+      </span>
+      <span className="mt-3 text-base font-semibold tracking-tight text-navy-900">
+        {title}
+      </span>
+      <span className="mt-1 flex-1 text-sm leading-relaxed text-slate-500">
+        {text}
+      </span>
+      <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-700">
+        Öffnen
+        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </Link>
   );
 }

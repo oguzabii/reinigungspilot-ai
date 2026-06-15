@@ -9,6 +9,7 @@ import {
   CalendarPlus,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
+import { GroupStations } from "@/components/app-shell/GroupStations";
 import { EmptyState } from "@/components/app-shell/EmptyState";
 import { JOB_STATUS_META } from "@/components/jobs/job-status";
 import { JobStatusForm } from "@/components/jobs/JobStatusForm";
@@ -68,6 +69,11 @@ export default async function AppShellJobsPage() {
               {jobs.length >= 100 ? "+" : ""} Auftr{jobs.length === 1 ? "ag" : "äge"}
             </p>
           </div>
+        </div>
+
+        {/* Aufträge group navigator */}
+        <div className="mt-6">
+          <GroupStations group="auftraege" active="jobs" />
         </div>
 
         {/* No-real-data / scope note */}

@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { getKlarsaEnv } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Login – Klarsa",
   description:
-    "Anmeldung zum Klarsa-Arbeitsbereich. Foundation – Zugang nur für Staging, noch keine echten Kundendaten.",
+    "Zugang zum geschützten Klarsa-Arbeitsbereich. Mandantengetrennt und geschützt.",
   robots: { index: false, follow: false },
 };
 
@@ -18,6 +20,9 @@ export default function LoginPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   );
+
+  // Production shows trust copy; staging/dev keeps the honest internal warning.
+  const isProduction = getKlarsaEnv() === "production";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-12">
@@ -33,13 +38,20 @@ export default function LoginPage() {
             Anmelden
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Zugang zum Klarsa-Arbeitsbereich (Multi-Tenant).
+            Zugang zum geschützten Klarsa-Arbeitsbereich.
           </p>
 
-          <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 ring-1 ring-inset ring-slate-100">
-            Staging-Testzugang nur für interne Entwicklung. Keine echten
-            Kundendaten.
-          </p>
+          {isProduction ? (
+            <p className="mt-3 inline-flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800 ring-1 ring-inset ring-emerald-100">
+              <ShieldCheck className="mt-px h-3.5 w-3.5 shrink-0 text-emerald-600" />
+              Mandantengetrennt. Geschützt. Für den täglichen Betrieb.
+            </p>
+          ) : (
+            <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 ring-1 ring-inset ring-slate-100">
+              Staging-Testzugang nur für interne Entwicklung. Keine echten
+              Kundendaten.
+            </p>
+          )}
 
           <LoginForm isConfigured={isConfigured} />
         </div>

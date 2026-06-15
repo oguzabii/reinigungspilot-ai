@@ -75,10 +75,11 @@ export default async function AppShellOffersPage() {
         <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <p className="text-sm leading-relaxed text-amber-800">
-            Manuelle Offerten-Entwürfe – <strong className="font-semibold">kein
-            PDF, kein E-Mail-Versand, keine bexio-Übergabe</strong> (noch). Alle
-            Daten werden über die <strong className="font-semibold">RLS</strong>{" "}
-            gefiltert und nur über den Session-Client geschrieben.
+            Manuelle Offerten-Entwürfe mit <strong className="font-semibold">PDF-Download</strong>{" "}
+            – <strong className="font-semibold">kein automatischer E-Mail-Versand</strong>,
+            der Versand-Entwurf wird zum Kopieren vorbereitet. Alle Daten werden
+            über die <strong className="font-semibold">RLS</strong> gefiltert und
+            nur über den Session-Client geschrieben.
           </p>
         </div>
 

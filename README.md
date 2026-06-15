@@ -7,6 +7,31 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.5** — **Workspace vereinfacht & Produktions-Kopie bereinigt.** Klarsa
+beantwortet jetzt sofort: „Wo ist heute Geld – und was tue ich als Nächstes?".
+**Reine UI/Copy/Navigation, keine neue Migration.** (1) **Produktions-Login**
+zeigt vertrauensvolle, umgebungsabhängige Kopie (`getKlarsaEnv()`): „Zugang zum
+geschützten Klarsa-Arbeitsbereich." + „Mandantengetrennt. Geschützt. Für den
+täglichen Betrieb." — **Staging-Warnungen nur noch in Staging/Dev**, keine
+„Demo/keine echten Kundendaten"-Sprache mehr in Produktion. (2) **Navigation auf
+6 Bereiche** verschlankt: **Cockpit · Chancen · Kunden · Offerten · Aufträge ·
+Chefansicht** (Chancen bündelt Revenue Autopilot/Lead Hunter/Radar/Quellen,
+Aufträge bündelt Aufträge/bexio) — **keine Funktion entfernt**. (3) **`/app-shell`
+ist das Geld-Cockpit** („Heute Geld holen" + Top-Aktionen + 3 grosse Karten:
+Neue Chancen finden / Kunden nachfassen / Aufträge abschliessen & verrechnen).
+(4) **Revenue Autopilot** als **Command Center** positioniert („Klarsa
+priorisiert, was heute Geld bringt." · Freigabe-Fluss **vorbereiten → prüfen →
+freigeben → senden**). (5) Neue, geteilte **`GroupStations`**-Leiste erklärt die
+Chancen-/Aufträge-Stationen einfach und konsistent (Quellen = woher Chancen
+kommen, Lead Hunter = erfassen/qualifizieren, Radar = Geografie, Revenue
+Autopilot = heutige Aktionen). (6) Schlanke Empty-States, veraltete
+„kein PDF"-Offerten-Kopie korrigiert. (7) Öffentlicher **Footer**: „Demo-Version"/
+„Alle Daten sind fiktiv" → „Das KI-Verkaufsbüro für Schweizer KMU" /
+„Beispieldaten zur Veranschaulichung". **Kein Service-Role, keine Secrets, kein
+Scraping/Versand/Buchung, keine bexio-API, keine echten/erfundenen Kundendaten.
+001–006 unverändert; `004` unangetastet.** Neu:
+`docs/clean24-workspace-simplification.md`. lint/build grün.
+
 **v0.5.4.2** — **Baugesuche-CSV-Grössenlimit erhöht.** Die offizielle Kanton-Zürich-
 Baugesuche-CSV ist ≈8 MB, der bisherige Text-Schutz lag bei 4 MB und konnte den
 Feed abschneiden. `MAX_TEXT_CHARS` in `lib/discovery/baugesuche-zh.ts` wurde auf
@@ -389,8 +414,8 @@ npm run start    # Produktionsserver (nach build)
 | `/sales-kit`    | **Intern** (noindex): Positionierung, Pitches, Cold-E-Mails, Nachrichten, Telefonskript, Einwände, Abschlusssätze |
 | `/video-script` | **Intern** (noindex): 60-Sekunden-Storyboard mit deutschem Voiceover für das geplante Erklärvideo |
 | `/workspace`    | **Intern** (noindex): Klarsa App Foundation – Architektur-Plan, Clean24 als erster Tenant, geplante Module, Auth-Fundament-Hinweis |
-| `/login`        | **Intern** (noindex): Login-Skelett (Supabase Auth). Inaktiv ohne Staging-Env, keine echten Daten |
-| `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): authentifizierter Tenant-Cockpit – Redirect ohne Session, RLS-gefilterte Zähler, kein Service-Role-Lesen, **Autopilot-Nächste-Aktionen + Umsatz-Kette + CEO-Briefing-Karte**, Link zum Revenue Autopilot. Ohne Env: „Setup erforderlich" |
+| `/login`        | **Intern** (noindex): Login (Supabase Auth). **Umgebungsabhängige Kopie (v0.5.5):** Produktion zeigt vertrauensvolle Texte („Zugang zum geschützten Klarsa-Arbeitsbereich" · „Mandantengetrennt. Geschützt."), **Staging-Warnung nur in Staging/Dev** (`getKlarsaEnv()`). Inaktiv ohne Env |
+| `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): **Geld-Cockpit (v0.5.5)** – Hero „Heute Geld holen", Top-Next-Actions + **3 grosse Karten** (Neue Chancen finden / Kunden nachfassen / Aufträge abschliessen & verrechnen) + Umsatz-Kette + CEO-Briefing. Redirect ohne Session, RLS-gefilterte Zähler, kein Service-Role-Lesen. Ohne Env: „Setup erforderlich". Navigation gruppiert in **6 Bereiche** (Cockpit · Chancen · Kunden · Offerten · Aufträge · Chefansicht) |
 | `/app-shell/revenue-autopilot` | **Intern** (noindex, **dynamisch/geschützt**): **Revenue Autopilot** – Command Center „Heute Geld holen": priorisierte Umsatz-Aktionen, **Automatik-Sektion** (Discovery/Richtlinien + Safe-Mode-Banner), **Source Execution Queue**, **heisse Chancen** mit **Erstkontakt-Entwürfen**, **Leads** mit **Nachricht + Terminvorschlag**, **Offerten-Nachfass**. Reine Kopier-Entwürfe (Schweizerdeutsch), nur Lesen (Session-Client/RLS). **Kein Auto-Versand/Buchung**, keine neue Migration |
 | `/app-shell/revenue-autopilot/discovery` | **Intern** (noindex, **dynamisch/geschützt**): **Automatische Discovery** – owner/admin-initiierter Lauf über die **offizielle** Google-Places-API (env-gated `GOOGLE_PLACES_API_KEY`, **kein Cron**, Trefferlimit 10, **kein Scraping**), Dedupe, optional Auto-Erstellung **kalter** Prospects (`source_type='google'`, Outreach gesperrt), entdeckte Kandidaten, Lauf-Audit. Fehlender Key → „nicht konfiguriert". Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/policy` | **Intern** (noindex, **dynamisch/geschützt**): **Autopilot-Richtlinien** – Policy-Matrix je Kontakt-Kategorie (was automatisch erlaubt/gesperrt + warum), Hard-Blocked-Liste (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), Provider-Status, **Owner-Toggles** für sichere Modi (in `company_settings.settings` jsonb, `can_write_settings` = owner/admin). Session-Client/RLS, kein Service-Role |

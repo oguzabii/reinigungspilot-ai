@@ -63,7 +63,7 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-white">Demo-Unternehmen</p>
+            <p className="text-sm font-semibold text-white">Beispielbetrieb</p>
             <ul className="mt-3 space-y-2 text-sm">
               <li className="font-medium text-white">Muster Service GmbH</li>
               <li>Region Zürich</li>
@@ -73,8 +73,11 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 flex flex-wrap justify-between gap-2 border-t border-white/10 pt-6 text-xs text-navy-400">
-          <p>© 2026 Klarsa · Demo-Version</p>
-          <p>Alle Daten sind fiktiv und dienen ausschliesslich der Demonstration.</p>
+          <p>© 2026 Klarsa · Das KI-Verkaufsbüro für Schweizer KMU</p>
+          <p>
+            Muster Service GmbH und ihre Kennzahlen sind Beispieldaten zur
+            Veranschaulichung.
+          </p>
         </div>
       </div>
     </footer>

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Map as MapIcon,
-  ArrowLeft,
   Lock,
   Radar,
   MapPin,
@@ -18,6 +17,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
+import { GroupStations } from "@/components/app-shell/GroupStations";
 import { matchServices } from "@/components/lead-hunter/scoring";
 import {
   CANTON_BY_CODE,
@@ -186,14 +186,7 @@ export default async function AppShellLeadRadarPage() {
     <div className="min-h-screen bg-slate-50">
       <AppShellNav companyName={summary?.name} />
       <main className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
-        <Link
-          href="/app-shell/lead-hunter"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-800"
-        >
-          <ArrowLeft className="h-4 w-4" /> Lead Hunter
-        </Link>
-
-        <div className="mt-3 flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
             <MapIcon className="h-4 w-4" strokeWidth={2} />
           </span>
@@ -207,6 +200,11 @@ export default async function AppShellLeadRadarPage() {
               dem Radar
             </p>
           </div>
+        </div>
+
+        {/* Chancen group navigator */}
+        <div className="mt-6">
+          <GroupStations group="chancen" active="radar" />
         </div>
 
         {/* Opportunity Signals — "Warum jetzt?" per region/service */}

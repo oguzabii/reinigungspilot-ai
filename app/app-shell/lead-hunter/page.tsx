@@ -21,6 +21,7 @@ import {
   Activity,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
+import { GroupStations } from "@/components/app-shell/GroupStations";
 import {
   NewOpportunityForm,
   type OpportunitySeed,
@@ -138,6 +139,11 @@ export default async function AppShellLeadHunterPage({
               {total >= 100 ? "+" : ""} Opportunit{total === 1 ? "y" : "ies"}
             </p>
           </div>
+        </div>
+
+        {/* Chancen group navigator */}
+        <div className="mt-6">
+          <GroupStations group="chancen" active="lead-hunter" />
         </div>
 
         {/* Money-focused hero — "where are new jobs hiding?" */}

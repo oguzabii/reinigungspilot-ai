@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
+import { GroupStations } from "@/components/app-shell/GroupStations";
 import { EmptyState } from "@/components/app-shell/EmptyState";
 import { formatChf } from "@/components/offers/offer-status";
 import {
@@ -123,6 +124,11 @@ export default async function AppShellBexioPage() {
               {prepared.length} vorbereitet · {invoiced.length} verrechnet
             </p>
           </div>
+        </div>
+
+        {/* Aufträge group navigator */}
+        <div className="mt-6">
+          <GroupStations group="auftraege" active="bexio" />
         </div>
 
         {/* Honest no-API note */}

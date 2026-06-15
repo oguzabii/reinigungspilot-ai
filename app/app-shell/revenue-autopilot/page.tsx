@@ -25,6 +25,7 @@ import {
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
 import { EmptyState } from "@/components/app-shell/EmptyState";
+import { GroupStations } from "@/components/app-shell/GroupStations";
 import { SafeModeBanner } from "@/components/revenue-autopilot/SafeModeBanner";
 import { DraftChannels } from "@/components/revenue-autopilot/DraftChannels";
 import {
@@ -219,26 +220,35 @@ export default async function RevenueAutopilotPage() {
               Revenue Autopilot
             </h1>
             <p className="text-sm text-slate-500">
-              {senderCompany} · Ihr Command Center für neue Aufträge
+              {senderCompany} · Das Command Center für Ihre Chancen
             </p>
           </div>
         </div>
 
-        {/* Money hero */}
+        {/* Chancen group navigator */}
+        <div className="mt-6">
+          <GroupStations group="chancen" active="autopilot" />
+        </div>
+
+        {/* Command-center hero — the brain that prioritises the day */}
         <section className="mt-6 overflow-hidden rounded-2xl border border-navy-900 surface-hero p-6 text-white shadow-sm sm:p-7">
           <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
             <Rocket className="h-3.5 w-3.5" />
-            Heute Geld holen
+            Command Center
           </p>
           <h2 className="mt-2 max-w-2xl text-xl font-semibold tracking-tight sm:text-2xl">
-            Klarsa zeigt Ihnen, was heute Umsatz bringt.
+            Klarsa priorisiert, was heute Geld bringt.
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-navy-100">
-            Quellen abarbeiten, heisse Chancen ansprechen, Leads nachfassen,
-            Offerten nachhaken und Termine vorschlagen – alle Texte sind{" "}
-            <strong className="font-semibold text-white">vorbereitet zum Kopieren</strong>.
-            Sie prüfen, passen an und senden selbst. Klarsa sucht, sendet und bucht
-            nichts automatisch.
+            Das Gehirn Ihres Verkaufs: Klarsa bündelt Quellen, heisse Chancen,
+            Leads, Offerten und Termine und sortiert sie nach Umsatz-Wirkung. Alle
+            Texte sind <strong className="font-semibold text-white">vorbereitet zum
+            Kopieren</strong> – Sie behalten die Kontrolle.
+          </p>
+          <p className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/15">
+            vorbereiten <span aria-hidden className="text-blue-200">→</span> prüfen{" "}
+            <span aria-hidden className="text-blue-200">→</span> freigeben{" "}
+            <span aria-hidden className="text-blue-200">→</span> senden
           </p>
         </section>
 

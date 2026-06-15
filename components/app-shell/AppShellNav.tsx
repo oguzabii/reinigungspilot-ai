@@ -4,27 +4,30 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
-  Rocket,
-  Radar,
-  Map as MapIcon,
-  Inbox,
+  Target,
+  Users,
   FileText,
   Briefcase,
-  PlugZap,
   Crown,
   LogOut,
   Building2,
+  type LucideIcon,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
 /**
  * App-shell navigation — the persistent header for the protected Klarsa
  * workspace. Unlike `InternalHeader` (which links to the marketing/sales pages),
- * this exposes the whole money chain so the owner can move laterally:
+ * this groups the product into six plain-language areas so the owner instantly
+ * knows where money is and what to do next:
  *
- *   Übersicht → Lead Hunter → Radar → Leads → Offerten → Aufträge → bexio → CEO
+ *   Cockpit → Chancen → Kunden → Offerten → Aufträge → Chefansicht
  *
- * Client component: it reads `usePathname()` to highlight the active station
+ * The bundled stations live one level down and are surfaced on each group's
+ * pages via `GroupStations` (Chancen = Autopilot/Lead Hunter/Radar/Quellen,
+ * Aufträge = Aufträge/bexio) — so nothing is removed, only de-cluttered.
+ *
+ * Client component: it reads `usePathname()` to highlight the active group
  * (the documented Next.js active-link pattern). No data fetching, no state —
  * just navigation, the brand mark and a logout form.
  */
@@ -32,42 +35,30 @@ import { Logo } from "@/components/Logo";
 interface NavItem {
   label: string;
   href: string;
-  icon: typeof Radar;
-  /** Precise active test so sub-routes light up the right station. */
+  icon: LucideIcon;
+  /** Active test covers every sub-route the group bundles. */
   isActive: (pathname: string) => boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
   {
-    label: "Übersicht",
+    label: "Cockpit",
     href: "/app-shell",
     icon: LayoutGrid,
     isActive: (p) => p === "/app-shell",
   },
   {
-    label: "Autopilot",
+    label: "Chancen",
     href: "/app-shell/revenue-autopilot",
-    icon: Rocket,
-    isActive: (p) => p.startsWith("/app-shell/revenue-autopilot"),
-  },
-  {
-    label: "Lead Hunter",
-    href: "/app-shell/lead-hunter",
-    icon: Radar,
+    icon: Target,
     isActive: (p) =>
-      p === "/app-shell/lead-hunter" ||
-      p.startsWith("/app-shell/lead-hunter/sources"),
+      p.startsWith("/app-shell/revenue-autopilot") ||
+      p.startsWith("/app-shell/lead-hunter"),
   },
   {
-    label: "Radar",
-    href: "/app-shell/lead-hunter/radar",
-    icon: MapIcon,
-    isActive: (p) => p.startsWith("/app-shell/lead-hunter/radar"),
-  },
-  {
-    label: "Leads",
+    label: "Kunden",
     href: "/app-shell/leads",
-    icon: Inbox,
+    icon: Users,
     isActive: (p) => p === "/app-shell/leads" || p.startsWith("/app-shell/leads/"),
   },
   {
@@ -80,16 +71,11 @@ const NAV_ITEMS: NavItem[] = [
     label: "Aufträge",
     href: "/app-shell/jobs",
     icon: Briefcase,
-    isActive: (p) => p === "/app-shell/jobs" || p.startsWith("/app-shell/jobs/"),
+    isActive: (p) =>
+      p.startsWith("/app-shell/jobs") || p.startsWith("/app-shell/bexio"),
   },
   {
-    label: "bexio",
-    href: "/app-shell/bexio",
-    icon: PlugZap,
-    isActive: (p) => p === "/app-shell/bexio" || p.startsWith("/app-shell/bexio/"),
-  },
-  {
-    label: "CEO",
+    label: "Chefansicht",
     href: "/app-shell/ceo",
     icon: Crown,
     isActive: (p) => p === "/app-shell/ceo" || p.startsWith("/app-shell/ceo/"),
@@ -128,9 +114,9 @@ export function AppShellNav({ companyName }: { companyName?: string }) {
         </div>
       </div>
 
-      {/* Chain row: the money chain, horizontally scrollable on small screens */}
+      {/* Group row: the six workspace areas, horizontally scrollable on mobile */}
       <nav
-        aria-label="Klarsa-Kette"
+        aria-label="Klarsa-Bereiche"
         className="mx-auto max-w-5xl overflow-x-auto px-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <ul className="flex items-center gap-1">

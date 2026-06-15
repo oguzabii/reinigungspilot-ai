@@ -72,6 +72,8 @@ export interface LanesInput {
   billingStatus?: string | null;
   /** Which channels are connected (send/calendar are not connected today). */
   providers: { discovery: boolean; send: boolean; calendar: boolean };
+  /** Most recent Approved Discovery run, if any (drives the lane's note). */
+  lastDiscovery?: { found: number; created: number } | null;
 }
 
 /** Tiny typed pair helper so each lane stays readable and type-safe. */
@@ -80,17 +82,23 @@ function sn(state: LaneState, note: string): { state: LaneState; note: string } 
 }
 
 export function buildAutopilotLanes(input: LanesInput): AutopilotLane[] {
-  const { tier, billingStatus, providers } = input;
+  const { tier, billingStatus, providers, lastDiscovery } = input;
   const premium = isPremiumExperience(tier, billingStatus);
   const isPro = tierRank(tier) >= 1;
+
+  // "Letzter Lauf: X Kandidaten" suffix when a run has happened.
+  const lastRunNote =
+    lastDiscovery && lastDiscovery.found > 0
+      ? ` Letzter Lauf: ${lastDiscovery.found} gefunden, ${lastDiscovery.created} erstellt.`
+      : "";
 
   // Discovery — find matching companies from approved sources.
   const discovery = !isPro
     ? sn("premium_feature", "Ab Pro: Klarsa findet neue Firmen. Mit Premium vollautomatisch.")
     : providers.discovery
       ? premium
-        ? sn("active", "Quelle verbunden – Premium kann Läufe automatisch planen.")
-        : sn("active", "Quelle verbunden – läuft auf Ihre Auslösung.")
+        ? sn("active", `Quelle verbunden – Premium kann Läufe automatisch planen.${lastRunNote}`)
+        : sn("active", `Quelle verbunden – läuft auf Ihre Auslösung.${lastRunNote}`)
       : premium
         ? sn("ready_premium", "Freigegebene Quelle aktivieren, dann automatisch.")
         : sn("channel_not_connected", "Freigegebene Quelle noch nicht verbunden.");

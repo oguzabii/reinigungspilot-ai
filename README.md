@@ -7,6 +7,34 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.7** — **Approved Discovery Autopilot (erster echter Automatik-Lane).**
+`/app-shell/revenue-autopilot/discovery` ist jetzt der **Approved Discovery
+Autopilot**: Klarsa findet über **offizielle, freigegebene Quellen** passende
+Chancen und erstellt – **wenn die Richtlinie es erlaubt** – automatisch **kalte
+Kandidaten**. **Nur Discovery: kein Outreach, kein E-Mail/WhatsApp, keine
+Buchung, keine bexio-API, kein Scraping.** **Keine neue Migration.** (1) **Nur
+offizielle Adapter** (`SIGNAL_ADAPTERS`): **Google Places** (env
+`GOOGLE_PLACES_API_KEY`) + **Baugesuche Zürich** (env `BAUGESUCHE_ZH_SIGNAL_URL`,
+offizieller CSV/JSON-Feed); SIMAP/ZEFIX bleiben geplant. (2) **Package-Gating**:
+Starter gesperrt (Upgrade-Hinweis, Offert-Büro bleibt nutzbar), Pro **geführt**
+(startet selbst, Auto-Erstellung nur per Richtlinie), Premium/internal_founder
+**vollautomatik-fähig** – server-seitig erzwungen. (3) **Auto-Create-Policy**
+wiederverwendet (`company_settings.settings.autopilot.autoCreateColdCandidates`,
+Owner-Toggle): AUS → nur Vorschau, EIN → kalte `prospects` via **Session-Client +
+RLS** (nie Service-Role, nie Lead/Kunde). (4) **Dedupe + Caps**: Name+Region-
+Abgleich gegen bestehende Prospects, Batch-Dedupe, `MAX_CREATE_PER_RUN = 15`;
+klares Ergebnis **Gefunden · Neu erstellt · Bereits vorhanden · Übersprungen ·
+Fehler**, jeder Lauf im Audit. (5) **Status/letzter Lauf/nächste Aktion** auf der
+Discovery-Seite; der **Discovery-Lane** auf Revenue Autopilot zeigt „Letzter
+Lauf: X". (6) **Ruhige Fehler** („Quelle momentan nicht erreichbar … Klarsa hat
+nichts geändert"), keine HTTP-Codes in der UI. Entdeckte Kandidaten fliessen über
+den bestehenden `prospects`-Pfad in **Lead Hunter/Radar**. **Kein Service-Role,
+keine Secrets, kein Scraping/Versand/Buchung/bexio-API. 001–006 unverändert;
+`004` unangetastet.** Neu: `docs/clean24-approved-discovery-autopilot.md`.
+lint/build grün. **Nächster Schritt: v0.5.8 — Outreach Autopilot (gated):
+konformer Versand-/Kalender-Kanal für sichere Kategorien, Cold-Outreach bleibt
+gesperrt.**
+
 **v0.5.6** — **Package-aware Premium Full Autopilot (Foundation).** Klarsa bleibt
 **paket-bewusst** und zeigt drei ehrliche Autonomie-Stufen:
 **Starter = „Digitales Offert-Büro"**, **Pro = „Geführter Sales Autopilot"**,
@@ -459,7 +487,7 @@ npm run start    # Produktionsserver (nach build)
 | `/login`        | **Intern** (noindex): Login (Supabase Auth). **Umgebungsabhängige Kopie (v0.5.5):** Produktion zeigt vertrauensvolle Texte („Zugang zum geschützten Klarsa-Arbeitsbereich" · „Mandantengetrennt. Geschützt."), **Staging-Warnung nur in Staging/Dev** (`getKlarsaEnv()`). Inaktiv ohne Env |
 | `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): **Geld-Cockpit** – **paket-bewusst (v0.5.6)**: Premium-Tenants sehen das Panel **„Klarsa hat für Sie gearbeitet"** (Status-Zeilen + nächster Termin, echte RLS-Daten, ehrliche „Kanal nicht verbunden"-Zustände); andere sehen das Geld-Cockpit (Hero „Heute Geld holen", Top-Next-Actions, **3 grosse Karten**, Umsatz-Kette, CEO) + Premium-Teaser. Positionierungs-Chip je Paket. Ohne Env: „Setup erforderlich". Navigation in **6 Bereiche** |
 | `/app-shell/revenue-autopilot` | **Intern** (noindex, **dynamisch/geschützt**): **Revenue Autopilot · Command Center (v0.5.6)** – **Autopilot-Lanes** (Discovery · Erstkontakt · Nachfassen · Offerten · Termine · Abschluss/bexio) mit Status **Aktiv / Wartet auf Freigabe / Kanal nicht verbunden / Bereit für Premium / Premium-Funktion / Nächste Aktion geplant**; paket-bewusster Header, Automation-Status-Copy. Darunter Source-Queue, heisse Chancen, Leads, Offerten-Nachfass (Kopier-Entwürfe). **Kein Auto-Versand/Buchung** (send/calendar nicht verbunden), keine neue Migration |
-| `/app-shell/revenue-autopilot/discovery` | **Intern** (noindex, **dynamisch/geschützt**): **Automatische Discovery** – owner/admin-initiierter Lauf über die **offizielle** Google-Places-API (env-gated `GOOGLE_PLACES_API_KEY`, **kein Cron**, Trefferlimit 10, **kein Scraping**), Dedupe, optional Auto-Erstellung **kalter** Prospects (`source_type='google'`, Outreach gesperrt), entdeckte Kandidaten, Lauf-Audit. Fehlender Key → „nicht konfiguriert". Session-Client/RLS, kein Service-Role |
+| `/app-shell/revenue-autopilot/discovery` | **Intern** (noindex, **dynamisch/geschützt**): **Approved Discovery Autopilot (v0.5.7)** – owner/admin-initiierter Lauf über **offizielle, freigegebene Quellen** (Google Places `GOOGLE_PLACES_API_KEY`, Baugesuche Zürich `BAUGESUCHE_ZH_SIGNAL_URL`; **kein Scraping/HTML/PDF/Headless, kein Cron**, Trefferlimit 10). **Package-gated** (Starter gesperrt, Pro geführt, Premium vollautomatik-fähig), Status/letzter Lauf/nächste Aktion, **Dedupe + Cap** (`MAX_CREATE_PER_RUN=15`), Ergebnis **Gefunden/Neu erstellt/Bereits vorhanden/Übersprungen/Fehler**, optional Auto-Erstellung **kalter** Prospects (`source_type='google'`/`other`, Outreach gesperrt), ruhige Fehler, Lauf-Audit. Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/policy` | **Intern** (noindex, **dynamisch/geschützt**): **Autopilot-Richtlinien** – Policy-Matrix je Kontakt-Kategorie (was automatisch erlaubt/gesperrt + warum), Hard-Blocked-Liste (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), Provider-Status, **Owner-Toggles** für sichere Modi (in `company_settings.settings` jsonb, `can_write_settings` = owner/admin). Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/signals` | **Intern** (noindex, **dynamisch/geschützt**): **Opportunity Signals** „Warum jetzt?" – aus erfassten/entdeckten Kandidaten berechnete Signale (Typ, Warum-jetzt, Service-Potenzial, Konfidenz, **Timing-Güte exakt/geschätzt/unbekannt**, nächste Aktion) + Quellen-Bereitschaft (Adapter-Stubs). Nur Lesen (Session-Client/RLS), **kein Auto-Versand/Buchung/Scraping**, keine neue Migration |
 | `/api/autopilot/discovery-cron` | **Intern** (Route-Handler, **dynamisch**): **vorbereiteter** Discovery/Signal-Cron – **standardmässig deaktiviert**: ohne `CRON_SECRET` → 404, sonst `Authorization: Bearer`-geprüft; führt **keine** Discovery/**keine Schreibvorgänge** aus (autonome Writes bräuchten Service-Role = gesperrt). Kein `vercel.json`-Cron, nichts geplant |

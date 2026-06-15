@@ -62,6 +62,7 @@ import {
   getInvoiceHandoffJobs,
   getFollowups,
   getLeadSources,
+  getDiscoveryRuns,
   type OpportunityListItem,
   type LeadListItem,
   type OfferListItem,
@@ -157,6 +158,7 @@ export default async function RevenueAutopilotPage() {
     handoffJobs,
     followups,
     leadSources,
+    discoveryRuns,
   ] = await Promise.all([
     getCompanySummary(companyId),
     getCompanySettings(companyId),
@@ -168,13 +170,17 @@ export default async function RevenueAutopilotPage() {
     getInvoiceHandoffJobs(companyId),
     getFollowups(companyId),
     getLeadSources(companyId),
+    getDiscoveryRuns(companyId),
   ]);
 
   const senderCompany = summary?.name ?? "Ihr Betrieb";
   const senderPerson = settings.senderName;
   const discoveryConfigured = isDiscoveryConfigured();
   const baugesucheConfigured = isBaugesucheConfigured();
-  const discoveredCount = prospects.filter((p) => p.sourceType === "google").length;
+  // Cold candidates from approved discovery sources (Google + official feeds).
+  const discoveredCount = prospects.filter(
+    (p) => p.sourceType === "google" || p.sourceType === "other",
+  ).length;
   // Signals = open (not-yet-promoted) candidates with a "why now" reading.
   const signalsCount = prospects.filter((p) => p.promotedLeadId === null).length;
 
@@ -182,6 +188,12 @@ export default async function RevenueAutopilotPage() {
   const tier = summary?.tier ?? "starter";
   const tierInfo = autopilotTier(tier, summary?.billingStatus);
   const isPremium = isPremiumExperience(tier, summary?.billingStatus);
+  const lastDiscovery = discoveryRuns[0]
+    ? {
+        found: discoveryRuns[0].found ?? 0,
+        created: discoveryRuns[0].created ?? 0,
+      }
+    : null;
   const lanes = buildAutopilotLanes({
     tier,
     billingStatus: summary?.billingStatus,
@@ -190,6 +202,7 @@ export default async function RevenueAutopilotPage() {
       send: false,
       calendar: false,
     },
+    lastDiscovery,
   });
 
   const now = new Date();

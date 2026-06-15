@@ -147,6 +147,8 @@ export async function getAutopilotPolicy(
 export interface DiscoveryRunLog {
   id: string;
   createdAt: string;
+  /** Which approved source the run used (e.g. "google", "baugesuche"). */
+  source: string | null;
   query: string | null;
   region: string | null;
   found: number | null;
@@ -191,6 +193,7 @@ export async function getDiscoveryRuns(
     return {
       id: r.id,
       createdAt: r.created_at,
+      source: str(m.source) ?? str(m.provider),
       query: str(m.query),
       region: str(m.region),
       found: num(m.found),

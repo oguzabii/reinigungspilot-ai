@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Radar,
-  Lock,
+  ShieldCheck,
   MapPin,
   Tag,
   Gauge,
@@ -36,6 +36,7 @@ import {
 import { SOURCE_TYPE_META } from "@/components/lead-hunter/source-meta";
 import { matchServices } from "@/components/lead-hunter/scoring";
 import { PromoteOpportunityButton } from "@/components/lead-hunter/PromoteOpportunityButton";
+import { ArchiveButton } from "@/components/app-shell/ArchiveButton";
 import { EmptyState } from "@/components/app-shell/EmptyState";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
@@ -301,17 +302,10 @@ export default async function AppShellLeadHunterPage({
           </Link>
         </section>
 
-        {/* No-real-data / no-scraping note */}
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-sm leading-relaxed text-amber-800">
-            <strong className="font-semibold">Manuelle Erfassung</strong> – kein
-            automatisches Scraping, keine Google-/ZEFIX-/SIMAP-Abfrage, keine
-            externen Quellen, kein Spam. Jede Opportunity wird von einem Menschen
-            geprüft und erfasst. Alle Daten werden über die{" "}
-            <strong className="font-semibold">RLS</strong> gefiltert und nur über
-            den Session-Client geschrieben.
-          </p>
+        {/* Calm status note */}
+        <div className="mt-6 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+          Chancen aus freigegebenen Quellen und eigener Erfassung – nur Ihr Betrieb.
         </div>
 
         {/* Radar overview */}
@@ -566,11 +560,12 @@ function OpportunityRow({ op }: { op: OpportunityListItem }) {
         </p>
       )}
 
-      <div className="mt-3 border-t border-slate-100 pt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
         <PromoteOpportunityButton
           opportunityId={op.id}
           promoted={op.promotedLeadId !== null}
         />
+        <ArchiveButton entity="prospect" id={op.id} />
       </div>
 
       <p className="mt-2 text-xs text-slate-400">

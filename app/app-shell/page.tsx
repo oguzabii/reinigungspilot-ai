@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   Banknote,
   Target,
-  Users,
+  Send,
   Briefcase,
   ArrowRight,
   Sparkles,
@@ -330,25 +330,25 @@ function TenantCockpit({
           />
         </div>
 
-        {/* Three big ways to make money today */}
+        {/* The money flow, in three clear steps */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <BigActionCard
             icon={Target}
-            title="Neue Chancen finden"
-            text="Revenue Autopilot, Lead Hunter, Radar und Quellen – an einem Ort."
-            href="/app-shell/revenue-autopilot"
+            title="Firmen finden"
+            text="Passende Firmen über freigegebene Quellen entdecken."
+            href="/app-shell/revenue-autopilot/discovery"
           />
           <BigActionCard
-            icon={Users}
-            title="Kunden nachfassen"
-            text="Offene Leads ansprechen und Follow-ups konsequent planen."
-            href="/app-shell/leads"
+            icon={Send}
+            title="Kontakte & E-Mail"
+            text="Kontakte prüfen, Erstkontakt vorbereiten und senden."
+            href="/app-shell/revenue-autopilot/outreach"
           />
           <BigActionCard
             icon={Briefcase}
-            title="Aufträge abschliessen & verrechnen"
-            text="Gewonnene Arbeit ausführen und an bexio übergeben."
-            href="/app-shell/jobs"
+            title="Offerten & Aufträge"
+            text="Offerten schreiben, abschliessen und verrechnen."
+            href="/app-shell/offers"
           />
         </div>
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Crown,
-  Lock,
   Banknote,
   CheckCircle2,
   Briefcase,
@@ -12,6 +12,9 @@ import {
   PlugZap,
   Activity,
   ChevronsRight,
+  ChevronRight,
+  Trash2,
+  ShieldCheck,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
@@ -52,6 +55,10 @@ export default async function AppShellCeoPage() {
   if (!context) redirect("/login");
   const companyId = context.activeCompanyId;
   if (!companyId) redirect("/app-shell");
+
+  const role =
+    context.memberships.find((m) => m.companyId === companyId)?.role ?? null;
+  const canManage = role === "owner" || role === "admin";
 
   const [summary, opportunities, leads, offers, jobs, handoffJobs, followups] =
     await Promise.all([
@@ -205,25 +212,35 @@ export default async function AppShellCeoPage() {
           </div>
         </section>
 
-        {/* Disclaimer */}
-        <div className="mt-8 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-sm leading-relaxed text-amber-800">
-            <strong className="font-semibold">Read-only KPI-Überblick</strong> auf
-            Basis Ihrer bestehenden Klarsa-Daten (RLS-gefiltert, nur Ihr Mandant).
-            Keine externen Quellen, <strong className="font-semibold">keine
-            KI</strong>, keine bexio-API, kein E-Mail. Die Übersicht je Modul ist
-            auf die neuesten Einträge begrenzt (Fundament).
+        {/* Workspace cleanup (owner/admin) */}
+        {canManage && (
+          <Link
+            href="/app-shell/ceo/cleanup"
+            className="mt-8 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+          >
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
+              <Trash2 className="h-4 w-4 text-blue-600" strokeWidth={2} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-navy-900">
+                Arbeitsbereich bereinigen
+              </span>
+              <span className="block text-sm text-slate-500">
+                Test- oder Altdaten aus den Arbeitslisten archivieren – sauber starten.
+              </span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+          </Link>
+        )}
+
+        {/* Calm status note */}
+        <div className="mt-8 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+          <p className="text-sm leading-relaxed text-slate-600">
+            Überblick auf Basis Ihrer eigenen Klarsa-Daten – nur Ihr Betrieb. Keine
+            externen Quellen, keine automatischen Aktionen, alles nachvollziehbar.
           </p>
         </div>
-
-        {/* Future note */}
-        <p className="mt-6 text-xs leading-relaxed text-slate-400">
-          Deterministischer KPI-Überblick – keine KI, keine Empfehlungen aus
-          externen Modellen. Ein optionaler KI-CEO-Agent (Zusammenfassung +
-          Handlungsempfehlungen mit menschlicher Freigabe) ist eine spätere,
-          gesonderte Phase.
-        </p>
       </main>
     </div>
   );

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Map as MapIcon,
-  Lock,
   Radar,
   MapPin,
   Target,
@@ -286,18 +285,10 @@ export default async function AppShellLeadRadarPage() {
           )}
         </section>
 
-        {/* Honest no-automation note */}
-        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-sm leading-relaxed text-amber-800">
-            <strong className="font-semibold">Manuelle Radar-Ansicht, keine
-            automatische Suche.</strong>{" "}
-            Visualisiert ausschliesslich die erfassten Opportunities dieses
-            Mandanten (RLS-gefiltert). <strong className="font-semibold">Kein
-            Kartenanbieter</strong>, keine Google-Maps-/Kacheln, keine ZEFIX-/
-            SIMAP-/externe Abfrage – das Kanton-Layout ist eine stilisierte,
-            lokale Darstellung.
-          </p>
+        {/* Calm status note */}
+        <div className="mt-4 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+          Übersicht Ihrer Chancen nach Region – nur Ihr Betrieb.
         </div>
 
         {isEmpty ? (

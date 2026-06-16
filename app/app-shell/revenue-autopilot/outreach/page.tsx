@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { EmptyState } from "@/components/app-shell/EmptyState";
+import { ArchiveButton } from "@/components/app-shell/ArchiveButton";
 import { SafeModeBanner } from "@/components/revenue-autopilot/SafeModeBanner";
 import { DraftChannels } from "@/components/revenue-autopilot/DraftChannels";
 import {
@@ -616,6 +617,7 @@ function ProspectCard({
         {sendControl}
         <PromoteOpportunityButton opportunityId={op.id} promoted={false} />
         <MarkContactedButton prospectId={op.id} contacted={false} />
+        <ArchiveButton entity="prospect" id={op.id} label="Nicht relevant" />
       </div>
     </li>
   );

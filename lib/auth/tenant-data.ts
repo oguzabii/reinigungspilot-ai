@@ -328,6 +328,8 @@ export async function getFollowups(
       "id, stage, due_at, channel, status, note, created_at, lead_id, leads ( company_name )",
     )
     .eq("company_id", companyId)
+    // Archived/removed follow-ups (status 'skipped') leave the active list.
+    .neq("status", "skipped")
     .order("due_at", { ascending: true })
     .limit(100);
 

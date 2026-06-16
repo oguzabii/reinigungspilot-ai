@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Library,
-  Lock,
   ListChecks,
   Power,
   ShieldCheck,
@@ -91,18 +90,10 @@ export default async function AppShellLeadSourcesPage() {
           <GroupStations group="chancen" active="sources" />
         </div>
 
-        {/* Controlled-sources / no-automation note */}
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-sm leading-relaxed text-amber-800">
-            <strong className="font-semibold">Kontrollierte Quellen</strong> –
-            eine von Menschen freigegebene Registry. Es läuft{" "}
-            <strong className="font-semibold">keine</strong> automatische Suche,
-            kein Scraping, keine Google-/Maps-, ZEFIX-/SIMAP- oder
-            Handelsregister-Abfrage. Google/ZEFIX/SIMAP sind spätere, gesonderte
-            Phasen. Alles ist RLS-gefiltert und nur über den Session-Client
-            geschrieben.
-          </p>
+        {/* Calm status note */}
+        <div className="mt-6 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+          Von Ihnen freigegebene Quellen – die Basis für die Discovery.
         </div>
 
         {/* Overview */}

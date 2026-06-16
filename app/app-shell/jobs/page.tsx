@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
   Briefcase,
-  Lock,
+  ShieldCheck,
   Receipt,
   UserRound,
   CalendarClock,
@@ -11,6 +11,7 @@ import {
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { GroupStations } from "@/components/app-shell/GroupStations";
 import { EmptyState } from "@/components/app-shell/EmptyState";
+import { ArchiveButton } from "@/components/app-shell/ArchiveButton";
 import { JOB_STATUS_META } from "@/components/jobs/job-status";
 import { JobStatusForm } from "@/components/jobs/JobStatusForm";
 import { JobScheduleForm } from "@/components/jobs/JobScheduleForm";
@@ -76,18 +77,10 @@ export default async function AppShellJobsPage() {
           <GroupStations group="auftraege" active="jobs" />
         </div>
 
-        {/* No-real-data / scope note */}
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-sm leading-relaxed text-amber-800">
-            Aufträge werden manuell aus <strong className="font-semibold">angenommenen
-            Offerten</strong> erstellt; Status &amp; Termin pflegen Sie hier. Termine
-            lassen sich als <strong className="font-semibold">.ics herunterladen</strong>{" "}
-            und selbst importieren – <strong className="font-semibold">kein
-            Kalender-Sync, keine E-Mail, keine bexio-Übergabe</strong>. Alle Daten
-            werden über die <strong className="font-semibold">RLS</strong> gefiltert
-            und nur über den Session-Client geschrieben.
-          </p>
+        {/* Calm status note */}
+        <div className="mt-6 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+          Aufträge aus angenommenen Offerten. Status & Termin pflegen, Termin als .ics herunterladen.
         </div>
 
         {/* Job list / empty state */}
@@ -173,9 +166,12 @@ function JobRow({ job }: { job: JobListItem }) {
         )}
       </div>
 
-      <p className="mt-2 text-xs text-slate-400">
-        erstellt {job.createdAt.slice(0, 10)}
-      </p>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+        <p className="text-xs text-slate-400">
+          erstellt {job.createdAt.slice(0, 10)}
+        </p>
+        <ArchiveButton entity="job" id={job.id} />
+      </div>
     </li>
   );
 }

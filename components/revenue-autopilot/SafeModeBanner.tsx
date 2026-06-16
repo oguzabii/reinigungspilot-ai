@@ -11,12 +11,9 @@ export function SafeModeBanner() {
     <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
       <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
       <p className="text-sm leading-relaxed text-emerald-900">
-        <strong className="font-semibold">
-          Autopilot sichtbar und kontrolliert.
-        </strong>{" "}
-        Klarsa arbeitet nach Paket und Freigabe-Regeln; Premium-Vollautomatik wird
-        kanalweise aktiviert. Jeder Schritt ist sichtbar und protokolliert – kein
-        Spam, keine versteckte Massen-Kontaktaufnahme, keine stille Terminbuchung.
+        <strong className="font-semibold">Kontrollierter Versand.</strong>{" "}
+        Klarsa arbeitet nach Ihrem Paket und mit Ihrer Freigabe – jede Aktion ist
+        sichtbar und nachvollziehbar.
       </p>
     </div>
   );

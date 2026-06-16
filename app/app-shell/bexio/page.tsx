@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
   PlugZap,
-  Lock,
   CheckCircle2,
   ListChecks,
   Receipt,
@@ -131,19 +130,10 @@ export default async function AppShellBexioPage() {
           <GroupStations group="auftraege" active="bexio" />
         </div>
 
-        {/* Honest no-API note */}
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-sm leading-relaxed text-amber-800">
-            <strong className="font-semibold">Manuelle bexio-Übergabe, keine
-            API-Verbindung.</strong>{" "}
-            Es werden <strong className="font-semibold">keine</strong> Rechnungen
-            automatisch erstellt und nichts an bexio übermittelt. Diese Ansicht
-            bereitet die Rechnungs-/Kundendaten abgeschlossener Aufträge zum{" "}
-            <strong className="font-semibold">manuellen</strong> Erfassen vor. Kein
-            bexio-Token, kein Netzwerkaufruf. Alles RLS-gefiltert, nur über den
-            Session-Client.
-          </p>
+        {/* Calm status note */}
+        <div className="mt-6 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+          Rechnungs-Übergabe vorbereiten und als verrechnet markieren – Zusammenfassung zum Kopieren.
         </div>
 
         {/* Overview */}

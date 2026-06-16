@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { ArrowRightToLine, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowRightToLine, CheckCircle2, ChevronRight } from "lucide-react";
 import {
   promoteOpportunity,
   type ActionState,
@@ -11,10 +12,10 @@ const initialState: ActionState = { status: "idle" };
 
 /**
  * "In Lead Inbox übernehmen" — promotes an opportunity into a lead via the
- * `promoteOpportunity` server action (session client + RLS; both prospects and
- * leads are the sales domain). If already promoted (`promoted`, or after a
- * successful promotion) it shows a static "Bereits im Lead Inbox" chip — no
- * duplicate promotion. No email, no automation, no external call.
+ * `promoteOpportunity` server action (session client + RLS). After promotion (or
+ * if already promoted) it does NOT dead-end: it confirms "Im Lead Inbox" and
+ * offers the clear next steps (open the inbox, plan a follow-up, prepare an
+ * offer). No email, no automation, no external call.
  */
 export function PromoteOpportunityButton({
   opportunityId,
@@ -30,10 +31,15 @@ export function PromoteOpportunityButton({
 
   if (promoted || state.status === "success") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
-        <CheckCircle2 className="h-3.5 w-3.5" />
-        Bereits im Lead Inbox
-      </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Im Lead Inbox
+        </span>
+        <NextLink href="/app-shell/leads" label="Lead öffnen" />
+        <NextLink href="/app-shell/leads" label="Follow-up planen" />
+        <NextLink href="/app-shell/offers" label="Offerte vorbereiten" />
+      </div>
     );
   }
 
@@ -54,5 +60,17 @@ export function PromoteOpportunityButton({
         </span>
       )}
     </form>
+  );
+}
+
+function NextLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-0.5 text-xs font-medium text-blue-700 hover:text-blue-800"
+    >
+      {label}
+      <ChevronRight className="h-3.5 w-3.5" />
+    </Link>
   );
 }

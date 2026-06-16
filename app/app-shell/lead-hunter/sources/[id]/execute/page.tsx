@@ -168,12 +168,10 @@ export default async function SourceExecutePage({
         <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <p className="text-sm leading-relaxed text-amber-800">
-            <strong className="font-semibold">Geführte, manuelle Recherche.</strong>{" "}
+            <strong className="font-semibold">Geführte Recherche.</strong>{" "}
             Die Recherche-Links öffnen Ihre <strong className="font-semibold">eigene
-            Suche im Browser</strong> – Klarsa ruft nichts ab, scrapt nichts, liest
-            keine Ergebnisse aus und sendet/bucht nichts automatisch. Sie
-            recherchieren, prüfen und erfassen jede Firma selbst. Alle Daten sind
-            RLS-gefiltert (nur Ihr Mandant).
+            Suche im Browser</strong>. Sie recherchieren, prüfen und erfassen jede
+            Firma selbst – alles bleibt nur in Ihrem Betrieb.
           </p>
         </div>
 

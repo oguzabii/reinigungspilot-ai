@@ -7,6 +7,32 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.11** — **Arbeitsbereich bereinigen & Geld-Ablauf vereinfachen.** Klarsa
+fühlt sich wie ein einfaches Verkaufsbüro an, nicht wie ein Admin-Dashboard.
+Klarer Ablauf: **Firmen finden → Kontakte prüfen → E-Mail senden → Nachfassen/
+Termin → Offerte/Auftrag.** **Reine UI + sichere Archiv-/Reset-Writes, keine neue
+Migration.** (1) **Archivieren pro Eintrag** (`ArchiveButton` + `archiveEntity`)
+auf Firmen/Chancen, Leads, Follow-ups, Offerten, Aufträgen – **soft** via
+`deleted_at` (Follow-ups via Status `skipped`); Einträge verschwinden aus den
+aktiven Listen, **kein Hard-Delete**. (2) **Cleanup/Reset** unter
+**`/app-shell/ceo/cleanup`** (owner/admin): Vorschau-Zahlen + Tippbestätigung
+`CLEAN24 RESET` → archiviert alle aktiven Arbeitsdaten **soft**; **nie**
+angerührt: Tenant/Einstellungen/Dienstleistungen/Nutzer/Auth/Paket **und
+Audit-Logs**. (3) **Kein Sackgassen-Übernehmen**: nach „In Lead Inbox übernehmen"
+klare nächste Schritte (Lead öffnen · Follow-up planen · Offerte vorbereiten).
+(4) **E-Mail-Versand sichtbar**: Kanal-Statuskarte + eindeutiger nächster Button
+bzw. genauer Grund (Kontaktangaben fehlen / Kanal verbinden / Senden ab Premium /
+Gesendet). (5) **Ruhige Status-Texte** statt Warnungen – **keine** Begriffe wie
+RLS/Session-Client/Safe Mode/„kein Scraping"/„keine Integration" mehr in der
+Inhaber-UI; stattdessen Business-Wording. (6) **Einfacheres Cockpit**: Hero
+„Heute Geld holen" + 3 Karten (Firmen finden / Kontakte & E-Mail / Offerten &
+Aufträge) + Chefansicht; erweiterte Seiten bleiben erreichbar, aber nicht
+dominant. **Kein Service-Role, keine Secrets, keine echten Kundendaten, kein
+Scraping/Bulk/Hintergrund-Versand/Buchung/bexio-API. 001–007 unverändert; `004`
+unangetastet.** Neu: `docs/clean24-workspace-cleanup-and-simplification.md`.
+lint/build grün. **Nächster Schritt: v0.5.12 — Contact Enrichment Autopilot oder
+IMAP Reply-Tracking.**
+
 **v0.5.10** — **SMTP-Versand & IMAP-Eingang-Fundament.** Klarsa hängt nicht mehr
 nur an Resend: Versand ist **provider-basiert** (`resend` | `smtp`), und das Lesen
 von Antworten per **IMAP** ist als sicheres Fundament vorbereitet. **SMTP =
@@ -590,7 +616,8 @@ npm run start    # Produktionsserver (nach build)
 | `/app-shell/revenue-autopilot/policy` | **Intern** (noindex, **dynamisch/geschützt**): **Autopilot-Richtlinien** – Policy-Matrix je Kontakt-Kategorie (was automatisch erlaubt/gesperrt + warum), Hard-Blocked-Liste (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), Provider-Status, **Owner-Toggles** für sichere Modi (in `company_settings.settings` jsonb, `can_write_settings` = owner/admin). Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/signals` | **Intern** (noindex, **dynamisch/geschützt**): **Opportunity Signals** „Warum jetzt?" – aus erfassten/entdeckten Kandidaten berechnete Signale (Typ, Warum-jetzt, Service-Potenzial, Konfidenz, **Timing-Güte exakt/geschätzt/unbekannt**, nächste Aktion) + Quellen-Bereitschaft (Adapter-Stubs). Nur Lesen (Session-Client/RLS), **kein Auto-Versand/Buchung/Scraping**, keine neue Migration |
 | `/api/autopilot/discovery-cron` | **Intern** (Route-Handler, **dynamisch**): **vorbereiteter** Discovery/Signal-Cron – **standardmässig deaktiviert**: ohne `CRON_SECRET` → 404, sonst `Authorization: Bearer`-geprüft; führt **keine** Discovery/**keine Schreibvorgänge** aus (autonome Writes bräuchten Service-Role = gesperrt). Kein `vercel.json`-Cron, nichts geplant |
-| `/app-shell/ceo` | **Intern** (noindex, **dynamisch/geschützt**): **CEO-Briefing** – **read-only** KPI-Überblick über die Kette (Geld-Wirkung CHF, KPI-Kacheln, Trichter Opportunity→Lead→Offerte→Auftrag→bexio, Letzte 7 Tage, Achtung-Karten) aus vorhandenen RLS-Daten. Keine Schreibvorgänge/KI/externe API/bexio-API/Scraping |
+| `/app-shell/ceo` | **Intern** (noindex, **dynamisch/geschützt**): **Chefansicht / CEO-Briefing** – read-only KPI-Überblick über die Kette (Geld-Wirkung CHF, KPI-Kacheln, Trichter Opportunity→Lead→Offerte→Auftrag→bexio, Letzte 7 Tage) aus den eigenen Daten + Link „Arbeitsbereich bereinigen" (owner/admin). Keine Schreibvorgänge/KI/externe API |
+| `/app-shell/ceo/cleanup` | **Intern** (noindex, **dynamisch/geschützt**): **Arbeitsbereich bereinigen (v0.5.11)** – owner/admin: Vorschau-Zahlen + Tippbestätigung `CLEAN24 RESET` → **soft-archiviert** alle aktiven Arbeitsdaten (prospects/leads/offers/jobs via `deleted_at`, Follow-ups via `skipped`). **Nie** Tenant/Einstellungen/Nutzer/Auth/Paket/Audit-Logs. Session-Client/RLS, kein Service-Role, keine Migration |
 | `/app-shell/leads` | **Intern** (noindex, **dynamisch/geschützt**): Lead Inbox – Tenant-Leads anzeigen, manuell erfassen, **Status pflegen** und **Follow-ups planen** (Server-Actions, Session-Client/RLS). Kein Versand, keine externen Integrationen |
 | `/app-shell/lead-hunter` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter / Opportunity Radar – Opportunities **manuell erfassen** + Radar-Übersicht + **deterministisches Service-Matching/Scoring** (live) + **„In Lead Inbox übernehmen"** (Promotion zu `leads`) + **„Opportunity aus Quelle"** (vorausgefülltes Formular via `?source=<id>`, verknüpft `prospects.source_id`) + Links zur **Quellen-Registry** und zum **Schweiz-Radar** (Server-Actions, Session-Client/RLS). Kein Scraping/Auto-Suche/KI/externe Quellen |
 | `/app-shell/lead-hunter/radar` | **Intern** (noindex, **dynamisch/geschützt**): Lead Hunter **Schweiz-Radar** – statische, stilisierte Kanton-Radar-Karte aus erfassten Opportunities (Stat-Karten, Kanton-SVG-Pins, Top-Regionen, Service-/Quellen-/Typ-Chips), nur Lesen (Session-Client/RLS). Kein Kartenanbieter/Google/ZEFIX/SIMAP/Geokodierung/externe Abfrage |

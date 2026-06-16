@@ -6,12 +6,13 @@ import {
   Phone,
   UserRound,
   Tag,
-  Lock,
+  ShieldCheck,
   BellRing,
   CalendarClock,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { EmptyState } from "@/components/app-shell/EmptyState";
+import { ArchiveButton } from "@/components/app-shell/ArchiveButton";
 import { NewLeadForm } from "@/components/leads/NewLeadForm";
 import { NewFollowupForm } from "@/components/leads/NewFollowupForm";
 import { LeadStatusForm } from "@/components/leads/LeadStatusForm";
@@ -89,16 +90,10 @@ export default async function AppShellLeadsPage() {
           </div>
         </div>
 
-        {/* No-real-data / RLS note */}
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-sm leading-relaxed text-amber-800">
-            Manuelle Erfassung – <strong className="font-semibold">keine
-            externen Integrationen</strong> (kein Scraping, keine E-Mail-Anbindung,
-            kein Versand). Alle Daten werden über die{" "}
-            <strong className="font-semibold">RLS</strong> gefiltert und nur über
-            den Session-Client geschrieben.
-          </p>
+        {/* Calm status note */}
+        <div className="mt-6 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+          Ihre Leads – nur Ihr Betrieb. Erfassen, Status pflegen und Follow-ups planen.
         </div>
 
         {/* Create lead */}
@@ -239,9 +234,12 @@ function LeadRow({ lead }: { lead: LeadListItem }) {
         currentStatus={lead.status}
       />
 
-      <p className="mt-2 text-xs text-slate-400">
-        Quelle: {lead.sourceType} · erfasst {lead.createdAt.slice(0, 10)}
-      </p>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+        <p className="text-xs text-slate-400">
+          erfasst {lead.createdAt.slice(0, 10)}
+        </p>
+        <ArchiveButton entity="lead" id={lead.id} />
+      </div>
     </li>
   );
 }
@@ -278,6 +276,9 @@ function FollowupRow({ fu }: { fu: FollowupListItem }) {
             {fu.channel}
           </span>
         )}
+      </div>
+      <div className="mt-3 flex justify-end border-t border-slate-100 pt-3">
+        <ArchiveButton entity="followup" id={fu.id} label="Nicht relevant" />
       </div>
     </li>
   );

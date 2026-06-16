@@ -42,7 +42,8 @@ import { formatChf } from "@/components/offers/offer-status";
 import { MarkContactedButton } from "./MarkContactedButton";
 import { SendEmailButton } from "./SendEmailButton";
 import { ProspectContactForm } from "./ProspectContactForm";
-import { isSendConfigured } from "@/lib/outreach/send-provider";
+import { isSendConfigured, sendProviderLabel } from "@/lib/outreach/send-provider";
+import { isInboxConfigured } from "@/lib/outreach/inbox-provider";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
@@ -123,6 +124,8 @@ export default async function OutreachAutopilotPage() {
   const isPro = tierRank(tier) >= 1;
   // A compliant send channel is connected only when the owner configured one.
   const sendConnected = isSendConfigured();
+  const sendProvider = sendProviderLabel(); // "SMTP" | "Resend" | null
+  const inboxConnected = isInboxConfigured();
 
   // Outreach-ready candidates: unpromoted, not yet contacted.
   const outreachReady = prospects
@@ -203,18 +206,25 @@ export default async function OutreachAutopilotPage() {
           </p>
         </section>
 
-        {/* Send-channel status (honest, money-language) */}
-        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <Mail className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" />
-          <p className="text-sm leading-relaxed text-slate-600">
-            <strong className="font-semibold text-navy-800">
-              {sendConnected ? "Versandkanal verbunden." : "Kanal nicht verbunden."}
-            </strong>{" "}
+        {/* Send + inbox channel status (honest, money-language) */}
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-800">
+              <Mail className="h-4 w-4 text-slate-400" />
+              Versandkanal: {sendConnected ? sendProvider : "Kanal nicht verbunden"}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-sm text-slate-600">
+              <Inbox className="h-4 w-4 text-slate-400" />
+              Eingangskanal: {inboxConnected ? "IMAP vorbereitet" : "nicht verbunden"}
+            </span>
+          </div>
+          <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
             {!isPremium
               ? "Klarsa bereitet die Texte vor – Sie kopieren, prüfen und senden selbst. Der direkte E-Mail-Versand ist eine Premium-Funktion."
               : sendConnected
                 ? "Sie können Erstkontakte als E-Mail direkt senden – einzeln, nach Ihrer Freigabe. Keine Massenmails, kein Hintergrund-Versand."
-                : "Bereit für E-Mail-Versand, sobald ein Versandkanal verbunden ist. Heute: Texte vorbereiten und selbst senden."}
+                : "Bereit für E-Mail-Versand, sobald ein Versandkanal verbunden ist (SMTP oder Resend). Heute: Texte vorbereiten und selbst senden."}{" "}
+            Antwort-Erkennung über IMAP {inboxConnected ? "vorbereitet" : "noch nicht verbunden"}.
           </p>
         </div>
 

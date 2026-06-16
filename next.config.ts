@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  // nodemailer is a Node-only SMTP library (net/tls). Keep it out of the
+  // Server Components bundle and load it via native require at runtime. It is
+  // imported only in server-only outreach code, never on the client.
+  serverExternalPackages: ["nodemailer"],
 };
 
 export default nextConfig;

@@ -50,7 +50,8 @@ import { formatChf } from "@/components/offers/offer-status";
 import { computeCeoKpis } from "@/components/ceo/kpi";
 import { isDiscoveryConfigured } from "@/lib/discovery/google-places";
 import { isBaugesucheConfigured } from "@/lib/discovery/baugesuche-zh";
-import { isSendConfigured } from "@/lib/outreach/send-provider";
+import { isSendConfigured, sendProviderLabel } from "@/lib/outreach/send-provider";
+import { isInboxConfigured } from "@/lib/outreach/inbox-provider";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
@@ -154,6 +155,8 @@ export default async function RevenueAutopilotPage() {
   const signalsCount = prospects.filter((p) => p.promotedLeadId === null).length;
   // Outreach send channel (v0.5.9): connected only if the owner configured one.
   const sendConfigured = isSendConfigured();
+  const sendProvider = sendProviderLabel(); // "SMTP" | "Resend" | null
+  const inboxConnected = isInboxConfigured(); // IMAP foundation (v0.5.10)
   // Candidates ready for first contact = unpromoted + not yet contacted.
   const outreachReadyProspects = prospects.filter(
     (p) =>
@@ -305,6 +308,24 @@ export default async function RevenueAutopilotPage() {
               <ChevronRight className="h-5 w-5 shrink-0 text-blue-200" />
             </Link>
           )}
+          {/* Mail channel status (send + inbox) */}
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 shadow-sm">
+            <span className="inline-flex items-center gap-1.5">
+              <Send className="h-3.5 w-3.5 text-slate-400" />
+              Versandkanal:{" "}
+              <strong className="font-semibold text-navy-800">
+                {sendConfigured ? `${sendProvider} verbunden` : "nicht verbunden"}
+              </strong>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Inbox className="h-3.5 w-3.5 text-slate-400" />
+              Eingangskanal:{" "}
+              <strong className="font-semibold text-navy-800">
+                {inboxConnected ? "IMAP vorbereitet" : "nicht verbunden"}
+              </strong>
+            </span>
+            <span className="text-slate-400">Antwort-Erkennung über IMAP vorbereitet.</span>
+          </div>
           {!isPremium && (
             <Link
               href="/pricing"

@@ -7,6 +7,30 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.10** — **SMTP-Versand & IMAP-Eingang-Fundament.** Klarsa hängt nicht mehr
+nur an Resend: Versand ist **provider-basiert** (`resend` | `smtp`), und das Lesen
+von Antworten per **IMAP** ist als sicheres Fundament vorbereitet. **SMTP =
+senden, IMAP = Antworten lesen.** **Keine neue Migration** (007 unverändert). (1)
+**`lib/outreach/send-provider.ts`** wählt via `OUTREACH_SEND_PROVIDER` den Kanal;
+**Resend bleibt unverändert** (leer → Resend, falls konfiguriert, sonst SMTP). (2)
+**SMTP** über **nodemailer** (offizielle Lib, neu als Dependency, lazy/`serverExternalPackages`,
+server-only) mit `SMTP_HOST/PORT/SECURE/USER/PASSWORD/FROM` – aus dem echten
+Postfach (z. B. `info@clean-24.ch`); gleiches kontrolliertes Verhalten: **eine
+Nachricht, ein Empfänger, pro Klick** (Premium), kein Bulk/Zeitplan/Hintergrund-
+Versand, kein WhatsApp; Schlüssel/Passwörter nie geloggt/zum Client. (3)
+**`lib/outreach/inbox-provider.ts`** erkennt `INBOX_PROVIDER=imap` +
+`IMAP_HOST/PORT/SECURE/USER/PASSWORD/MAILBOX` und zeigt Status – **verbindet/pollt/
+importiert nichts** in dieser Version (Reply-Tracking = v0.5.11, owner-getriggert).
+(4) **UI**: `/outreach` zeigt „Versandkanal: SMTP/Resend / Kanal nicht verbunden"
++ „Eingangskanal: IMAP vorbereitet"; Revenue Autopilot zeigt Versand-/Eingangs-
+Status + „Antwort-Erkennung über IMAP vorbereitet". (5) **Gating unverändert**
+(Starter gesperrt, Pro Kopier-/Freigabe, Premium echter Versand). **Nur
+E-Mail/SMTP; kein WhatsApp, kein Bulk/Zeitplan/Hintergrund, keine Buchung, keine
+bexio-API, kein Scraping, kein Service-Role, keine Secrets im Repo, keine echten
+Kundendaten. 001–006 unverändert; 007 unverändert; `004` unangetastet.** Neu:
+`docs/clean24-smtp-imap-mail-channel.md`. lint/build grün. **Nächster Schritt:
+v0.5.11 — Reply-Tracking + Follow-up/Appointment Autopilot.**
+
 **v0.5.9** — **Controlled Outreach Send Channel MVP.** Klarsa geht von kopier-only
 zu **kontrolliertem echtem E-Mail-Versand** für Premium – die erste echte
 Geld-Ausführung. **Kein Massenversand, kein Spam, kein verstecktes Auto-Senden:
@@ -562,7 +586,7 @@ npm run start    # Produktionsserver (nach build)
 | `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): **Geld-Cockpit** – **paket-bewusst (v0.5.6)**: Premium-Tenants sehen das Panel **„Klarsa hat für Sie gearbeitet"** (Status-Zeilen + nächster Termin, echte RLS-Daten, ehrliche „Kanal nicht verbunden"-Zustände); andere sehen das Geld-Cockpit (Hero „Heute Geld holen", Top-Next-Actions, **3 grosse Karten**, Umsatz-Kette, CEO) + Premium-Teaser. Positionierungs-Chip je Paket. Ohne Env: „Setup erforderlich". Navigation in **6 Bereiche** |
 | `/app-shell/revenue-autopilot` | **Intern** (noindex, **dynamisch/geschützt**): **Revenue Autopilot · Command Center (v0.5.6)** – **Autopilot-Lanes** (Discovery · Erstkontakt · Nachfassen · Offerten · Termine · Abschluss/bexio) mit Status **Aktiv / Wartet auf Freigabe / Kanal nicht verbunden / Bereit für Premium / Premium-Funktion / Nächste Aktion geplant**; paket-bewusster Header, Automation-Status-Copy. Darunter Source-Queue, heisse Chancen, Leads, Offerten-Nachfass (Kopier-Entwürfe). **Kein Auto-Versand/Buchung** (send/calendar nicht verbunden), keine neue Migration |
 | `/app-shell/revenue-autopilot/discovery` | **Intern** (noindex, **dynamisch/geschützt**): **Approved Discovery Autopilot (v0.5.7)** – owner/admin-initiierter Lauf über **offizielle, freigegebene Quellen** (Google Places `GOOGLE_PLACES_API_KEY`, Baugesuche Zürich `BAUGESUCHE_ZH_SIGNAL_URL`; **kein Scraping/HTML/PDF/Headless, kein Cron**, Trefferlimit 10). **Package-gated** (Starter gesperrt, Pro geführt, Premium vollautomatik-fähig), Status/letzter Lauf/nächste Aktion, **Dedupe + Cap** (`MAX_CREATE_PER_RUN=15`), Ergebnis **Gefunden/Neu erstellt/Bereits vorhanden/Übersprungen/Fehler**, optional Auto-Erstellung **kalter** Prospects (`source_type='google'`/`other`, Outreach gesperrt), ruhige Fehler, Lauf-Audit. Session-Client/RLS, kein Service-Role |
-| `/app-shell/revenue-autopilot/outreach` | **Intern** (noindex, **dynamisch/geschützt**): **Outreach Autopilot (v0.5.8) + controlled send channel (v0.5.9)** – 5 Abschnitte aus bestehenden Daten (Bereit für Erstkontakt · Heisse Chancen · Leads ohne Follow-up · Offerten Antwort ausstehend · Termine vorschlagen) mit **fertigen Entwürfen** (E-Mail/WhatsApp/Telefon/Follow-up/Termin). Kopieren, „übernehmen", „als kontaktiert markieren", **Kontakt-Editor** (`contact_email/phone/website/person`, Migration 007). **Kontrollierter E-Mail-Einzelversand** (`sendOutreachMessage`, **Premium-only**, ein Empfänger = gespeicherte Kandidaten-E-Mail, offizielle Resend-REST-API, ohne `RESEND_API_KEY`+`RESEND_FROM_EMAIL` → „Kanal nicht verbunden"). **Kein Bulk/WhatsApp/Buchung/bexio-API**, Session-Client/RLS, kein Service-Role |
+| `/app-shell/revenue-autopilot/outreach` | **Intern** (noindex, **dynamisch/geschützt**): **Outreach Autopilot (v0.5.8) + controlled send channel (v0.5.9)** – 5 Abschnitte aus bestehenden Daten (Bereit für Erstkontakt · Heisse Chancen · Leads ohne Follow-up · Offerten Antwort ausstehend · Termine vorschlagen) mit **fertigen Entwürfen** (E-Mail/WhatsApp/Telefon/Follow-up/Termin). Kopieren, „übernehmen", „als kontaktiert markieren", **Kontakt-Editor** (`contact_email/phone/website/person`, Migration 007). **Kontrollierter E-Mail-Einzelversand** (`sendOutreachMessage`, **Premium-only**, ein Empfänger = gespeicherte Kandidaten-E-Mail). **Provider-basiert (v0.5.10): Resend REST oder SMTP** (nodemailer, `OUTREACH_SEND_PROVIDER`/`SMTP_*`), Anzeige „Versandkanal: SMTP/Resend"; **IMAP-Eingangs-Fundament** (`INBOX_PROVIDER=imap`/`IMAP_*`, nur Status „vorbereitet", kein Lesen/Polling). Ohne Konfiguration → „Kanal nicht verbunden". **Kein Bulk/Zeitplan/Hintergrund/WhatsApp/Buchung/bexio-API**, Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/policy` | **Intern** (noindex, **dynamisch/geschützt**): **Autopilot-Richtlinien** – Policy-Matrix je Kontakt-Kategorie (was automatisch erlaubt/gesperrt + warum), Hard-Blocked-Liste (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), Provider-Status, **Owner-Toggles** für sichere Modi (in `company_settings.settings` jsonb, `can_write_settings` = owner/admin). Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/signals` | **Intern** (noindex, **dynamisch/geschützt**): **Opportunity Signals** „Warum jetzt?" – aus erfassten/entdeckten Kandidaten berechnete Signale (Typ, Warum-jetzt, Service-Potenzial, Konfidenz, **Timing-Güte exakt/geschätzt/unbekannt**, nächste Aktion) + Quellen-Bereitschaft (Adapter-Stubs). Nur Lesen (Session-Client/RLS), **kein Auto-Versand/Buchung/Scraping**, keine neue Migration |
 | `/api/autopilot/discovery-cron` | **Intern** (Route-Handler, **dynamisch**): **vorbereiteter** Discovery/Signal-Cron – **standardmässig deaktiviert**: ohne `CRON_SECRET` → 404, sonst `Authorization: Bearer`-geprüft; führt **keine** Discovery/**keine Schreibvorgänge** aus (autonome Writes bräuchten Service-Role = gesperrt). Kein `vercel.json`-Cron, nichts geplant |

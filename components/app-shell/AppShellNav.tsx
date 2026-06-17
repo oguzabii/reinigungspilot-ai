@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
+  Sparkles,
   Target,
   Users,
   FileText,
@@ -46,6 +47,12 @@ const NAV_ITEMS: NavItem[] = [
     href: "/app-shell",
     icon: LayoutGrid,
     isActive: (p) => p === "/app-shell",
+  },
+  {
+    label: "Digitales Büro",
+    href: "/app-shell/digital-office",
+    icon: Sparkles,
+    isActive: (p) => p.startsWith("/app-shell/digital-office"),
   },
   {
     label: "Chancen",

@@ -5,7 +5,41 @@ Master-Demo-Foundation. Dieses Repository ist die **eigenständige,
 verkaufsfähige Produkt- und Demo-Basis**. Clean24 dient ausschliesslich als
 interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
+**Neue Produktrichtung:** Klarsa wird zu einem **Self-Service Digital Office
+Builder** repositioniert. Kunden **bauen ihr eigenes digitales Büro**, wählen
+digitale Mitarbeiter, konfigurieren Mailbox/PDF-Vorlage/Preisregeln und steuern
+Aufgaben über eine Live-Büro-Ansicht und das **Ask-Office**-Panel.
+
 ## Aktuelle Version
+
+**vNext** — **Digital Office Builder Foundation.** Klarsa fühlt sich wie ein
+**einfaches, eigenes digitales Büro** an, nicht wie ein komplexes CRM. Neue
+geschützte Route **`/app-shell/digital-office`** (Nav „Digitales Büro"):
+**Hero „Ihr digitales Büro" → Schnellaktionen → Einrichtung (X/7 Schritte) →
+digitale Mitarbeiter live → Mailbox/Offerten-Vorlage/Preisregeln-Fundament →
+Heute-im-Büro-Feed → Ask Office**. **Reine Config + UI + Helfer, keine neue
+Migration, kein Schreibzugriff.** (1) **Zentrale Paket-Config**
+(`lib/digital-office/pricing.ts`): Free 0 / Starter 19 / Pro 49 / Premium 99 /
+Business 199 CHF + Add-ons (das alte „Go" entfällt; `lib/packages.ts`
+unverändert). (2) **Mitarbeiter-Katalog** (`lib/digital-office/workers.ts`, 8
+Typen), aktiv je nach Paket-Limit (Default-Auswahl). (3) **Feature-Gating**
+(`lib/digital-office/feature-gates.ts`) – alles aus den Paket-Limiten abgeleitet,
+freundliche Lock-Texte („Ab Pro verfügbar"). (4) **Ehrliche Fundamente**
+(`lib/digital-office/office.ts`): Mailbox nur „Verbunden", wenn ein echter
+Versandkanal konfiguriert ist (Resend/SMTP), sonst „Konfiguriert"/„Nicht
+verbunden"; Vorlage/Preisregeln als Modell + UI (Beispiele nur als „Beispiele",
+keine echten Kundendaten); Worker-Status/Aktivität aus **echten, RLS-gescopten**
+Daten. (5) **Ask Office** (`AskOffice.tsx` + `ask-office.ts`): rechtsseitiges
+Panel wie YouTube Studio, **gated** (Free/Starter gesperrt, Pro+ aktiv),
+**kontextbewusst**, **deutsch by default** mit **Sprach-Erkennung DE/TR/EN** je
+Nachricht, **deterministisch/lokal (kein externes KI-API)**, jede Änderung als
+**Vorschlag mit Freigabe** (sendet/ändert/löscht nichts still). **Kein
+Service-Role, keine Secrets, keine echten Kundendaten, kein automatischer
+Versand, keine Clean24-Lead-Autopilot-Änderung. 001–007 unverändert; `004`
+unangetastet und ungestaged.** Neu:
+`docs/digital-office-builder-foundation.md`. lint/build grün. **Nächster Schritt:
+Persistenz von Büro-Einrichtung/Mailbox/Vorlage/Preisregeln (zuerst
+`company_settings.settings` jsonb, Session-Client/RLS).**
 
 **v0.5.12** — **Kompakter Geld-Ablauf & Contact Enrichment Autopilot.** Klarsa
 fühlt sich wie **ein** Verkaufs-Ablauf an: **Firmen finden → Kontakt automatisch

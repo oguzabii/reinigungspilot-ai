@@ -13,15 +13,16 @@ import {
   Target,
   Send,
   Briefcase,
+  Search,
+  BellRing,
   ArrowRight,
   Sparkles,
   Rocket,
-  type LucideIcon,
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
-import { ChainStepper } from "@/components/app-shell/ChainStepper";
+import { CompactFlow, type FlowStep } from "@/components/app-shell/CompactFlow";
 import { PremiumAutopilotPanel } from "@/components/app-shell/PremiumAutopilotPanel";
 import {
   autopilotTier,
@@ -42,7 +43,6 @@ import {
 } from "@/lib/auth/session";
 import {
   getCompanySummary,
-  getTenantCounts,
   getProspects,
   getLeads,
   getOffers,
@@ -50,7 +50,6 @@ import {
   getInvoiceHandoffJobs,
   getFollowups,
   getDiscoveryRuns,
-  type TenantCounts,
 } from "@/lib/auth/tenant-data";
 import type { CeoKpis } from "@/components/ceo/kpi";
 import { getPackageName } from "@/lib/packages";
@@ -94,7 +93,6 @@ export default async function AppShellPage() {
 
   const [
     summary,
-    counts,
     opportunities,
     leads,
     offers,
@@ -104,7 +102,6 @@ export default async function AppShellPage() {
     discoveryRuns,
   ] = await Promise.all([
     getCompanySummary(companyId),
-    getTenantCounts(companyId),
     getProspects(companyId),
     getLeads(companyId),
     getOffers(companyId),
@@ -127,6 +124,19 @@ export default async function AppShellPage() {
   });
   const hasData =
     kpis.oppsTotal + kpis.leadsTotal + kpis.offersTotal + kpis.jobsTotal > 0;
+
+  // Compact money flow counts (from the tenant's own data).
+  const PRE_CONTACT = new Set<string>(["raw", "scored", "approved"]);
+  const outreachReady = opportunities.filter(
+    (p) => p.promotedLeadId === null && PRE_CONTACT.has(p.status),
+  );
+  const flow = {
+    firmen: kpis.oppsTotal,
+    kontakt: outreachReady.filter((p) => !p.contactEmail).length,
+    email: outreachReady.filter((p) => p.contactEmail).length,
+    nachfassen: kpis.attnLeadsNoFollowup,
+    abschluss: kpis.attnOffersWaiting + kpis.attnJobsNotHandedOff,
+  };
 
   // Package-aware Autopilot positioning + Premium "worked for you" digest.
   const tier = summary?.tier ?? "starter";
@@ -154,12 +164,12 @@ export default async function AppShellPage() {
       companyName={summary?.name ?? "Unbekannter Mandant"}
       role={activeMembership.role}
       tierLabel={summary ? getPackageName(summary.tier) : "—"}
-      counts={counts}
       kpis={kpis}
       hasData={hasData}
       tierInfo={tierInfo}
       isPremium={isPremium}
       digest={digest}
+      flow={flow}
     />
   );
 }
@@ -248,25 +258,79 @@ function TenantCockpit({
   companyName,
   role,
   tierLabel,
-  counts,
   kpis,
   hasData,
   tierInfo,
   isPremium,
   digest,
+  flow,
 }: {
   displayName: string;
   email: string | null;
   companyName: string;
   role: string;
   tierLabel: string;
-  counts: TenantCounts;
   kpis: CeoKpis;
   hasData: boolean;
   tierInfo: AutopilotTierInfo;
   isPremium: boolean;
   digest: PremiumDigest;
+  flow: {
+    firmen: number;
+    kontakt: number;
+    email: number;
+    nachfassen: number;
+    abschluss: number;
+  };
 }) {
+  const steps: FlowStep[] = [
+    {
+      key: "find",
+      label: "Firmen finden",
+      count: flow.firmen,
+      status: flow.firmen > 0 ? "im Radar" : "Discovery starten",
+      href: "/app-shell/revenue-autopilot/discovery",
+      cta: "Finden",
+      icon: Target,
+    },
+    {
+      key: "contact",
+      label: "Kontakt finden",
+      count: flow.kontakt,
+      status: flow.kontakt > 0 ? "ohne Kontakt" : "alle mit Kontakt",
+      href: "/app-shell/revenue-autopilot/outreach",
+      cta: "Finden",
+      icon: Search,
+    },
+    {
+      key: "email",
+      label: "E-Mail senden",
+      count: flow.email,
+      status: flow.email > 0 ? "bereit" : "—",
+      href: "/app-shell/revenue-autopilot/outreach",
+      cta: "Senden",
+      icon: Send,
+    },
+    {
+      key: "followup",
+      label: "Nachfassen",
+      count: flow.nachfassen,
+      status: flow.nachfassen > 0 ? "offen" : "—",
+      href: "/app-shell/leads",
+      cta: "Nachfassen",
+      icon: BellRing,
+    },
+    {
+      key: "close",
+      label: "Offerte/Auftrag",
+      count: flow.abschluss,
+      status: flow.abschluss > 0 ? "offen" : "—",
+      href: "/app-shell/offers",
+      cta: "Abschliessen",
+      icon: Briefcase,
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50">
       <AppShellNav companyName={companyName} />
@@ -330,26 +394,14 @@ function TenantCockpit({
           />
         </div>
 
-        {/* The money flow, in three clear steps */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <BigActionCard
-            icon={Target}
-            title="Firmen finden"
-            text="Passende Firmen über freigegebene Quellen entdecken."
-            href="/app-shell/revenue-autopilot/discovery"
-          />
-          <BigActionCard
-            icon={Send}
-            title="Kontakte & E-Mail"
-            text="Kontakte prüfen, Erstkontakt vorbereiten und senden."
-            href="/app-shell/revenue-autopilot/outreach"
-          />
-          <BigActionCard
-            icon={Briefcase}
-            title="Offerten & Aufträge"
-            text="Offerten schreiben, abschliessen und verrechnen."
-            href="/app-shell/offers"
-          />
+        {/* The compact money flow — one simple process, five steps */}
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Ihr Verkaufs-Ablauf
+          </h2>
+          <div className="mt-3">
+            <CompactFlow steps={steps} />
+          </div>
         </div>
 
         {/* Premium teaser for non-Premium packages (never makes them feel broken) */}
@@ -377,11 +429,6 @@ function TenantCockpit({
             </span>
           </Link>
         )}
-
-        {/* The money chain, in order */}
-        <div className="mt-6">
-          <ChainStepper counts={counts} />
-        </div>
 
         {/* CEO briefing entry */}
         <Link
@@ -433,36 +480,3 @@ function LogoutButton() {
   );
 }
 
-/** One of the three big "make money today" routes on the cockpit. */
-function BigActionCard({
-  icon: Icon,
-  title,
-  text,
-  href,
-}: {
-  icon: LucideIcon;
-  title: string;
-  text: string;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
-    >
-      <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-inset ring-navy-100">
-        <Icon className="h-5 w-5 text-blue-600" strokeWidth={2} />
-      </span>
-      <span className="mt-3 text-base font-semibold tracking-tight text-navy-900">
-        {title}
-      </span>
-      <span className="mt-1 flex-1 text-sm leading-relaxed text-slate-500">
-        {text}
-      </span>
-      <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-700">
-        Öffnen
-        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-      </span>
-    </Link>
-  );
-}

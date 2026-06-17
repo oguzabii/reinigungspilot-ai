@@ -14,7 +14,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import { getCompanySummary, getCompanySettings } from "@/lib/auth/tenant-data";
-import { isPremiumExperience } from "@/components/app-shell/autopilot-tier";
+import { isPremiumExperience, tierRank } from "@/components/app-shell/autopilot-tier";
 import { buildOutreachDrafts } from "@/components/revenue-autopilot/outreach";
 import { matchServices } from "@/components/lead-hunter/scoring";
 import {
@@ -22,6 +22,7 @@ import {
   sendEmail,
   looksLikeEmail,
 } from "@/lib/outreach/send-provider";
+import { enrichContact } from "@/lib/outreach/contact-enrichment";
 import type { SourceType } from "@/lib/database-types";
 
 export interface ContactActionState {
@@ -295,4 +296,130 @@ export async function sendOutreachMessage(
   revalidatePath("/app-shell/lead-hunter");
   revalidatePath("/app-shell/revenue-autopilot");
   return { status: "success", message: "E-Mail gesendet und als kontaktiert markiert." };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Contact Enrichment Autopilot — find the contact path (v0.5.12)              */
+/* -------------------------------------------------------------------------- */
+
+export interface EnrichActionState {
+  status: "idle" | "success" | "error" | "locked";
+  message?: string;
+}
+
+/**
+ * "Kontakt automatisch finden" — fills MISSING contact fields of a candidate
+ * from safe sources (stored data → official Google Places → the candidate's own
+ * public website, bounded). Pro+ only. Never overwrites contact data a human
+ * already entered. Session client + RLS; writes only this prospect.
+ */
+export async function enrichProspectContact(
+  _prev: EnrichActionState,
+  formData: FormData,
+): Promise<EnrichActionState> {
+  const context = await getCurrentCompanyContext();
+  if (!context || !context.activeCompanyId) {
+    return { status: "error", message: "Kein aktiver Mandant – bitte erneut anmelden." };
+  }
+  const companyId = context.activeCompanyId;
+
+  const prospectId = optField(formData, "prospect_id", 60);
+  if (!prospectId) return { status: "error", message: "Kein Kandidat ausgewählt." };
+
+  // Package gating: enrichment is a Pro+ feature.
+  const summary = await getCompanySummary(companyId);
+  if (tierRank(summary?.tier ?? "starter") < 1) {
+    return { status: "locked", message: "Kontakt-Suche ist ab Pro verfügbar." };
+  }
+
+  const supabase = await createClient();
+  const { data: prospect, error: readError } = await supabase
+    .from("prospects")
+    .select(
+      "id, name, region, reason, contact_email, contact_phone, contact_website, contact_person",
+    )
+    .eq("id", prospectId)
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (readError) {
+    console.error("[enrich] read failed:", readError.message);
+    return { status: "error", message: "Kontakt-Suche fehlgeschlagen. Bitte erneut versuchen." };
+  }
+  if (!prospect) return { status: "error", message: "Kandidat nicht gefunden." };
+  const p = prospect as unknown as {
+    name: string;
+    region: string | null;
+    reason: string | null;
+    contact_email: string | null;
+    contact_phone: string | null;
+    contact_website: string | null;
+    contact_person: string | null;
+  };
+
+  const result = await enrichContact({
+    name: p.name,
+    region: p.region,
+    website: p.contact_website,
+    reason: p.reason,
+  });
+
+  // Fill ONLY empty fields — never overwrite human-entered contact data.
+  const update: Record<string, string> = {};
+  if (!p.contact_email && result.email) update.contact_email = result.email;
+  if (!p.contact_phone && result.phone) update.contact_phone = result.phone;
+  if (!p.contact_website && result.website) update.contact_website = result.website;
+  if (!p.contact_person && result.person) update.contact_person = result.person;
+
+  if (Object.keys(update).length > 0) {
+    update.updated_by = context.user.id;
+    const { error: updError } = await supabase
+      .from("prospects")
+      .update(update)
+      .eq("id", prospectId)
+      .eq("company_id", companyId)
+      .is("deleted_at", null);
+    if (updError) {
+      console.error("[enrich] update failed:", updError.message);
+      return { status: "error", message: "Kontaktangaben konnten nicht gespeichert werden." };
+    }
+  }
+
+  // Audit transparency — flags + sources only, never the contact values (PII).
+  await supabase.from("audit_logs").insert({
+    company_id: companyId,
+    actor_user_id: context.user.id,
+    action: "system",
+    entity_type: "contact_enrichment",
+    metadata: {
+      emailFound: Boolean(result.email),
+      phoneFound: Boolean(result.phone),
+      websiteFound: Boolean(result.website),
+      sources: result.sources,
+      outcome: result.status,
+    },
+  });
+
+  revalidatePath("/app-shell/revenue-autopilot/outreach");
+  revalidatePath("/app-shell/lead-hunter");
+  revalidatePath("/app-shell/revenue-autopilot");
+
+  if (result.status === "unreachable") {
+    return {
+      status: "success",
+      message: "Quelle momentan nicht erreichbar – bitte später erneut versuchen.",
+    };
+  }
+  const found: string[] = [];
+  if (result.email) found.push("E-Mail");
+  if (result.phone) found.push("Telefon");
+  if (result.website) found.push("Website");
+  return {
+    status: "success",
+    message:
+      found.length > 0
+        ? `Gefunden: ${found.join(", ")}.`
+        : "Kein Kontakt gefunden – bitte Angaben manuell ergänzen.",
+  };
 }

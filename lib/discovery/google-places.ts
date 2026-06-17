@@ -26,6 +26,8 @@ export interface DiscoveryCandidate {
   /** Free-text address as returned by the provider. */
   address: string | null;
   website: string | null;
+  /** Public business phone, if the provider returns one. */
+  phone: string | null;
 }
 
 export type DiscoveryStatus = "ok" | "not_configured" | "error";
@@ -54,6 +56,8 @@ interface RawPlace {
   displayName?: { text?: string };
   formattedAddress?: string;
   websiteUri?: string;
+  internationalPhoneNumber?: string;
+  nationalPhoneNumber?: string;
 }
 
 /**
@@ -86,7 +90,7 @@ export async function runPlacesTextSearch(input: {
         // Field mask keeps the response (and cost) minimal — public business
         // listing fields only.
         "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.websiteUri",
+          "places.id,places.displayName,places.formattedAddress,places.websiteUri,places.internationalPhoneNumber,places.nationalPhoneNumber",
       },
       body: JSON.stringify({ textQuery, pageSize: limit }),
       cache: "no-store",
@@ -110,6 +114,9 @@ export async function runPlacesTextSearch(input: {
         name: (p.displayName?.text as string).slice(0, 200),
         address: p.formattedAddress?.slice(0, 300) ?? null,
         website: p.websiteUri?.slice(0, 300) ?? null,
+        phone:
+          (p.internationalPhoneNumber ?? p.nationalPhoneNumber)?.slice(0, 60) ??
+          null,
       }));
 
     return { status: "ok", candidates };

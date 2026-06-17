@@ -65,6 +65,9 @@ interface NormCandidate {
   score: number | null;
   /** In-batch dedupe key (provider id / source url), if any. */
   providerKey: string | null;
+  /** Contact path already returned by the official source (cheap auto-enrich). */
+  contactPhone: string | null;
+  contactWebsite: string | null;
 }
 
 function field(formData: FormData, name: string, maxLen = 120): string {
@@ -150,6 +153,8 @@ export async function runDiscovery(
         reason: parts.join("\n"),
         score: analysis.suggestedScore,
         providerKey: c.providerId,
+        contactPhone: c.phone,
+        contactWebsite: c.website,
       };
     });
   } else {
@@ -199,6 +204,8 @@ export async function runDiscovery(
         reason: parts.join("\n"),
         score: analysis.suggestedScore,
         providerKey: s.sourceUrl,
+        contactPhone: null,
+        contactWebsite: null,
       };
     });
   }
@@ -257,6 +264,9 @@ export async function runDiscovery(
       score: c.score,
       reason: c.reason,
       status: "raw" as const,
+      // Cheap auto-enrich: store the contact path the official source returned.
+      contact_phone: c.contactPhone,
+      contact_website: c.contactWebsite,
       created_by: context.user.id,
       updated_by: context.user.id,
     }));

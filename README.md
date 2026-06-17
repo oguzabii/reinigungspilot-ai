@@ -7,6 +7,33 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.12** — **Kompakter Geld-Ablauf & Contact Enrichment Autopilot.** Klarsa
+fühlt sich wie **ein** Verkaufs-Ablauf an: **Firmen finden → Kontakt automatisch
+finden → E-Mail senden → Nachfassen/Termin → Offerte/Auftrag**. **Reine UI +
+Helfer, keine neue Migration** (nutzt 007-Kontaktfelder). (1) **Kompakter Ablauf**
+auf `/app-shell` (`CompactFlow`): fünf Schritte mit Zahl, Status und einem Button;
+die doppelte „Umsatz-Kette" entfällt. (2) **Contact Enrichment Autopilot**
+(`lib/outreach/contact-enrichment.ts` + Aktion `enrichProspectContact`): füllt
+**nur leere** Kontaktfelder aus sicheren Quellen – **A** vorhandene Discovery-
+Daten, **B** offizielle Google Places (Telefon/Website; Discovery speichert das
+jetzt direkt beim Anlegen), **C** die **eigene öffentliche Website** des
+Kandidaten (festes Set Start/`/kontakt`/`/impressum`/`/contact`). **Harte Caps:
+max. 4 Seiten, 5 s Timeout, nur HTML, Größenlimit, kein Headless/PDF/Login/
+Formular/Crawling, SSRF-Schutz.** **D** ZEFIX/local.ch/search.ch bleiben künftige,
+freigegebene Adapter (kein Scraping). (3) **Outreach** enrichment-first: Karten-
+Status (E-Mail/Telefon/Website gefunden · Kontakt fehlt · Quelle nicht erreichbar),
+Buttons **„Kontakt automatisch finden" · „E-Mail senden" · „Anrufen" · „Website
+öffnen" · „Aus Arbeitsliste"**; manuelle Bearbeitung bleibt sekundär. (4)
+**Package-Gating**: Starter gesperrt, Pro Ein-Klick-Anreicherung, Premium
+Vollausbau – **keine versteckten Cron-/Hintergrund-Jobs**. (5) **Versand-
+Sichtbarkeit**: Kanalstatus + Grund, wenn kein Senden möglich (E-Mail fehlt /
+Kanal nicht verbunden / Senden ab Premium / bereits kontaktiert). (6) **Cleanup/
+Reset** (v0.5.11) unverändert. **Kein unkontrolliertes Scraping, kein Bulk/Spam/
+Hintergrund-Versand, keine Buchung, keine bexio-API, kein Service-Role, keine
+Secrets, keine echten Kundendaten. 001–007 unverändert; `004` unangetastet.** Neu:
+`docs/clean24-compact-money-flow-contact-enrichment.md`. lint/build grün.
+**Nächster Schritt: v0.5.13 — IMAP Reply-Tracking + Follow-up/Appointment Autopilot.**
+
 **v0.5.11** — **Arbeitsbereich bereinigen & Geld-Ablauf vereinfachen.** Klarsa
 fühlt sich wie ein einfaches Verkaufsbüro an, nicht wie ein Admin-Dashboard.
 Klarer Ablauf: **Firmen finden → Kontakte prüfen → E-Mail senden → Nachfassen/
@@ -609,10 +636,10 @@ npm run start    # Produktionsserver (nach build)
 | `/video-script` | **Intern** (noindex): 60-Sekunden-Storyboard mit deutschem Voiceover für das geplante Erklärvideo |
 | `/workspace`    | **Intern** (noindex): Klarsa App Foundation – Architektur-Plan, Clean24 als erster Tenant, geplante Module, Auth-Fundament-Hinweis |
 | `/login`        | **Intern** (noindex): Login (Supabase Auth). **Umgebungsabhängige Kopie (v0.5.5):** Produktion zeigt vertrauensvolle Texte („Zugang zum geschützten Klarsa-Arbeitsbereich" · „Mandantengetrennt. Geschützt."), **Staging-Warnung nur in Staging/Dev** (`getKlarsaEnv()`). Inaktiv ohne Env |
-| `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): **Geld-Cockpit** – **paket-bewusst (v0.5.6)**: Premium-Tenants sehen das Panel **„Klarsa hat für Sie gearbeitet"** (Status-Zeilen + nächster Termin, echte RLS-Daten, ehrliche „Kanal nicht verbunden"-Zustände); andere sehen das Geld-Cockpit (Hero „Heute Geld holen", Top-Next-Actions, **3 grosse Karten**, Umsatz-Kette, CEO) + Premium-Teaser. Positionierungs-Chip je Paket. Ohne Env: „Setup erforderlich". Navigation in **6 Bereiche** |
+| `/app-shell`    | **Intern** (noindex, **dynamisch/geschützt**): **Geld-Cockpit** – paket-bewusst: Premium-Tenants sehen **„Klarsa hat für Sie gearbeitet"** (Status-Zeilen + nächster Termin), andere den Hero „Heute Geld holen" + Top-Next-Actions + Premium-Teaser. **Kompakter Verkaufs-Ablauf (v0.5.12, `CompactFlow`)**: Firmen finden → Kontakt finden → E-Mail senden → Nachfassen → Offerte/Auftrag (je Zahl, Status, ein Button). CEO-Link. Ohne Env: „Setup erforderlich". Navigation in **6 Bereiche** |
 | `/app-shell/revenue-autopilot` | **Intern** (noindex, **dynamisch/geschützt**): **Revenue Autopilot · Command Center (v0.5.6)** – **Autopilot-Lanes** (Discovery · Erstkontakt · Nachfassen · Offerten · Termine · Abschluss/bexio) mit Status **Aktiv / Wartet auf Freigabe / Kanal nicht verbunden / Bereit für Premium / Premium-Funktion / Nächste Aktion geplant**; paket-bewusster Header, Automation-Status-Copy. Darunter Source-Queue, heisse Chancen, Leads, Offerten-Nachfass (Kopier-Entwürfe). **Kein Auto-Versand/Buchung** (send/calendar nicht verbunden), keine neue Migration |
 | `/app-shell/revenue-autopilot/discovery` | **Intern** (noindex, **dynamisch/geschützt**): **Approved Discovery Autopilot (v0.5.7)** – owner/admin-initiierter Lauf über **offizielle, freigegebene Quellen** (Google Places `GOOGLE_PLACES_API_KEY`, Baugesuche Zürich `BAUGESUCHE_ZH_SIGNAL_URL`; **kein Scraping/HTML/PDF/Headless, kein Cron**, Trefferlimit 10). **Package-gated** (Starter gesperrt, Pro geführt, Premium vollautomatik-fähig), Status/letzter Lauf/nächste Aktion, **Dedupe + Cap** (`MAX_CREATE_PER_RUN=15`), Ergebnis **Gefunden/Neu erstellt/Bereits vorhanden/Übersprungen/Fehler**, optional Auto-Erstellung **kalter** Prospects (`source_type='google'`/`other`, Outreach gesperrt), ruhige Fehler, Lauf-Audit. Session-Client/RLS, kein Service-Role |
-| `/app-shell/revenue-autopilot/outreach` | **Intern** (noindex, **dynamisch/geschützt**): **Outreach Autopilot (v0.5.8) + controlled send channel (v0.5.9)** – 5 Abschnitte aus bestehenden Daten (Bereit für Erstkontakt · Heisse Chancen · Leads ohne Follow-up · Offerten Antwort ausstehend · Termine vorschlagen) mit **fertigen Entwürfen** (E-Mail/WhatsApp/Telefon/Follow-up/Termin). Kopieren, „übernehmen", „als kontaktiert markieren", **Kontakt-Editor** (`contact_email/phone/website/person`, Migration 007). **Kontrollierter E-Mail-Einzelversand** (`sendOutreachMessage`, **Premium-only**, ein Empfänger = gespeicherte Kandidaten-E-Mail). **Provider-basiert (v0.5.10): Resend REST oder SMTP** (nodemailer, `OUTREACH_SEND_PROVIDER`/`SMTP_*`), Anzeige „Versandkanal: SMTP/Resend"; **IMAP-Eingangs-Fundament** (`INBOX_PROVIDER=imap`/`IMAP_*`, nur Status „vorbereitet", kein Lesen/Polling). Ohne Konfiguration → „Kanal nicht verbunden". **Kein Bulk/Zeitplan/Hintergrund/WhatsApp/Buchung/bexio-API**, Session-Client/RLS, kein Service-Role |
+| `/app-shell/revenue-autopilot/outreach` | **Intern** (noindex, **dynamisch/geschützt**): **Outreach Autopilot (v0.5.8) + controlled send channel (v0.5.9)** – 5 Abschnitte aus bestehenden Daten (Bereit für Erstkontakt · Heisse Chancen · Leads ohne Follow-up · Offerten Antwort ausstehend · Termine vorschlagen) mit **fertigen Entwürfen** (E-Mail/WhatsApp/Telefon/Follow-up/Termin). Kopieren, „übernehmen", „als kontaktiert markieren", **Kontakt-Editor** (`contact_email/phone/website/person`, Migration 007). **Kontrollierter E-Mail-Einzelversand** (`sendOutreachMessage`, **Premium-only**, ein Empfänger = gespeicherte Kandidaten-E-Mail). **Provider-basiert (v0.5.10): Resend REST oder SMTP** (nodemailer, `OUTREACH_SEND_PROVIDER`/`SMTP_*`), Anzeige „Versandkanal: SMTP/Resend"; **IMAP-Eingangs-Fundament** (`INBOX_PROVIDER=imap`/`IMAP_*`, nur Status „vorbereitet", kein Lesen/Polling). Ohne Konfiguration → „Kanal nicht verbunden". **Contact Enrichment (v0.5.12):** „Kontakt automatisch finden" (`enrichProspectContact`) füllt leere Kontaktfelder aus sicheren Quellen (vorhandene Daten → Google Places → eigene öffentliche Website, **max. 4 Seiten/5 s/HTML, kein Headless/PDF/Login/Crawling, SSRF-Schutz**); Karten-Status + „Anrufen"/„Website öffnen". **Kein Bulk/Zeitplan/Hintergrund/WhatsApp/Buchung/bexio-API**, Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/policy` | **Intern** (noindex, **dynamisch/geschützt**): **Autopilot-Richtlinien** – Policy-Matrix je Kontakt-Kategorie (was automatisch erlaubt/gesperrt + warum), Hard-Blocked-Liste (Cold-Outreach/Auto-Anruf/stille Buchung/Scraping), Provider-Status, **Owner-Toggles** für sichere Modi (in `company_settings.settings` jsonb, `can_write_settings` = owner/admin). Session-Client/RLS, kein Service-Role |
 | `/app-shell/revenue-autopilot/signals` | **Intern** (noindex, **dynamisch/geschützt**): **Opportunity Signals** „Warum jetzt?" – aus erfassten/entdeckten Kandidaten berechnete Signale (Typ, Warum-jetzt, Service-Potenzial, Konfidenz, **Timing-Güte exakt/geschätzt/unbekannt**, nächste Aktion) + Quellen-Bereitschaft (Adapter-Stubs). Nur Lesen (Session-Client/RLS), **kein Auto-Versand/Buchung/Scraping**, keine neue Migration |
 | `/api/autopilot/discovery-cron` | **Intern** (Route-Handler, **dynamisch**): **vorbereiteter** Discovery/Signal-Cron – **standardmässig deaktiviert**: ohne `CRON_SECRET` → 404, sonst `Authorization: Bearer`-geprüft; führt **keine** Discovery/**keine Schreibvorgänge** aus (autonome Writes bräuchten Service-Role = gesperrt). Kein `vercel.json`-Cron, nichts geplant |

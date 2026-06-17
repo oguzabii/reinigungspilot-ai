@@ -19,6 +19,7 @@ import {
   Mail,
   Phone,
   Globe,
+  Search,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { EmptyState } from "@/components/app-shell/EmptyState";
@@ -43,6 +44,7 @@ import { formatChf } from "@/components/offers/offer-status";
 import { MarkContactedButton } from "./MarkContactedButton";
 import { SendEmailButton } from "./SendEmailButton";
 import { ProspectContactForm } from "./ProspectContactForm";
+import { EnrichContactButton } from "./EnrichContactButton";
 import { isSendConfigured, sendProviderLabel } from "@/lib/outreach/send-provider";
 import { isInboxConfigured } from "@/lib/outreach/inbox-provider";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -197,8 +199,8 @@ export default async function OutreachAutopilotPage() {
               : "Bereit, sobald neue Chancen entstehen."}
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-navy-100">
-            Klarsa bereitet Erstkontakte, Nachfass-Nachrichten und Terminvorschläge
-            vor. Sie kopieren, prüfen und senden selbst.
+            Klarsa findet den Kontakt automatisch und bereitet Erstkontakt,
+            Nachfassen und Termine vor – Sie geben frei und senden.
           </p>
           <p className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/15">
             vorbereiten <span aria-hidden className="text-blue-200">→</span> prüfen{" "}
@@ -237,7 +239,7 @@ export default async function OutreachAutopilotPage() {
         <SectionHeader
           icon={Crosshair}
           title="Bereit für Erstkontakt"
-          subtitle="Neue Kandidaten – Erstkontakt vorbereiten, dann übernehmen."
+          subtitle="Neue Kandidaten – Kontakt automatisch finden, dann ansprechen."
         />
         {newCandidates.length === 0 ? (
           <EmptyRow
@@ -532,6 +534,10 @@ function ProspectCard({
     senderCompany,
   });
 
+  const hasContact = Boolean(
+    op.contactEmail || op.contactPhone || op.contactWebsite,
+  );
+
   // Gated send control: Premium + configured channel + recipient email.
   let sendControl: React.ReactNode;
   if (!isPremium) {
@@ -575,8 +581,16 @@ function ProspectCard({
         )}
       </div>
 
+      {/* Contact status */}
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {op.contactEmail && <ContactChip ok icon={Mail} label="E-Mail gefunden" />}
+        {op.contactPhone && <ContactChip ok icon={Phone} label="Telefon gefunden" />}
+        {op.contactWebsite && <ContactChip ok icon={Globe} label="Website gefunden" />}
+        {!hasContact && <ContactChip icon={Search} label="Kontakt fehlt" />}
+      </div>
+
       {/* Known contact details */}
-      {(op.contactEmail || op.contactPhone || op.contactWebsite) && (
+      {hasContact && (
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
           {op.contactEmail && (
             <span className="inline-flex items-center gap-1.5">
@@ -604,16 +618,41 @@ function ProspectCard({
         summary="Erstkontakt vorbereiten (kopieren & selbst senden)"
       />
 
+      {/* Manual contact edit — secondary, collapsed */}
       <ProspectContactForm
         prospectId={op.id}
         email={op.contactEmail}
         phone={op.contactPhone}
         website={op.contactWebsite}
         person={op.contactPerson}
-        openByDefault={!op.contactEmail}
+        openByDefault={false}
       />
 
+      {/* Contact actions */}
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+        <EnrichContactButton prospectId={op.id} />
+        {op.contactPhone && (
+          <a
+            href={`tel:${op.contactPhone.replace(/\s+/g, "")}`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
+          >
+            <Phone className="h-3.5 w-3.5" /> Anrufen
+          </a>
+        )}
+        {op.contactWebsite && (
+          <a
+            href={withScheme(op.contactWebsite)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
+          >
+            <Globe className="h-3.5 w-3.5" /> Website öffnen
+          </a>
+        )}
+      </div>
+
+      {/* Outreach actions */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
         {sendControl}
         <PromoteOpportunityButton opportunityId={op.id} promoted={false} />
         <MarkContactedButton prospectId={op.id} contacted={false} />
@@ -621,6 +660,35 @@ function ProspectCard({
       </div>
     </li>
   );
+}
+
+/** A small contact-status chip (green when present, slate when missing). */
+function ContactChip({
+  ok,
+  icon: Icon,
+  label,
+}: {
+  ok?: boolean;
+  icon: typeof Mail;
+  label: string;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${
+        ok
+          ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+          : "bg-slate-100 text-slate-500 ring-slate-200"
+      }`}
+    >
+      <Icon className="h-3 w-3" />
+      {label}
+    </span>
+  );
+}
+
+/** Ensure a website string has an http(s) scheme for use as a link href. */
+function withScheme(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
 /** A muted, non-clickable chip explaining why sending is unavailable. */

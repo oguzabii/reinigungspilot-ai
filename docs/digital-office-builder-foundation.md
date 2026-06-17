@@ -3,6 +3,10 @@
 > **New product direction.** Klarsa is repositioned from a complex
 > lead/radar/CRM system into a **simple, self-service Digital Office Builder**.
 > This document describes the foundation version added in `vNext`.
+>
+> **Follow-up:** [`digital-office-ask-office-chat.md`](./digital-office-ask-office-chat.md)
+> covers the separate-product framing and the context-aware Ask Office chat
+> (local fallback vs. future AI provider).
 
 ## Why this direction
 

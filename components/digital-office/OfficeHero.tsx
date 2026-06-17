@@ -27,12 +27,15 @@ export function OfficeHero({
     <section className="overflow-hidden rounded-2xl border border-navy-900 surface-hero p-6 text-white shadow-sm sm:p-8">
       <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
         <Sparkles className="h-3.5 w-3.5" />
-        Klarsa · Digitales Büro
+        Eigenständiges Produkt · läuft auf der Klarsa-Plattform
       </p>
       <h1 className="mt-3 max-w-2xl text-2xl font-semibold tracking-tight sm:text-3xl">
-        Bauen Sie Ihr digitales Büro mit KI-Mitarbeitern.
+        Digital Office Builder
       </h1>
-      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-navy-100">
+      <p className="mt-3 max-w-2xl text-lg font-medium text-blue-50">
+        Bauen Sie Ihr digitales Büro mit KI-Mitarbeitern.
+      </p>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-navy-100">
         Wählen Sie digitale Mitarbeiter, verbinden Sie Ihre Mailbox, konfigurieren
         Sie Offerten und Preisregeln – und lassen Sie Ihr digitales Büro tägliche
         Büroarbeit übernehmen.

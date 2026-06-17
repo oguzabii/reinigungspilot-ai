@@ -12,6 +12,38 @@ Aufgaben über eine Live-Büro-Ansicht und das **Ask-Office**-Panel.
 
 ## Aktuelle Version
 
+> **Hinweis:** Digital Office Builder ist ein **separater Produktpfad** auf dem
+> Branch `digital-office-builder-foundation`. Klarsa `master` bleibt unverändert –
+> **kein Merge in master**. Klarsa dient vorerst nur als Plattform-Shell.
+
+**vNext · Schritt 2** — **Separater Produktpfad & Ask-Office-Chat.** Digital
+Office Builder wird als **eigenständiges Produkt** positioniert (Headline
+„Digital Office Builder", „läuft auf der Klarsa-Plattform"); Route bleibt
+**`/app-shell/digital-office`**, Klarsa-Seiten unverändert. **Ask Office** wird
+vom kanned FAQ zu einem **echten, kontextbewussten Chat**: (1) **lokale
+Chat-History** in der offenen Session, Antwort auf die **tatsächliche** Nachricht;
+(2) **Server-Action** `askOfficeChat` (`app/app-shell/digital-office/actions.ts`,
+**read-only**, RLS, **kein Service-Role**) leitet den **server-seitig** frisch
+abgeleiteten, sicheren Kontext (`lib/digital-office/ask-office-context.ts`, nur
+tenant-scoped, **keine Secrets**) an die **Provider-Abstraktion**
+(`lib/digital-office/ask-office-chat.ts`); (3) zwei ehrliche Modi: **`local`**
+(deterministische, kontextbewusste Engine – Standard, Badge „Lokaler Modus") und
+**`ai`** (OpenAI-kompatibel, **nur via env** `ASK_OFFICE_AI_API_KEY`/`…_BASE_URL`/
+`…_MODEL`/`…_PROVIDER`, **kein Key im Repo**, Key nie geloggt/zum Client, Timeout,
+**Fallback auf lokal** bei Fehler); (4) **Sprachverhalten** unverändert: öffnet
+Deutsch, antwortet je Nachricht in **DE/TR/EN**, folgt Sprachwechseln; (5)
+**Aktionen nur als Vorschlag mit Freigabe** („Entwurf/Vorschlag · Freigabe nötig",
+Bestätigen/Abbrechen) – auch im KI-Modus liefert der lokale Detektor die
+strukturierte, freigabepflichtige Aktion; **nichts wird still gesendet/geändert/
+gebucht/gelöscht**; (6) **UI-Politur**: Nachrichten-Bubbles, Tipp-Indikator,
+**„Kontext: …"**-Chips, Modus-Badge; Locked-State für Free/Starter bleibt, Pro+
+aktiv. **Kein Service-Role, keine Secrets, keine echten Kundendaten, kein
+automatischer Versand, keine Clean24-Lead-Autopilot-Änderung, keine neue
+Migration. master unverändert, kein Merge. 001–007 unverändert; `004`
+unangetastet und ungestaged.** Neu: `docs/digital-office-ask-office-chat.md`.
+lint/build grün. **Nächster Schritt: Persistenz (Büro/Mailbox/Vorlage/Preisregeln)
++ freigabe-gebundene Writes für bestätigte Vorschläge.**
+
 **vNext** — **Digital Office Builder Foundation.** Klarsa fühlt sich wie ein
 **einfaches, eigenes digitales Büro** an, nicht wie ein komplexes CRM. Neue
 geschützte Route **`/app-shell/digital-office`** (Nav „Digitales Büro"):

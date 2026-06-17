@@ -267,6 +267,84 @@ export function buildSetupStatus(signals: OfficeSignals): SetupStatus {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Main setup journey (4 macro stages — the primary onboarding)                 */
+/* -------------------------------------------------------------------------- */
+
+export type JourneyStageId = "type" | "workers" | "connect" | "activate";
+export type JourneyTab = "overview" | "workers" | "mailbox" | "rules";
+
+export interface JourneyStage {
+  id: JourneyStageId;
+  label: string;
+  hint: string;
+  done: boolean;
+  ctaLabel: string;
+  /** Which internal tab the stage's CTA opens. */
+  targetTab: JourneyTab;
+}
+
+export interface JourneyState {
+  stages: JourneyStage[];
+  /** Index of the current (first not-done) stage, clamped to the last. */
+  currentIndex: number;
+}
+
+/**
+ * The simplified first-run journey: four plain stages over the seven setup
+ * steps. This is the page's primary onboarding element — current step, next
+ * step and a single CTA, without technical detail.
+ */
+export function buildOfficeJourney(signals: OfficeSignals): JourneyState {
+  const mailbox = deriveMailboxStatus(signals);
+  const hasCompany = signals.companyName.trim().length > 0;
+  const activeWorkers = splitWorkers(signals.packageId).active.length;
+  const hasWorkers = activeWorkers > 0;
+  const hasMailbox = mailboxIsUsable(mailbox);
+  const hasTemplate = signals.templateCount > 0;
+  const hasPricing = signals.pricingRuleCount > 0;
+  const connected = hasMailbox && hasTemplate && hasPricing;
+  const launched = hasCompany && connected;
+
+  const stages: JourneyStage[] = [
+    {
+      id: "type",
+      label: "Bürotyp wählen",
+      hint: hasCompany ? signals.companyName : "Firmenprofil hinterlegen",
+      done: hasCompany,
+      ctaLabel: "Bürotyp wählen",
+      targetTab: "overview",
+    },
+    {
+      id: "workers",
+      label: "KI-Mitarbeiter auswählen",
+      hint: `${activeWorkers} aktiv`,
+      done: hasWorkers,
+      ctaLabel: "Mitarbeiter auswählen",
+      targetTab: "workers",
+    },
+    {
+      id: "connect",
+      label: "Mailbox & Regeln verbinden",
+      hint: connected ? "verbunden" : "Mailbox, Vorlage & Preisregeln",
+      done: connected,
+      ctaLabel: "Mailbox & Regeln",
+      targetTab: "mailbox",
+    },
+    {
+      id: "activate",
+      label: "Büro aktivieren",
+      hint: launched ? "startbereit" : "nach den Schritten oben",
+      done: launched,
+      ctaLabel: "Büro aktivieren",
+      targetTab: "overview",
+    },
+  ];
+
+  const firstOpen = stages.findIndex((s) => !s.done);
+  return { stages, currentIndex: firstOpen === -1 ? stages.length - 1 : firstOpen };
+}
+
+/* -------------------------------------------------------------------------- */
 /* Worker runtime (honest, derived from signals)                               */
 /* -------------------------------------------------------------------------- */
 

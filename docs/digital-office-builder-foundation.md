@@ -34,10 +34,29 @@ A new protected route: **`/app-shell/digital-office`**. It is the new central
 product experience and is linked from the app-shell navigation as **„Digitales
 Büro"**. Existing routes are untouched and keep working.
 
-The page shows: a hero („Ihr digitales Büro"), a package/status summary,
-quick-action cards, self-service setup progress, the digital workers working
-live, mailbox/template/pricing foundation cards, a today's-activity feed and the
-**Ask Office** panel (gated to Pro+).
+### Standalone shell & simplified first-run journey (vNext)
+
+The route now renders as a **standalone product surface**, not a Klarsa module:
+
+- A slim **standalone top bar** ([`DigitalOfficeShell`](../components/digital-office/DigitalOfficeShell.tsx))
+  replaces the Klarsa money-chain navigation on this page — product mark
+  „Digital Office Builder" + a discreet „Klarsa-Plattform" back-link + logout.
+  (The Klarsa shell stays the platform; only this page's chrome is product-owned.)
+- A strong **hero**: „Digital Office Builder" / „Bauen Sie Ihr digitales Büro mit
+  KI-Mitarbeitern." with the badge „Eigenständiges Produkt · läuft auf der
+  Klarsa-Plattform".
+- A **4-step main journey** (`buildOfficeJourney`):
+  **Bürotyp wählen → KI-Mitarbeiter auswählen → Mailbox & Regeln verbinden →
+  Büro aktivieren** — current step, next step and one primary CTA, no technical
+  detail. (The detailed 7-step status still exists in `buildSetupStatus` for
+  later use.)
+- **Internal tabs** (Übersicht / Mitarbeiter / Mailbox / Regeln) instead of a
+  long card stack; a **compact worker list** in Übersicht (the full board lives
+  under „Mitarbeiter").
+- **Ask Office docked** as the right-side assistant on desktop (always visible),
+  and a sticky „Frag Ihr digitales Büro" shortcut on mobile.
+- **Schnellaktionen reduced to 3**: Büro einrichten · Mitarbeiter auswählen ·
+  Ask Office öffnen.
 
 ## Package model (central config)
 

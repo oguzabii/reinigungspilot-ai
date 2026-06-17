@@ -34,6 +34,19 @@ conversation, not a fixed FAQ.
 - A typing indicator, message bubbles and quick-suggestion chips make it feel
   conversational; chips remain available but responses are not canned templates.
 
+### Placement (vNext standalone shell)
+
+Ask Office is the **central assistant** of the standalone surface, not a hidden
+widget ([`AskOfficeDock`](../components/digital-office/AskOffice.tsx)):
+
+- **Desktop:** an **always-visible, sticky docked panel** in the right column
+  („Frag Ihr digitales Büro").
+- **Mobile:** a prominent in-flow section plus a sticky bottom shortcut that
+  jumps to it.
+- The header shows the **mode honestly** („Lokaler Modus" / „KI-Modus") and the
+  reminder **„Änderungen brauchen Freigabe"**.
+- Locked state stays for Free/Starter (friendly upgrade); Pro+ enabled.
+
 ### Architecture
 
 | File | Role |

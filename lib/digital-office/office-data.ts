@@ -28,12 +28,14 @@ import {
 import { featureLimit, isAskOfficeEnabled } from "./feature-gates";
 import {
   buildSetupStatus,
+  buildOfficeJourney,
   buildWorkerRuntimes,
   buildActivityFeed,
   deriveMailboxStatus,
   splitWorkers,
   type OfficeSignals,
   type SetupStatus,
+  type JourneyState,
   type WorkerRuntime,
   type ActivityItem,
   type MailboxStatus,
@@ -53,6 +55,7 @@ export interface OfficeView {
   pkg: OfficePackageDef;
   signals: OfficeSignals;
   setup: SetupStatus;
+  journey: JourneyState;
   runtimes: WorkerRuntime[];
   activity: ActivityItem[];
   mailboxStatus: MailboxStatus;
@@ -113,6 +116,7 @@ export async function loadOfficeView(companyId: string): Promise<OfficeView> {
   };
 
   const setup = buildSetupStatus(signals);
+  const journey = buildOfficeJourney(signals);
   const runtimes = buildWorkerRuntimes(signals);
   const activity = buildActivityFeed(signals);
   const mailboxStatus = deriveMailboxStatus(signals);
@@ -145,6 +149,7 @@ export async function loadOfficeView(companyId: string): Promise<OfficeView> {
     pkg,
     signals,
     setup,
+    journey,
     runtimes,
     activity,
     mailboxStatus,

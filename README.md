@@ -16,6 +16,28 @@ Aufgaben über eine Live-Büro-Ansicht und das **Ask-Office**-Panel.
 > Branch `digital-office-builder-foundation`. Klarsa `master` bleibt unverändert –
 > **kein Merge in master**. Klarsa dient vorerst nur als Plattform-Shell.
 
+**vNext · Schritt 3** — **Standalone-Shell & einfacher Erststart.** Die Seite
+**`/app-shell/digital-office`** fühlt sich nicht mehr wie ein Klarsa-Modul an,
+sondern wie ein **eigenständiges Produkt**. (1) **Standalone-Top-Bar**
+(`DigitalOfficeShell`) statt der Klarsa-Geld-Kette: Produktmarke „Digital Office
+Builder" + dezenter „Klarsa-Plattform"-Backlink + Abmelden. (2) **Starker Hero**
+mit Produkt-Badge „Eigenständiges Produkt · läuft auf der Klarsa-Plattform". (3)
+**4-Schritte-Hauptjourney** (`buildOfficeJourney`): **Bürotyp wählen → KI-
+Mitarbeiter auswählen → Mailbox & Regeln verbinden → Büro aktivieren** – aktueller
+Schritt, nächster Schritt, eine primäre Aktion, wenig Technik. (4) **Interne Tabs**
+(Übersicht / Mitarbeiter / Mailbox / Regeln) statt Kartenflut; **kompakte
+Mitarbeiterliste** in der Übersicht (aktiv/bereit/wartet/premium), volles Board im
+Tab „Mitarbeiter". (5) **Ask Office als zentraler Assistent**: auf Desktop **fix
+angedockt** (rechte Spalte, sichtbar), auf Mobile prominente Sektion + Sticky-
+Shortcut „Frag Ihr digitales Büro"; Modus-Badge (Lokaler/KI-Modus) + „Änderungen
+brauchen Freigabe". (6) **Schnellaktionen auf 3 reduziert** (Büro einrichten ·
+Mitarbeiter auswählen · Ask Office öffnen). **Kein Service-Role, keine Secrets,
+keine echten Kundendaten, kein automatischer Versand, keine Clean24-Lead-
+Autopilot-Änderung, keine neue Migration. master unverändert, kein Merge. `004`
+unangetastet und ungestaged.** Aktualisiert:
+`docs/digital-office-builder-foundation.md`, `docs/digital-office-ask-office-chat.md`.
+lint/build grün.
+
 **vNext · Schritt 2** — **Separater Produktpfad & Ask-Office-Chat.** Digital
 Office Builder wird als **eigenständiges Produkt** positioniert (Headline
 „Digital Office Builder", „läuft auf der Klarsa-Plattform"); Route bleibt

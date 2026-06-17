@@ -25,10 +25,10 @@ export function OfficeHero({
 }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-navy-900 surface-hero p-6 text-white shadow-sm sm:p-8">
-      <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-100 ring-1 ring-inset ring-white/15">
         <Sparkles className="h-3.5 w-3.5" />
         Eigenständiges Produkt · läuft auf der Klarsa-Plattform
-      </p>
+      </span>
       <h1 className="mt-3 max-w-2xl text-2xl font-semibold tracking-tight sm:text-3xl">
         Digital Office Builder
       </h1>

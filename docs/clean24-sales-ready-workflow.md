@@ -1,8 +1,57 @@
-# Clean24 — Sales-Ready Workflow & Dokumentvorlagen (v0.5.13)
+# Clean24 — Sales-Ready Workflow & Dokumentvorlagen (v0.5.13 → v0.5.14)
 
 Diese Version macht Klarsa für den Clean24-Pilot **abschluss-fähiger**: vom
 gewonnenen Auftrag entstehen jetzt **kundenfertige und interne Dokumente** als
 PDF — ohne neue Migration, ohne externe Bibliothek, ohne Versand.
+
+## v0.5.14 — Einfacher Verkaufs-Workflow (abgeschlossen)
+
+v0.5.14 vervollständigt die in v0.5.13 dokumentierten Punkte und lässt Klarsa
+wie **ein einfaches AI-Verkaufsbüro** wirken – der Inhaber sieht die nächste
+beste Aktion, nicht viele technische Module. **Reine UI + ein additiver
+Schreibpfad (manuelle Offerte), keine neue Migration, kein Versand.**
+
+- **Finale Navigation (6 Bereiche):** **Cockpit · Lead Radar · Pipeline ·
+  Aufträge · CEO / Finanzen · Einstellungen.** Technische Modulnamen (Revenue
+  Autopilot, Lead Hunter, Quellen, Offerten, bexio) sind nicht mehr in der
+  Hauptnavigation; sie bleiben über In-Page-Links erreichbar (kein 404).
+- **Action-first Cockpit:** eine **„Nächste beste Aktion“**-Karte (geld-nächst
+  zuerst), ein **kompakter Status-Streifen** (Lead gefunden · Kontakt gefunden ·
+  Offerte bereit · Follow-up geplant · Auftrag gewonnen · bexio bereit) und
+  **ein** einfacher Verkaufs-Ablauf – keine Wand aus KPI-Karten.
+- **Pipeline (`/app-shell/pipeline`):** eine Fläche
+  **Lead → Kontakt → Offerte → Follow-up → Auftrag**. Bewertung ist **in der
+  Karte eingebettet** (kein eigener „Bewerten“-Tab). Aktionen je Karte: Kontakt
+  automatisch finden, E-Mail senden, in Pipeline übernehmen, Offerte erstellen,
+  Follow-up planen, Auftrag erstellen, Archivieren – alle über **bestehende**
+  Aktionen/Helfer.
+- **Manuelle Offerte (`/app-shell/offers/new`):** zwei Modi – **Aus Lead
+  übernehmen** und **Manuell erfassen** (Kunde, Adresse, E-Mail, Telefon,
+  Leistung/Objekt, Grösse, Reinigungs-/Übergabedatum, Position, Preis, Notizen).
+  Der manuell erfasste Kunde wird als Lead gespeichert und bleibt im System –
+  damit PDF, Auftrag und Übergabe ihn auflösen. **Wiederverwendet das bestehende
+  Offer-/Lead-Schema – keine Migration.**
+- **Dokumente im Workflow sichtbar:** Offerte-PDF auf Pipeline-Lead-Karten;
+  **Auftragsbestätigung** und **Partner-Einsatzbestätigung** auf Pipeline-Job-
+  Karten (zusätzlich zur Aufträge-Seite). Die v0.5.13-PDF-Routen sind
+  unverändert – nur verlinkt.
+- **CEO / Finanzen mit Perioden:** einfache Umschalter **Heute · Diese Woche ·
+  Dieser Monat** (URL-Param `?period=`) mit fünf Kennzahlen: gewonnener Umsatz,
+  offene Offerten, abgeschlossene Aufträge, bexio bereit, offene Follow-ups.
+  Kein Chart-Framework.
+- **Einstellungen/Bereitschaft (`/app-shell/settings`):** Status (verbunden /
+  nicht verbunden) für E-Mail-Versand (SMTP/Resend), Antwort-Eingang (IMAP),
+  Google Places, Baugesuche Zürich, Dokumentvorlagen; Paket-Stufe; Link zu
+  Cleanup/Reset. **Keine Schlüssel/Secrets sichtbar.**
+- **Einfache Business-Sprache** statt Modul-Jargon; **Archivieren** pro Karte
+  bleibt über `ArchiveButton`/`archiveEntity`.
+
+Neue Routen v0.5.14: `/app-shell/pipeline`, `/app-shell/offers/new`,
+`/app-shell/settings`. Neue Helfer: `components/app-shell/sales-flow.ts`
+(`salesStageStats` + `nextBestAction`), `components/ceo/period.ts`. Neue UI:
+`NextBestAction`, `StatusStrip`, `ManualOfferForm`. Neue Aktion:
+`createManualOffer` (Session-Client/RLS). **001–007 unverändert; `004`
+unangetastet.** lint/build grün.
 
 ## Verkaufs-Ablauf (Ziel)
 
@@ -97,24 +146,23 @@ ab v0.5.11; in v0.5.13 zusätzlich der Restbestand auf `/workspace` geglättet).
 
 Alle Platzhalter bleiben leer im Repo. Kein Service-Role, keine Secrets.
 
-## Was diese Version NICHT enthält (nächster Schritt)
+## In v0.5.14 erledigt (vormals „nächster Schritt")
 
-Bewusst fokussiert und schiffbar gehalten — die folgenden Punkte sind die
-nächste Iteration (sie brauchen neue Seiten/Schreibpfade und werden separat
-gebaut, damit lint/build grün bleibt):
+Die in v0.5.13 dokumentierten offenen Punkte sind jetzt umgesetzt:
 
-- **Pipeline-Seite** (`/app-shell/pipeline`) als eine Hauptfläche
-  Lead → Kontakt → Offerte → Follow-up → Auftrag, mit Bewertung in der Karte
-- **Manuelle Offerte/Kunde erfassen** (Formular `Neue Offerte` → als Lead/Kunde
-  speichern)
-- **Cockpit „Nächste beste Aktion"** als einzelne Aktionskarte
-- **CEO/Finanzen-Perioden** (heute/Woche/Monat/Vormonate)
-- **Einstellungen/Bereitschaft-Seite** (`/app-shell/settings`)
+- ✅ **Pipeline-Seite** (`/app-shell/pipeline`) als eine Hauptfläche
+  Lead → Kontakt → Offerte → Follow-up → Auftrag, Bewertung in der Karte
+- ✅ **Manuelle Offerte/Kunde erfassen** (`/app-shell/offers/new` → Lead/Kunde
+  wird gespeichert)
+- ✅ **Cockpit „Nächste beste Aktion"** als einzelne Aktionskarte
+- ✅ **CEO/Finanzen-Perioden** (Heute/Woche/Monat)
+- ✅ **Einstellungen/Bereitschaft-Seite** (`/app-shell/settings`)
 
 ## Nächster Schritt: Produktions-QA / Sales-Launch
 
-Dokumente in Produktion am echten Clean24-Tenant prüfen (Auftrag öffnen →
-beide PDFs herunterladen), dann die Pipeline-/Manuelle-Offerte-Iteration und die
+Den fertigen Workflow in Produktion am echten Clean24-Tenant durchspielen
+(Lead → Pipeline → Offerte/PDF → Auftrag → Auftragsbestätigung/Partner-Einsatz →
+bexio → CEO sieht Umsatz), Perioden und Einstellungen prüfen, dann die
 Sales-Launch-Checkliste.
 
 **Guardrails:** keine neue Migration, kein Service-Role, keine Secrets/echten

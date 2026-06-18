@@ -19,7 +19,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
-import type { OfferStatus } from "@/lib/database-types";
+import type { OfferStatus, SourceType, LeadStatus } from "@/lib/database-types";
 import {
   OFFER_STATUS_FLOW,
   DEFAULT_VAT_RATE_PCT,
@@ -201,6 +201,169 @@ export async function createOffer(
 
   revalidatePath("/app-shell/offers");
   return { status: "success", message: `Offerte „${reference}" erstellt.` };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Create a MANUAL offer for a brand-new customer (v0.5.14)                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Manual end-to-end offer: the owner types in a new customer + the offer in one
+ * step. To keep the customer INSIDE the system (so the offer PDF, the job and
+ * the Auftragsbestätigung all resolve the customer), we first create a `leads`
+ * row from the customer fields, then the offer linked to it, then the first
+ * line item. All writes go through the session client (RLS: sales domain).
+ * NO migration — extra context (address, object size, cleaning/handover dates,
+ * notes) is stored in the lead's existing `region`/`notes` text columns.
+ */
+export async function createManualOffer(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const context = await getCurrentCompanyContext();
+  if (!context || !context.activeCompanyId) {
+    return {
+      status: "error",
+      message: "Kein aktiver Mandant – bitte erneut anmelden.",
+    };
+  }
+  const companyId = context.activeCompanyId;
+
+  const customerName = field(formData, "customer_name", 200);
+  if (!customerName) {
+    return { status: "error", message: "Kundenname ist erforderlich." };
+  }
+
+  // The line item: a description (defaults to the service) + a price.
+  const service = field(formData, "service", 200);
+  const itemLabel = field(formData, "item_label", 200) ?? service;
+  if (!itemLabel) {
+    return {
+      status: "error",
+      message: "Leistung oder Positions-Bezeichnung ist erforderlich.",
+    };
+  }
+  const price = parseAmount(field(formData, "item_amount", 20));
+  if (price === null) {
+    return { status: "error", message: "Bitte einen gültigen Preis angeben." };
+  }
+
+  const vatRate = parseVat(field(formData, "vat_rate_pct", 10));
+  const validRaw = field(formData, "valid_until", 10);
+  if (validRaw && !/^\d{4}-\d{2}-\d{2}$/.test(validRaw)) {
+    return { status: "error", message: "Ungültiges Gültigkeitsdatum." };
+  }
+  const validUntil = validRaw ?? null;
+
+  // Compose the extra context into the lead's free-text notes (no migration).
+  const address = field(formData, "address", 300);
+  const objectSize = field(formData, "object_size", 120);
+  const cleaningDate = field(formData, "cleaning_date", 40);
+  const handover = field(formData, "handover", 120);
+  const extraNotes = field(formData, "notes", 1500);
+  const noteLines: string[] = [];
+  if (objectSize) noteLines.push(`Objekt/Grösse: ${objectSize}`);
+  if (cleaningDate) noteLines.push(`Reinigungsdatum: ${cleaningDate}`);
+  if (handover) noteLines.push(`Übergabe: ${handover}`);
+  if (extraNotes) noteLines.push(extraNotes);
+  const leadNotes = noteLines.length > 0 ? noteLines.join("\n") : null;
+
+  const supabase = await createClient();
+
+  // 1) Create the customer lead so it stays inside the system.
+  const { data: lead, error: leadError } = await supabase
+    .from("leads")
+    .insert({
+      company_id: companyId,
+      company_name: customerName,
+      contact_name: field(formData, "contact_name", 200),
+      email: field(formData, "email", 320),
+      phone: field(formData, "phone", 50),
+      region: address, // address kept in the existing region text column
+      service_interest: service,
+      source_type: "manual" as SourceType,
+      status: "offer_ready" as LeadStatus,
+      notes: leadNotes,
+      created_by: context.user.id,
+      updated_by: context.user.id,
+    })
+    .select("id")
+    .single();
+
+  if (leadError || !lead) {
+    console.error("[offers] createManualOffer lead insert failed:", leadError?.message);
+    return {
+      status: "error",
+      message: "Kunde konnte nicht gespeichert werden. Prüfen Sie Ihre Berechtigung.",
+    };
+  }
+
+  // 2) Create the offer linked to that lead.
+  const net = price;
+  const gross = round2(net * (1 + vatRate / 100));
+  const reference = field(formData, "reference", 60) ?? autoReference();
+  const { data: offer, error: offerError } = await supabase
+    .from("offers")
+    .insert({
+      company_id: companyId,
+      lead_id: lead.id,
+      reference,
+      status: "draft" as OfferStatus,
+      total_net_chf: net,
+      vat_rate_pct: vatRate,
+      total_gross_chf: gross,
+      valid_until: validUntil,
+      created_by: context.user.id,
+      updated_by: context.user.id,
+    })
+    .select("id")
+    .single();
+
+  if (offerError || !offer) {
+    if (offerError?.code === "23505") {
+      return {
+        status: "error",
+        message: "Diese Referenz existiert bereits. Bitte eine andere wählen.",
+      };
+    }
+    console.error("[offers] createManualOffer offer insert failed:", offerError?.message);
+    return {
+      status: "error",
+      message:
+        "Kunde gespeichert, aber die Offerte konnte nicht erstellt werden. Bitte erneut versuchen.",
+    };
+  }
+
+  // 3) Seed the first line item (scope detail = object size / cleaning date).
+  const detailParts: string[] = [];
+  if (objectSize) detailParts.push(objectSize);
+  if (cleaningDate) detailParts.push(`Reinigung ${cleaningDate}`);
+  const { error: itemError } = await supabase.from("offer_items").insert({
+    company_id: companyId,
+    offer_id: offer.id,
+    label: itemLabel,
+    detail: detailParts.length > 0 ? detailParts.join(" · ") : null,
+    amount_chf: price,
+    sort_order: 0,
+  });
+  if (itemError) {
+    console.error("[offers] createManualOffer item insert failed:", itemError.message);
+    revalidatePath("/app-shell/offers");
+    revalidatePath("/app-shell/pipeline");
+    return {
+      status: "error",
+      message:
+        "Offerte erstellt, aber die Position konnte nicht gespeichert werden. Sie können sie auf der Offerte ergänzen.",
+    };
+  }
+
+  revalidatePath("/app-shell/offers");
+  revalidatePath("/app-shell/leads");
+  revalidatePath("/app-shell/pipeline");
+  return {
+    status: "success",
+    message: `Offerte „${reference}" für „${customerName}" erstellt.`,
+  };
 }
 
 /* -------------------------------------------------------------------------- */

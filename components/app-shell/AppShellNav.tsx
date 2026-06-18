@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
-  Target,
-  Users,
-  FileText,
+  Radar,
+  Workflow,
   Briefcase,
   Crown,
+  Settings,
   LogOut,
   Building2,
   type LucideIcon,
@@ -18,14 +18,17 @@ import { Logo } from "@/components/Logo";
 /**
  * App-shell navigation — the persistent header for the protected Klarsa
  * workspace. Unlike `InternalHeader` (which links to the marketing/sales pages),
- * this groups the product into six plain-language areas so the owner instantly
- * knows where money is and what to do next:
+ * this groups the product into six plain-language areas that mirror the simple
+ * sales workflow, so the owner instantly knows where money is and what to do
+ * next (v0.5.14 — final, action-first naming):
  *
- *   Cockpit → Chancen → Kunden → Offerten → Aufträge → Chefansicht
+ *   Cockpit → Lead Radar → Pipeline → Aufträge → CEO / Finanzen → Einstellungen
  *
- * The bundled stations live one level down and are surfaced on each group's
- * pages via `GroupStations` (Chancen = Autopilot/Lead Hunter/Radar/Quellen,
- * Aufträge = Aufträge/bexio) — so nothing is removed, only de-cluttered.
+ * The technical module names (Revenue Autopilot, Lead Hunter, Quellen, Offerten,
+ * bexio) are no longer top-level: they live under the area they belong to and
+ * stay reachable via in-page links and `GroupStations`. Each `isActive` test
+ * covers the sub-routes its area bundles, so deep links still highlight the
+ * right tab and nothing 404s.
  *
  * Client component: it reads `usePathname()` to highlight the active group
  * (the documented Next.js active-link pattern). No data fetching, no state —
@@ -48,24 +51,23 @@ const NAV_ITEMS: NavItem[] = [
     isActive: (p) => p === "/app-shell",
   },
   {
-    label: "Chancen",
-    href: "/app-shell/revenue-autopilot",
-    icon: Target,
+    // Where leads come from and why Klarsa found them — the transparency screen.
+    label: "Lead Radar",
+    href: "/app-shell/lead-hunter/radar",
+    icon: Radar,
     isActive: (p) =>
-      p.startsWith("/app-shell/revenue-autopilot") ||
-      p.startsWith("/app-shell/lead-hunter"),
+      p.startsWith("/app-shell/lead-hunter") ||
+      p.startsWith("/app-shell/revenue-autopilot"),
   },
   {
-    label: "Kunden",
-    href: "/app-shell/leads",
-    icon: Users,
-    isActive: (p) => p === "/app-shell/leads" || p.startsWith("/app-shell/leads/"),
-  },
-  {
-    label: "Offerten",
-    href: "/app-shell/offers",
-    icon: FileText,
-    isActive: (p) => p === "/app-shell/offers" || p.startsWith("/app-shell/offers/"),
+    // The one work surface: Lead → Kontakt → Offerte → Follow-up → Auftrag.
+    label: "Pipeline",
+    href: "/app-shell/pipeline",
+    icon: Workflow,
+    isActive: (p) =>
+      p.startsWith("/app-shell/pipeline") ||
+      p.startsWith("/app-shell/leads") ||
+      p.startsWith("/app-shell/offers"),
   },
   {
     label: "Aufträge",
@@ -79,6 +81,12 @@ const NAV_ITEMS: NavItem[] = [
     href: "/app-shell/ceo",
     icon: Crown,
     isActive: (p) => p === "/app-shell/ceo" || p.startsWith("/app-shell/ceo/"),
+  },
+  {
+    label: "Einstellungen",
+    href: "/app-shell/settings",
+    icon: Settings,
+    isActive: (p) => p.startsWith("/app-shell/settings"),
   },
 ];
 

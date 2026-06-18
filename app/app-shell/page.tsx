@@ -9,7 +9,6 @@ import {
   Crown,
   ChevronRight,
   ShieldCheck,
-  Banknote,
   Target,
   Send,
   Briefcase,
@@ -21,7 +20,13 @@ import {
 } from "lucide-react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
-import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
+import { NextBestAction } from "@/components/app-shell/NextBestAction";
+import { StatusStrip } from "@/components/app-shell/StatusStrip";
+import {
+  salesStageStats,
+  nextBestAction,
+  type StageStat,
+} from "@/components/app-shell/sales-flow";
 import { CompactFlow, type FlowStep } from "@/components/app-shell/CompactFlow";
 import { PremiumAutopilotPanel } from "@/components/app-shell/PremiumAutopilotPanel";
 import {
@@ -138,6 +143,16 @@ export default async function AppShellPage() {
     abschluss: kpis.attnOffersWaiting + kpis.attnJobsNotHandedOff,
   };
 
+  // The compact, plain-language status strip (shared with the Pipeline page).
+  const stats = salesStageStats({
+    prospects: opportunities,
+    leads,
+    offers,
+    followups,
+    jobs,
+    bexioReady: kpis.attnJobsNotHandedOff,
+  });
+
   // Package-aware Autopilot positioning + Premium "worked for you" digest.
   const tier = summary?.tier ?? "starter";
   const tierInfo = autopilotTier(tier, summary?.billingStatus);
@@ -170,6 +185,7 @@ export default async function AppShellPage() {
       isPremium={isPremium}
       digest={digest}
       flow={flow}
+      stats={stats}
     />
   );
 }
@@ -264,6 +280,7 @@ function TenantCockpit({
   isPremium,
   digest,
   flow,
+  stats,
 }: {
   displayName: string;
   email: string | null;
@@ -282,14 +299,24 @@ function TenantCockpit({
     nachfassen: number;
     abschluss: number;
   };
+  stats: StageStat[];
 }) {
+  // The single "what should I do now?" action, money-closest first.
+  const nextAction = nextBestAction({
+    kpis,
+    contactMissing: flow.kontakt,
+    emailReady: flow.email,
+    hasAnyData: hasData,
+  });
+
+  // The simple sales flow — five steps that all funnel into the Pipeline.
   const steps: FlowStep[] = [
     {
       key: "find",
-      label: "Firmen finden",
+      label: "Lead finden",
       count: flow.firmen,
-      status: flow.firmen > 0 ? "im Radar" : "Discovery starten",
-      href: "/app-shell/revenue-autopilot/discovery",
+      status: flow.firmen > 0 ? "im Radar" : "Radar öffnen",
+      href: "/app-shell/lead-hunter/radar",
       cta: "Finden",
       icon: Target,
     },
@@ -298,7 +325,7 @@ function TenantCockpit({
       label: "Kontakt finden",
       count: flow.kontakt,
       status: flow.kontakt > 0 ? "ohne Kontakt" : "alle mit Kontakt",
-      href: "/app-shell/revenue-autopilot/outreach",
+      href: "/app-shell/pipeline#chancen",
       cta: "Finden",
       icon: Search,
     },
@@ -307,7 +334,7 @@ function TenantCockpit({
       label: "E-Mail senden",
       count: flow.email,
       status: flow.email > 0 ? "bereit" : "—",
-      href: "/app-shell/revenue-autopilot/outreach",
+      href: "/app-shell/pipeline#chancen",
       cta: "Senden",
       icon: Send,
     },
@@ -316,7 +343,7 @@ function TenantCockpit({
       label: "Nachfassen",
       count: flow.nachfassen,
       status: flow.nachfassen > 0 ? "offen" : "—",
-      href: "/app-shell/leads",
+      href: "/app-shell/pipeline#leads",
       cta: "Nachfassen",
       icon: BellRing,
     },
@@ -325,7 +352,7 @@ function TenantCockpit({
       label: "Offerte/Auftrag",
       count: flow.abschluss,
       status: flow.abschluss > 0 ? "offen" : "—",
-      href: "/app-shell/offers",
+      href: "/app-shell/pipeline#leads",
       cta: "Abschliessen",
       icon: Briefcase,
     },
@@ -364,37 +391,22 @@ function TenantCockpit({
           </div>
         </div>
 
-        {/* Premium → "Klarsa hat für Sie gearbeitet"; others → money hero */}
-        {isPremium ? (
-          <div className="mt-7">
-            <PremiumAutopilotPanel digest={digest} />
-          </div>
-        ) : (
-          <section className="mt-7 overflow-hidden rounded-2xl border border-navy-900 surface-hero p-6 text-white shadow-sm sm:p-7">
-            <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
-              <Banknote className="h-3.5 w-3.5" />
-              Heute Geld holen
-            </p>
-            <h2 className="mt-2 max-w-2xl text-xl font-semibold tracking-tight sm:text-2xl">
-              Klarsa zeigt die wichtigsten Umsatz-Aktionen für heute.
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-navy-100">
-              Wo liegt heute Geld – und was ist der nächste Schritt? Unten sehen
-              Sie die wichtigsten Aktionen, danach die drei Wege zu mehr Umsatz.
-            </p>
-          </section>
-        )}
-
-        {/* Top next actions — the most important thing, first */}
-        <div className="mt-6">
-          <AutopilotCard
-            kpis={kpis}
-            hasData={hasData}
-            ctaHref="/app-shell/revenue-autopilot"
-          />
+        {/* The single most important thing, first — "Nächste beste Aktion" */}
+        <div className="mt-7">
+          <NextBestAction action={nextAction} />
         </div>
 
-        {/* The compact money flow — one simple process, five steps */}
+        {/* Compact, plain-language status strip (not a wall of KPI cards) */}
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Ihr Verkaufs-Status
+          </h2>
+          <div className="mt-3">
+            <StatusStrip stats={stats} />
+          </div>
+        </div>
+
+        {/* One simple sales flow — five steps that funnel into the Pipeline */}
         <div className="mt-6">
           <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
             Ihr Verkaufs-Ablauf
@@ -403,6 +415,13 @@ function TenantCockpit({
             <CompactFlow steps={steps} />
           </div>
         </div>
+
+        {/* Premium → "Klarsa hat für Sie gearbeitet" (recap, below the action) */}
+        {isPremium && (
+          <div className="mt-6">
+            <PremiumAutopilotPanel digest={digest} />
+          </div>
+        )}
 
         {/* Premium teaser for non-Premium packages (never makes them feel broken) */}
         {!isPremium && (

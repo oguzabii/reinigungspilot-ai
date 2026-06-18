@@ -7,6 +7,45 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.14** — **Einfacher Verkaufs-Workflow (fertig).** Klarsa fühlt sich wie
+**ein** AI-Verkaufsbüro an: der Inhaber sieht die **nächste beste Aktion**, nicht
+viele technische Module. Die in v0.5.13 aufgeschobenen Usability-Punkte sind nun
+umgesetzt. **Reine UI + ein additiver Schreibpfad (manuelle Offerte), keine neue
+Migration, kein Versand.** (1) **Finale Navigation (6 Bereiche):** **Cockpit ·
+Lead Radar · Pipeline · Aufträge · CEO / Finanzen · Einstellungen** – technische
+Modulnamen (Revenue Autopilot, Lead Hunter, Quellen, Offerten, bexio) sind nicht
+mehr in der Hauptnavigation, bleiben aber per In-Page-Link erreichbar (**kein
+404**). (2) **Action-first Cockpit:** eine **„Nächste beste Aktion"**-Karte
+(geld-nächst zuerst), ein **kompakter Status-Streifen** (Lead gefunden · Kontakt
+gefunden · Offerte bereit · Follow-up geplant · Auftrag gewonnen · bexio bereit)
+und **ein** einfacher Verkaufs-Ablauf – **keine Wand aus KPI-Karten**. (3) **Neue
+Pipeline** (`/app-shell/pipeline`): eine Fläche **Lead → Kontakt → Offerte →
+Follow-up → Auftrag**, **Bewertung in der Karte** (kein eigener „Bewerten"-Tab),
+Aktionen je Karte (Kontakt finden · E-Mail senden · in Pipeline übernehmen ·
+Offerte erstellen · Follow-up planen · Auftrag erstellen · Archivieren) über
+**bestehende** Aktionen. (4) **Manuelle Offerte** (`/app-shell/offers/new`): zwei
+Modi **Aus Lead übernehmen** / **Manuell erfassen** (Kunde, Adresse, Kontakt,
+Leistung/Objekt, Grösse, Reinigungs-/Übergabedatum, Position, Preis, Notizen);
+der manuelle Kunde wird als **Lead gespeichert** und bleibt im System – das
+bestehende Offer-/Lead-Schema wird wiederverwendet (**keine Migration**). (5)
+**Dokumente im Workflow:** Offerte-PDF auf Pipeline-Lead-Karten,
+**Auftragsbestätigung** + **Partner-Einsatzbestätigung** auf Job-Karten – die
+v0.5.13-PDF-Routen sind unverändert, nur verlinkt. (6) **CEO / Finanzen mit
+Perioden:** **Heute · Diese Woche · Dieser Monat** (`?period=`) mit fünf
+Kennzahlen (gewonnener Umsatz, offene Offerten, abgeschlossene Aufträge, bexio
+bereit, offene Follow-ups) – kein Chart-Framework. (7) **Einstellungen/
+Bereitschaft** (`/app-shell/settings`): Status (verbunden/nicht verbunden) für
+SMTP/Resend, IMAP, Google Places, Baugesuche, Dokumentvorlagen + Paket + Cleanup-
+Link – **keine Schlüssel/Secrets sichtbar**. Neue Routen:
+`/app-shell/pipeline`, `/app-shell/offers/new`, `/app-shell/settings`; neue
+Helfer `components/app-shell/sales-flow.ts` + `components/ceo/period.ts`; neue UI
+`NextBestAction`/`StatusStrip`/`ManualOfferForm`; neue Aktion `createManualOffer`
+(Session-Client/RLS). **Kein Service-Role, keine Secrets/echten Kundendaten, kein
+Scraping/Bulk/Hintergrund-Versand/Buchung, keine echte bexio-API. 001–007
+unverändert; `004` unangetastet.** Aktualisiert:
+`docs/clean24-sales-ready-workflow.md`. lint/build grün. **Nächster Schritt:
+Produktions-QA des kompletten Workflows + Sales-Launch.**
+
 **v0.5.13** — **Sales-Ready Workflow & Clean24-Dokumentvorlagen.** Klarsa wird
 abschluss-fähiger: aus einem gewonnenen Auftrag entstehen jetzt **kundenfertige
 und interne PDF-Dokumente**. **Reine, additive Helfer + Reads + Routen, keine

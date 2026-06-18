@@ -4,13 +4,12 @@ import { redirect } from "next/navigation";
 import {
   Crown,
   Banknote,
-  CheckCircle2,
   Briefcase,
   Target,
   Users,
   FileText,
   PlugZap,
-  Activity,
+  BellRing,
   ChevronsRight,
   ChevronRight,
   Trash2,
@@ -20,7 +19,12 @@ import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import { AutopilotCard } from "@/components/app-shell/AutopilotCard";
 import { formatChf } from "@/components/offers/offer-status";
 import { getPackageName } from "@/lib/packages";
-import { computeCeoKpis, type CeoKpis } from "@/components/ceo/kpi";
+import { computeCeoKpis, type CeoKpis, type CeoKpiInput } from "@/components/ceo/kpi";
+import {
+  CEO_PERIODS,
+  parseCeoPeriod,
+  computeCeoPeriodKpis,
+} from "@/components/ceo/period";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import {
@@ -48,7 +52,11 @@ function formatDateCh(iso: string): string {
   return `${d}.${m}.${y}`;
 }
 
-export default async function AppShellCeoPage() {
+export default async function AppShellCeoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
   if (!isSupabaseConfigured()) redirect("/app-shell");
 
   const context = await getCurrentCompanyContext();
@@ -59,6 +67,8 @@ export default async function AppShellCeoPage() {
   const role =
     context.memberships.find((m) => m.companyId === companyId)?.role ?? null;
   const canManage = role === "owner" || role === "admin";
+
+  const period = parseCeoPeriod((await searchParams).period);
 
   const [summary, opportunities, leads, offers, jobs, handoffJobs, followups] =
     await Promise.all([
@@ -73,7 +83,7 @@ export default async function AppShellCeoPage() {
 
   const now = new Date();
   const nowIso = now.toISOString();
-  const kpis = computeCeoKpis({
+  const kpiInput: CeoKpiInput = {
     opportunities,
     leads,
     offers,
@@ -81,7 +91,9 @@ export default async function AppShellCeoPage() {
     handoffJobs,
     followupLeadIds: followups.map((f) => f.leadId),
     nowIso,
-  });
+  };
+  const kpis = computeCeoKpis(kpiInput);
+  const periodKpis = computeCeoPeriodKpis(kpiInput, period);
   const hasData =
     kpis.oppsTotal + kpis.leadsTotal + kpis.offersTotal + kpis.jobsTotal > 0;
 
@@ -119,30 +131,63 @@ export default async function AppShellCeoPage() {
           />
         </div>
 
-        {/* Money impact */}
+        {/* Period money view — simple controls + the five headline figures */}
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Geld-Wirkung (CHF)
-          </h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <MoneyCard
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
+              Geld &amp; Status
+            </h2>
+            <nav aria-label="Zeitraum" className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+              {CEO_PERIODS.map((p) => {
+                const active = p.key === period;
+                return (
+                  <Link
+                    key={p.key}
+                    href={`/app-shell/ceo?period=${p.key}`}
+                    aria-current={active ? "page" : undefined}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      active
+                        ? "bg-white text-navy-900 shadow-sm"
+                        : "text-slate-500 hover:text-navy-800"
+                    }`}
+                  >
+                    {p.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <Figure
               icon={Banknote}
-              label="Offene Pipeline"
-              hint="Geld in offenen Offerten"
-              value={kpis.pipelineOpenChf}
-            />
-            <MoneyCard
-              icon={CheckCircle2}
-              label="Gewonnen (angenommen)"
-              hint="Angenommene Offerten"
-              value={kpis.acceptedChf}
+              label={`Gewonnen · ${periodKpis.periodLabel}`}
+              value={`CHF ${formatChf(periodKpis.wonRevenueChf)}`}
+              sub={`${periodKpis.wonCount} angenommen`}
               accent
             />
-            <MoneyCard
+            <Figure
+              icon={FileText}
+              label="Offene Offerten"
+              value={String(periodKpis.openOffers)}
+              sub={`CHF ${formatChf(periodKpis.openOffersChf)} · aktuell`}
+            />
+            <Figure
               icon={Briefcase}
-              label="Erbracht (abgeschlossen)"
-              hint="Abgeschlossene Aufträge"
-              value={kpis.completedJobChf}
+              label={`Abgeschlossen · ${periodKpis.periodLabel}`}
+              value={String(periodKpis.completedJobs)}
+              sub={`CHF ${formatChf(periodKpis.completedJobChf)}`}
+            />
+            <Figure
+              icon={PlugZap}
+              label="bexio bereit"
+              value={String(periodKpis.bexioReady)}
+              sub="zur Verrechnung · aktuell"
+            />
+            <Figure
+              icon={BellRing}
+              label="Follow-ups offen"
+              value={String(periodKpis.followupsDue)}
+              sub="ohne nächsten Schritt"
             />
           </div>
         </section>
@@ -198,20 +243,6 @@ export default async function AppShellCeoPage() {
           <FunnelRow kpis={kpis} />
         </section>
 
-        {/* Activity last 7 days */}
-        <section className="mt-8">
-          <h2 className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
-            <Activity className="h-4 w-4 text-blue-600" />
-            Letzte 7 Tage
-          </h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <ActivityChip label="Opportunities" value={kpis.newOpps7d} />
-            <ActivityChip label="Leads" value={kpis.newLeads7d} />
-            <ActivityChip label="Offerten" value={kpis.newOffers7d} />
-            <ActivityChip label="Aufträge" value={kpis.newJobs7d} />
-          </div>
-        </section>
-
         {/* Workspace cleanup (owner/admin) */}
         {canManage && (
           <Link
@@ -246,22 +277,22 @@ export default async function AppShellCeoPage() {
   );
 }
 
-function MoneyCard({
+function Figure({
   icon: Icon,
   label,
-  hint,
   value,
+  sub,
   accent,
 }: {
   icon: typeof Banknote;
   label: string;
-  hint: string;
-  value: number;
+  value: string;
+  sub: string;
   accent?: boolean;
 }) {
   return (
     <div
-      className={`rounded-2xl border p-5 shadow-sm ${
+      className={`rounded-2xl border p-4 shadow-sm ${
         accent
           ? "border-navy-900 bg-navy-900 text-white"
           : "border-slate-200 bg-white"
@@ -280,10 +311,10 @@ function MoneyCard({
           accent ? "text-white" : "text-navy-900"
         }`}
       >
-        CHF {formatChf(value)}
+        {value}
       </p>
       <p className={`mt-0.5 text-xs ${accent ? "text-blue-200/80" : "text-slate-400"}`}>
-        {hint}
+        {sub}
       </p>
     </div>
   );
@@ -311,15 +342,6 @@ function KpiTile({
       </p>
       <p className="mt-0.5 text-xs text-slate-400">{sub}</p>
     </div>
-  );
-}
-
-function ActivityChip({ label, value }: { label: string; value: number }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-navy-700 ring-1 ring-inset ring-slate-200">
-      <span className="tabular-nums text-blue-700">+{value}</span>
-      {label}
-    </span>
   );
 }
 

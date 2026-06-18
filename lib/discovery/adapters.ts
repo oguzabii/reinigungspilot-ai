@@ -19,6 +19,8 @@
 import type { SignalType } from "@/components/revenue-autopilot/signals";
 import { isDiscoveryConfigured } from "@/lib/discovery/google-places";
 import { isBaugesucheConfigured, runBaugesucheZh } from "@/lib/discovery/baugesuche-zh";
+import { isSimapConfigured, runSimap } from "@/lib/discovery/simap";
+import { isZefixConfigured, runZefix } from "@/lib/discovery/zefix";
 
 export type AdapterPhase = "live" | "planned";
 
@@ -96,20 +98,40 @@ export const SIGNAL_ADAPTERS: SignalAdapter[] = [
   },
   {
     key: "simap",
-    label: "SIMAP (öffentliche Ausschreibungen)",
+    label: "SIMAP Ausschreibungen",
     description:
-      "Geplant: öffentliche Ausschreibungen für Büro-/Unterhaltsreinigung. Quelle prüfen, Eingabefristen einhalten. GO erforderlich.",
-    phase: "planned",
-    isConfigured: () => false,
-    run: notConfigured,
+      "Öffentliche Ausschreibungen passend zu Reinigung/Facility Services. Nur offizielle SIMAP-API (owner-konfiguriert), kein Scraping. Ohne Zugang: nicht konfiguriert.",
+    phase: "live",
+    isConfigured: () => isSimapConfigured(),
+    run: runSimap,
   },
   {
     key: "zefix",
-    label: "ZEFIX (Firmen-Validierung / Neugründungen)",
+    label: "ZEFIX Firmenprüfung",
     description:
-      "Geplant: Firmen-Validierung & Neugründungs-Signale (Gewerbereinigung-Potenzial). Nur offizielle Quelle, kein Bulk-Harvesting. GO erforderlich.",
-    phase: "planned",
-    isConfigured: () => false,
-    run: notConfigured,
+      "Neue Firmen / Handelsregister-Signale & Firmen-Validierung. Nur offizielle ZEFIX-REST-API (owner-konfiguriert), kein Bulk-Harvesting/Scraping. Ohne Zugang: nicht konfiguriert.",
+    phase: "live",
+    isConfigured: () => isZefixConfigured(),
+    run: runZefix,
   },
 ];
+
+/**
+ * Customer-facing source readiness for the Lead Radar + Settings. Pure status
+ * (configured / needs attention / not configured) — never secrets. The
+ * Baugesuche entry reads "needs attention" when configured (so the owner knows
+ * to verify the feed), otherwise the simple configured/planned states apply.
+ */
+export interface SourceReadiness {
+  key: string;
+  label: string;
+  configured: boolean;
+}
+
+export function sourceReadiness(): SourceReadiness[] {
+  return SIGNAL_ADAPTERS.map((a) => ({
+    key: a.key,
+    label: a.label,
+    configured: a.isConfigured(),
+  }));
+}

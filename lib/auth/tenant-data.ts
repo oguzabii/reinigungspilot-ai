@@ -205,6 +205,41 @@ export async function getDiscoveryRuns(
   });
 }
 
+export interface HiddenRunsConfig {
+  /** Runs created strictly before this ISO instant are hidden from the UI. */
+  hiddenBefore: string | null;
+  /** Explicit run ids the owner hid (capped). */
+  hiddenIds: string[];
+}
+
+/**
+ * UI-level "hidden discovery runs" config from `company_settings.settings`
+ * (key `discoveryRunsHidden`). RLS-scoped. The underlying `audit_logs` are NEVER
+ * mutated — this only controls what the owner sees, so the audit trail stays
+ * intact. Missing/invalid values fall back to "nothing hidden". No migration.
+ */
+export async function getHiddenDiscoveryRuns(
+  companyId: string,
+): Promise<HiddenRunsConfig> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("company_settings")
+    .select("settings")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  if (error) {
+    console.error("[tenant-data] getHiddenDiscoveryRuns failed:", error.message);
+    return { hiddenBefore: null, hiddenIds: [] };
+  }
+  const settings = (data?.settings ?? {}) as Record<string, unknown>;
+  const h = (settings.discoveryRunsHidden ?? {}) as Record<string, unknown>;
+  const hiddenBefore = typeof h.hiddenBefore === "string" ? h.hiddenBefore : null;
+  const hiddenIds = Array.isArray(h.hiddenIds)
+    ? (h.hiddenIds.filter((v) => typeof v === "string") as string[])
+    : [];
+  return { hiddenBefore, hiddenIds };
+}
+
 /** Row counts per module for the active company. Each value is RLS-scoped. */
 export async function getTenantCounts(companyId: string): Promise<TenantCounts> {
   const supabase = await createClient();
@@ -501,6 +536,142 @@ export async function getOfferById(
   }
   if (!data) return null;
   return mapOfferRow(data as unknown as RawOfferRow);
+}
+
+export interface OfferDocumentItem {
+  label: string;
+  detail: string | null;
+  amountChf: number;
+}
+
+/**
+ * Rich offer data for the customer-facing Offerte PDF: the offer joined with its
+ * line items and the customer lead (name, contact, address). One embedded
+ * PostgREST query (no N+1). RLS-scoped via the session client (never
+ * service-role). Returns null if the offer is not this tenant's. No migration —
+ * the customer address comes from the lead's existing `region`/`notes` columns.
+ */
+export interface OfferDocumentData {
+  reference: string;
+  status: OfferStatus;
+  createdAt: string;
+  validUntil: string | null;
+  totalNetChf: number;
+  vatRatePct: number;
+  totalGrossChf: number;
+  leadId: string | null;
+  customerName: string | null;
+  customerContact: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  customerAddress: string | null;
+  serviceInterest: string | null;
+  customerNotes: string | null;
+  items: OfferDocumentItem[];
+}
+
+const OFFER_DOC_SELECT =
+  "id, reference, status, total_net_chf, vat_rate_pct, total_gross_chf, valid_until, created_at, lead_id, leads ( company_name, contact_name, email, phone, region, service_interest, notes ), offer_items ( label, detail, amount_chf, sort_order )";
+
+interface RawOfferDocLead {
+  company_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  region: string | null;
+  service_interest: string | null;
+  notes: string | null;
+}
+interface RawOfferDocRow {
+  reference: string;
+  status: OfferStatus;
+  total_net_chf: number | string;
+  vat_rate_pct: number | string;
+  total_gross_chf: number | string;
+  valid_until: string | null;
+  created_at: string;
+  lead_id: string | null;
+  leads: RawOfferDocLead | RawOfferDocLead[] | null;
+  offer_items: Array<{
+    label: string;
+    detail: string | null;
+    amount_chf: number | string;
+    sort_order: number;
+  }> | null;
+}
+
+export async function getOfferDocumentData(
+  companyId: string,
+  offerId: string,
+): Promise<OfferDocumentData | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("offers")
+    .select(OFFER_DOC_SELECT)
+    .eq("company_id", companyId)
+    .eq("id", offerId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[tenant-data] getOfferDocumentData failed:", error.message);
+    return null;
+  }
+  if (!data) return null;
+
+  const row = data as unknown as RawOfferDocRow;
+  const lead = Array.isArray(row.leads) ? row.leads[0] : row.leads;
+  const items: OfferDocumentItem[] = (row.offer_items ?? [])
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((it) => ({
+      label: it.label,
+      detail: it.detail,
+      amountChf: Number(it.amount_chf) || 0,
+    }));
+
+  return {
+    reference: row.reference,
+    status: row.status,
+    createdAt: row.created_at,
+    validUntil: row.valid_until,
+    totalNetChf: Number(row.total_net_chf) || 0,
+    vatRatePct: Number(row.vat_rate_pct) || 0,
+    totalGrossChf: Number(row.total_gross_chf) || 0,
+    leadId: row.lead_id,
+    customerName: lead?.company_name ?? null,
+    customerContact: lead?.contact_name ?? null,
+    customerEmail: lead?.email ?? null,
+    customerPhone: lead?.phone ?? null,
+    customerAddress: lead?.region ?? null,
+    serviceInterest: lead?.service_interest ?? null,
+    customerNotes: lead?.notes ?? null,
+    items,
+  };
+}
+
+/**
+ * The active company's `company_settings.settings.company_profile` jsonb override
+ * (letterhead for documents), or null. RLS-scoped via the session client.
+ */
+export async function getCompanyProfileOverride(
+  companyId: string,
+): Promise<Record<string, unknown> | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("company_settings")
+    .select("settings")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  if (error) {
+    console.error("[tenant-data] getCompanyProfileOverride failed:", error.message);
+    return null;
+  }
+  const settings = (data?.settings ?? {}) as Record<string, unknown>;
+  const profile = settings.company_profile;
+  return profile && typeof profile === "object"
+    ? (profile as Record<string, unknown>)
+    : null;
 }
 
 /* -------------------------------------------------------------------------- */

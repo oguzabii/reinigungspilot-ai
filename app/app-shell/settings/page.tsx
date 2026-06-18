@@ -7,6 +7,7 @@ import {
   Inbox,
   Search,
   Building2,
+  Landmark,
   FileText,
   Trash2,
   ChevronRight,
@@ -24,6 +25,8 @@ import { isSendConfigured, sendProviderLabel } from "@/lib/outreach/send-provide
 import { isInboxConfigured, inboxProviderLabel } from "@/lib/outreach/inbox-provider";
 import { isDiscoveryConfigured } from "@/lib/discovery/google-places";
 import { isBaugesucheConfigured } from "@/lib/discovery/baugesuche-zh";
+import { isSimapConfigured } from "@/lib/discovery/simap";
+import { isZefixConfigured } from "@/lib/discovery/zefix";
 
 // Reads the session/cookies -> always rendered on demand, never prerendered.
 export const dynamic = "force-dynamic";
@@ -54,6 +57,8 @@ export default async function AppShellSettingsPage() {
   const inboxReady = isInboxConfigured();
   const placesReady = isDiscoveryConfigured();
   const baugesucheReady = isBaugesucheConfigured();
+  const simapReady = isSimapConfigured();
+  const zefixReady = isZefixConfigured();
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -129,6 +134,20 @@ export default async function AppShellSettingsPage() {
               ready={baugesucheReady}
               readyText="Konfiguriert – offizieller Baugesuch-Feed liefert Bau-Signale."
               notReadyText="Nicht konfiguriert. Offizieller Open-Data-Feed kann hinterlegt werden."
+            />
+            <ReadinessRow
+              icon={Landmark}
+              title="Lead-Quelle · SIMAP Ausschreibungen"
+              ready={simapReady}
+              readyText="Konfiguriert – öffentliche Ausschreibungen passend zu Reinigung/Facility."
+              notReadyText="Zugang erforderlich. Offizielle SIMAP-API hinterlegen, dann aktiv."
+            />
+            <ReadinessRow
+              icon={Building2}
+              title="Lead-Quelle · ZEFIX Firmenprüfung"
+              ready={zefixReady}
+              readyText="Konfiguriert – Firmenprüfung & Handelsregister-Signale."
+              notReadyText="Zugang erforderlich. Offizielle ZEFIX-API hinterlegen, dann aktiv."
             />
             <ReadinessRow
               icon={FileText}

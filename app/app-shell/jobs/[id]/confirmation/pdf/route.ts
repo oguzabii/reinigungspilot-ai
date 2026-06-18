@@ -8,8 +8,13 @@
 import { NextResponse } from "next/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
-import { getJobDocumentData, getCompanySummary } from "@/lib/auth/tenant-data";
+import {
+  getJobDocumentData,
+  getCompanySummary,
+  getCompanyProfileOverride,
+} from "@/lib/auth/tenant-data";
 import { buildOrderConfirmationPdf } from "@/lib/pdf/order-confirmation-pdf";
+import { resolveCompanyProfile } from "@/lib/pdf/company-profile";
 
 export const dynamic = "force-dynamic";
 
@@ -40,12 +45,16 @@ export async function GET(
     });
   }
 
-  const summary = await getCompanySummary(companyId);
+  const [summary, profileOverride] = await Promise.all([
+    getCompanySummary(companyId),
+    getCompanyProfileOverride(companyId),
+  ]);
+  const profile = resolveCompanyProfile(summary?.name ?? null, profileOverride);
   const time = job.scheduledFor ? job.scheduledFor.slice(11, 16) : "";
   const reference = `AB-${job.offerReference ?? job.id.slice(0, 8)}`;
 
   const pdf = buildOrderConfirmationPdf({
-    companyName: summary?.name ?? "Mandant",
+    profile,
     reference,
     createdAt: job.createdAt,
     offerReference: job.offerReference,
@@ -54,6 +63,7 @@ export async function GET(
     customerAddress: job.location ?? job.customerRegion,
     serviceLabel: job.serviceInterest,
     cleaningDate: job.scheduledFor ? job.scheduledFor.slice(0, 10) : null,
+    handoverDate: null,
     cleaningTime: time && time !== "00:00" ? time : null,
     scopeItems: job.scopeItems,
     netChf: job.offerNetChf,

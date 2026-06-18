@@ -103,8 +103,41 @@ export interface PdfDoc {
   line: (x1: number, y1: number, x2: number, y2: number, width: number, color: RGB) => void;
   /** Draw a filled rectangle. */
   rect: (x: number, y: number, w: number, h: number, color: RGB) => void;
+  /** Draw a filled rounded rectangle (corner radius r). */
+  roundedRect: (x: number, y: number, w: number, h: number, r: number, color: RGB) => void;
+  /** Stroke (outline) a rounded rectangle. */
+  roundedRectStroke: (
+    x: number, y: number, w: number, h: number, r: number, width: number, color: RGB,
+  ) => void;
+  /** Draw a filled circle (centre cx,cy, radius r). */
+  circle: (cx: number, cy: number, r: number, color: RGB) => void;
   /** Assemble the final single-page PDF bytes. */
   build: () => Uint8Array<ArrayBuffer>;
+}
+
+/** Bézier circle constant (4-segment approximation). */
+const K = 0.5523;
+
+/** Build a rounded-rectangle path (no paint operator). */
+function roundedPath(x: number, y: number, w: number, h: number, r: number): string {
+  const rr = Math.max(0, Math.min(r, w / 2, h / 2));
+  const x0 = x;
+  const y0 = y;
+  const x1 = x + w;
+  const y1 = y + h;
+  const f = (n: number) => n.toFixed(2);
+  return [
+    `${f(x0 + rr)} ${f(y0)} m`,
+    `${f(x1 - rr)} ${f(y0)} l`,
+    `${f(x1 - rr + K * rr)} ${f(y0)} ${f(x1)} ${f(y0 + rr - K * rr)} ${f(x1)} ${f(y0 + rr)} c`,
+    `${f(x1)} ${f(y1 - rr)} l`,
+    `${f(x1)} ${f(y1 - rr + K * rr)} ${f(x1 - rr + K * rr)} ${f(y1)} ${f(x1 - rr)} ${f(y1)} c`,
+    `${f(x0 + rr)} ${f(y1)} l`,
+    `${f(x0 + rr - K * rr)} ${f(y1)} ${f(x0)} ${f(y1 - rr + K * rr)} ${f(x0)} ${f(y1 - rr)} c`,
+    `${f(x0)} ${f(y0 + rr)} l`,
+    `${f(x0)} ${f(y0 + rr - K * rr)} ${f(x0 + rr - K * rr)} ${f(y0)} ${f(x0 + rr)} ${f(y0)} c`,
+    "h",
+  ].join(" ");
 }
 
 /** Create a single-page A4 PDF document builder. */
@@ -125,6 +158,22 @@ export function createPdf(): PdfDoc {
   };
   const rect: PdfDoc["rect"] = (x, y, w, h, color) => {
     ops.push(`${rgb(color)} rg ${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
+  };
+  const roundedRect: PdfDoc["roundedRect"] = (x, y, w, h, r, color) => {
+    ops.push(`${rgb(color)} rg ${roundedPath(x, y, w, h, r)} f`);
+  };
+  const roundedRectStroke: PdfDoc["roundedRectStroke"] = (x, y, w, h, r, width, color) => {
+    ops.push(`${rgb(color)} RG ${width} w ${roundedPath(x, y, w, h, r)} S`);
+  };
+  const circle: PdfDoc["circle"] = (cx, cy, r, color) => {
+    const f = (n: number) => n.toFixed(2);
+    ops.push(
+      `${rgb(color)} rg ${f(cx + r)} ${f(cy)} m ` +
+        `${f(cx + r)} ${f(cy + K * r)} ${f(cx + K * r)} ${f(cy + r)} ${f(cx)} ${f(cy + r)} c ` +
+        `${f(cx - K * r)} ${f(cy + r)} ${f(cx - r)} ${f(cy + K * r)} ${f(cx - r)} ${f(cy)} c ` +
+        `${f(cx - r)} ${f(cy - K * r)} ${f(cx - K * r)} ${f(cy - r)} ${f(cx)} ${f(cy - r)} c ` +
+        `${f(cx + K * r)} ${f(cy - r)} ${f(cx + r)} ${f(cy - K * r)} ${f(cx + r)} ${f(cy)} c f`,
+    );
   };
 
   const build = (): Uint8Array<ArrayBuffer> => {
@@ -169,7 +218,7 @@ export function createPdf(): PdfDoc {
     return out;
   };
 
-  return { text, textRight, line, rect, build };
+  return { text, textRight, line, rect, roundedRect, roundedRectStroke, circle, build };
 }
 
 /** Shared Clean24-style header used by the customer/partner documents. */

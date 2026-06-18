@@ -155,12 +155,16 @@ export const SOURCE_PRESETS: SourcePreset[] = [
   },
 ];
 
-/** Active/inactive badge for a registry entry. */
+/**
+ * Ready/inactive badge for a registry entry. These manual channels do NOT run a
+ * search by themselves, so an enabled entry reads "Bereit" (ready to work),
+ * never a misleading "Aktiv" (automatic sources live on the Lead Radar).
+ */
 export function enabledBadge(enabled: boolean): {
   label: string;
   className: string;
 } {
   return enabled
-    ? { label: "Aktiv", className: "bg-blue-50 text-blue-700 ring-blue-200" }
+    ? { label: "Bereit", className: "bg-blue-50 text-blue-700 ring-blue-200" }
     : { label: "Inaktiv", className: "bg-slate-100 text-slate-500 ring-slate-200" };
 }

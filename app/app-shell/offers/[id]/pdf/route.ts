@@ -8,11 +8,33 @@
 import { NextResponse } from "next/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
-import { getOfferById, getCompanySummary } from "@/lib/auth/tenant-data";
+import {
+  getOfferDocumentData,
+  getCompanySummary,
+  getCompanyProfileOverride,
+} from "@/lib/auth/tenant-data";
 import { buildOfferPdf } from "@/lib/pdf/offer-pdf";
-import { OFFER_STATUS_META } from "@/components/offers/offer-status";
+import { resolveCompanyProfile } from "@/lib/pdf/company-profile";
 
 export const dynamic = "force-dynamic";
+
+/** Stable 5-digit customer number from a lead id (cosmetic, deterministic). */
+function customerNrFrom(leadId: string | null): string | null {
+  if (!leadId) return null;
+  let h = 0;
+  for (let i = 0; i < leadId.length; i++) h = (h * 31 + leadId.charCodeAt(i)) >>> 0;
+  return `K-${String(10000 + (h % 90000))}`;
+}
+
+/** Split a free-text address into up to three display lines. */
+function addressLines(address: string | null): string[] {
+  if (!address) return [];
+  return address
+    .split(/\n|,/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+}
 
 export async function GET(
   request: Request,
@@ -35,7 +57,7 @@ export async function GET(
 
   const { id } = await params;
   // RLS + explicit company scoping: only this tenant's offer is ever loaded.
-  const offer = await getOfferById(companyId, id);
+  const offer = await getOfferDocumentData(companyId, id);
   if (!offer) {
     return new NextResponse("Offerte nicht gefunden.", {
       status: 404,
@@ -43,22 +65,30 @@ export async function GET(
     });
   }
 
-  const summary = await getCompanySummary(companyId);
-  const statusLabel = OFFER_STATUS_META[offer.status]?.label ?? offer.status;
+  const [summary, profileOverride] = await Promise.all([
+    getCompanySummary(companyId),
+    getCompanyProfileOverride(companyId),
+  ]);
+  const profile = resolveCompanyProfile(summary?.name ?? null, profileOverride);
+
+  const serviceLabel =
+    offer.serviceInterest ?? offer.items[0]?.label ?? "Reinigung";
 
   const pdf = buildOfferPdf({
-    companyName: summary?.name ?? "Mandant",
+    profile,
     reference: offer.reference,
-    statusLabel,
     createdAt: offer.createdAt,
     validUntil: offer.validUntil,
-    leadName: offer.leadName,
-    vatRatePct: offer.vatRatePct,
+    customerNr: customerNrFrom(offer.leadId),
+    recipientName: offer.customerContact ?? offer.customerName,
+    addressLines: addressLines(offer.customerAddress),
+    serviceLabel,
     items: offer.items.map((it) => ({
       label: it.label,
       detail: it.detail,
       amountChf: it.amountChf,
     })),
+    vatRatePct: offer.vatRatePct,
     totalNetChf: offer.totalNetChf,
     totalGrossChf: offer.totalGrossChf,
   });

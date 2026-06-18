@@ -1,26 +1,28 @@
 /**
  * Partner-Einsatzbestätigung (internal partner assignment), SERVER-ONLY.
  *
- * The internal counterpart to the customer Auftragsbestätigung: it tells an
- * assigned partner/team what to do, where and when — WITHOUT exposing the
- * customer-facing price as the headline, and with fixed partner instructions
- * (communication runs through the company, no own offers to the customer, etc.).
- * Built from existing data only — no migration, no external asset. Single-page
- * A4 via the shared `pdf-core`. Tenant-aware.
+ * The internal counterpart to the customer Auftragsbestätigung, in the same
+ * modern card design: it tells the assigned partner/team what to do, where and
+ * when — WITHOUT the customer price as a headline, with an "Ausführung" summary
+ * and the fixed partner rules (communication runs through the company, no own
+ * offers, etc.). Built from existing data only — no migration, no external
+ * asset. Single-page A4 via `pdf-core` + `clean24-doc`. Tenant-aware.
  */
 
+import { createPdf, wrap, GRAY } from "./pdf-core";
 import {
-  BLACK,
-  GRAY,
-  LEFT,
-  LINE,
-  NAVY,
-  RIGHT,
-  createPdf,
-  drawFooter,
-  drawHeader,
-  wrap,
-} from "./pdf-core";
+  CARD_BORDER,
+  DARK_TEXT,
+  DOC_LEFT,
+  DOC_RIGHT,
+  drawBulletCard,
+  drawCardFooter,
+  drawCardHeader,
+  drawChecklist,
+  drawDarkCard,
+  drawInfoCard,
+} from "./clean24-doc";
+import type { CompanyProfile } from "./company-profile";
 
 export interface PartnerAssignmentScopeItem {
   label: string;
@@ -28,7 +30,7 @@ export interface PartnerAssignmentScopeItem {
 }
 
 export interface PartnerAssignmentData {
-  companyName: string;
+  profile: CompanyProfile;
   reference: string;
   createdAt: string; // ISO
   jobTitle: string;
@@ -38,110 +40,127 @@ export interface PartnerAssignmentData {
   customerAddress: string | null;
   serviceLabel: string | null;
   cleaningDate: string | null; // YYYY-MM-DD
+  handoverDate: string | null; // YYYY-MM-DD
   cleaningTime: string | null; // HH:mm or null
   team: string | null;
   statusLabel: string;
   scopeItems: PartnerAssignmentScopeItem[];
 }
 
+function dateCh(iso: string | null): string | null {
+  if (!iso) return null;
+  const [y, m, d] = iso.slice(0, 10).split("-");
+  return d && m && y ? `${d}.${m}.${y}` : iso.slice(0, 10);
+}
+
 export function buildPartnerAssignmentPdf(
   data: PartnerAssignmentData,
 ): Uint8Array<ArrayBuffer> {
   const doc = createPdf();
-  drawHeader(doc, {
-    companyName: data.companyName,
-    docLabel: "Partner-Einsatz",
-    accent: NAVY,
+  const p = data.profile;
+  const brand = p.brandName || p.legalName;
+  const reinigung = dateCh(data.cleaningDate) ?? "n. Vereinbarung";
+  const abgabe = dateCh(data.handoverDate) ?? dateCh(data.cleaningDate) ?? "n. Vereinbarung";
+  const recipient = data.customerContact ?? data.customerName ?? "Kunde";
+  const service = data.serviceLabel ?? "Reinigung inkl. Abgabegarantie";
+
+  const bodyTop = drawCardHeader(doc, {
+    brand,
+    docLabel: "Einsatzbestätigung",
+    subtitle: `Partnerauftrag - ${service}`,
+    refLine: data.offerReference
+      ? `Interne Partner-Version zur angenommenen Offerte ${data.offerReference}`
+      : "Interne Partner-Version",
+    minis: [
+      { label: "Kunde", value: recipient },
+      { label: "Reinigung", value: reinigung },
+      { label: "Abgabe", value: abgabe },
+      { label: "Status", value: data.statusLabel, note: data.cleaningTime ? "" : "Uhrzeit offen" },
+    ],
   });
 
-  doc.text(LEFT, 748, 16, 2, "Partner-Einsatzbestätigung", NAVY);
-  doc.text(LEFT, 734, 8.5, 1, "INTERN – nicht an den Kunden weitergeben", GRAY);
-
-  // Meta
-  let my = 712;
-  const metaRow = (k: string, v: string) => {
-    doc.text(LEFT, my, 10, 2, k, NAVY);
-    doc.text(LEFT + 88, my, 10, 1, v, BLACK);
-    my -= 15;
-  };
-  metaRow("Referenz", data.reference);
-  metaRow("Datum", data.createdAt.slice(0, 10));
-  metaRow("Auftrag", data.jobTitle);
-  if (data.offerReference) metaRow("Quell-Offerte", data.offerReference);
-
-  // Object / customer contact
-  let y = my - 10;
-  doc.text(LEFT, y, 11, 2, "Objekt / Ansprechpartner", NAVY);
-  y -= 6;
-  doc.line(LEFT, y, RIGHT, y, 0.75, LINE);
-  y -= 16;
-  const fact = (k: string, v: string) => {
-    doc.text(LEFT, y, 10, 2, k, NAVY);
-    doc.text(LEFT + 130, y, 10, 1, v, BLACK);
-    y -= 15;
-  };
-  fact("Kunde / Objekt", data.customerName ?? "—");
-  if (data.customerContact) fact("Kontakt", data.customerContact);
-  fact("Adresse", data.customerAddress ?? "—");
-  fact("Reinigungsdatum", data.cleaningDate ?? "nach Vereinbarung");
-  fact("Übergabe", data.cleaningTime ? `${data.cleaningTime} Uhr` : "nach Vereinbarung");
-  if (data.serviceLabel) fact("Leistung", data.serviceLabel);
-  fact("Partner / Team", data.team ?? "noch nicht zugeteilt");
-  fact("Status", data.statusLabel);
-
-  // Scope (no customer pricing — internal scope only)
-  y -= 8;
-  doc.text(LEFT, y, 11, 2, "Auszuführender Umfang", NAVY);
-  y -= 6;
-  doc.line(LEFT, y, RIGHT, y, 0.75, LINE);
-  y -= 16;
-  const MIN_Y = 200;
-  let truncated = 0;
-  if (data.scopeItems.length === 0) {
-    doc.text(LEFT, y, 10, 1, data.serviceLabel ?? "Gemäss Auftrag.", GRAY);
-    y -= 15;
+  // -------- Left column --------
+  const lx = DOC_LEFT;
+  const lw = 320;
+  let ly = bodyTop;
+  doc.text(lx, ly, 13, 2, "Auftrag & Projektdetails", DARK_TEXT);
+  ly -= 18;
+  const intro = `Bitte führen Sie die ${service} inklusive Abgabegarantie fachgerecht, sorgfältig und termingerecht aus. Der vereinbarte Leistungsumfang ist unten aufgeführt.`;
+  for (const line of wrap(intro, 9, lw)) {
+    doc.text(lx, ly, 9, 1, line, GRAY);
+    ly -= 12;
   }
-  for (let i = 0; i < data.scopeItems.length; i++) {
-    if (y < MIN_Y) {
-      truncated = data.scopeItems.length - i;
-      break;
-    }
-    const item = data.scopeItems[i];
-    doc.text(LEFT + 4, y, 10, 1, `· ${item.label}`, BLACK);
-    if (item.detail) {
-      y -= 11;
-      doc.text(LEFT + 14, y, 8.5, 1, item.detail, GRAY);
-    }
-    y -= 15;
-  }
-  if (truncated > 0) {
-    doc.text(LEFT + 4, y, 9, 1, `... ${truncated} weitere Position(en) gemäss Auftrag.`, GRAY);
-  }
+  ly -= 8;
 
-  // Partner instructions box (fixed)
-  const boxTop = 168;
-  doc.rect(LEFT, 78, RIGHT - LEFT, boxTop - 78, [0.96, 0.97, 0.99]);
-  doc.text(LEFT + 10, boxTop - 16, 10.5, 2, "Hinweise für den Partner", NAVY);
-  const instructions = [
-    `Kundenkommunikation läuft ausschliesslich über ${data.companyName}.`,
-    "Keine eigenen Angebote an den Kunden.",
-    `Bei Unklarheiten zuerst ${data.companyName} kontaktieren.`,
-    "Vorher-/Nachher-Fotos werden empfohlen.",
-  ];
-  let iy = boxTop - 32;
-  for (const ins of instructions) {
-    const lines = wrap(`•  ${ins}`, 9, RIGHT - LEFT - 24);
-    for (const [i, ln] of lines.entries()) {
-      doc.text(LEFT + 12, iy, 9, 1, i === 0 ? ln : `   ${ln}`, BLACK);
-      iy -= 12;
-    }
-  }
-
-  drawFooter(
+  const cgap = 10;
+  const cw = (lw - cgap) / 2;
+  const chH = 58;
+  const addrLines = (data.customerAddress ?? "")
+    .split(/\n|,/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+  drawInfoCard(doc, lx, ly, cw, chH, "Kunde / Objektkontakt", [recipient, ...addrLines]);
+  drawInfoCard(doc, lx + cw + cgap, ly, cw, chH, "Objekt", [service, "inkl. Abgabegarantie"]);
+  ly -= chH + cgap;
+  drawInfoCard(doc, lx, ly, cw, chH, "Termine", [`Reinigung: ${reinigung}`, `Abgabe: ${abgabe}`]);
+  drawInfoCard(
     doc,
-    data.companyName,
-    "Internes Einsatzdokument. Kein automatischer Versand an Dritte.",
+    lx + cw + cgap,
+    ly,
+    cw,
+    chH,
+    "Hinweis",
+    data.cleaningTime
+      ? [`${data.cleaningTime} Uhr`, "Übergabe-Zeit vereinbart"]
+      : ["Uhrzeit der Übergabe", "noch nicht bekannt"],
   );
+  ly -= chH + 16;
 
+  doc.text(lx, ly, 13, 2, "Vereinbarter Leistungsumfang", DARK_TEXT);
+  ly -= 16;
+  const checklistItems =
+    data.scopeItems.length > 0
+      ? data.scopeItems.map((it) => ({ label: it.label, detail: it.detail }))
+      : [{ label: service, detail: "gemäss Auftrag" }];
+  drawChecklist(doc, lx, ly, lw, checklistItems);
+
+  // -------- Right column --------
+  const rx = 374;
+  const rw = DOC_RIGHT - rx;
+  let ry = bodyTop;
+
+  // "Partner-Version" badge
+  doc.roundedRectStroke(rx, ry - 16, 92, 16, 8, 0.8, CARD_BORDER);
+  doc.text(rx + 10, ry - 11.5, 7.5, 2, "Partner-Version", DARK_TEXT);
+  ry -= 28;
+
+  // Ausführung bullets
+  ry = drawBulletCard(doc, rx, ry, rw, "Ausführung", [
+    `Termin: ${reinigung}`,
+    `Abgabe: ${abgabe}`,
+    data.team ? `Team: ${data.team}` : "Uhrzeit folgt nach Bestätigung",
+    "Abgabebereit reinigen",
+  ]);
+  ry -= 14;
+
+  ry = drawDarkCard(
+    doc,
+    rx,
+    ry,
+    rw,
+    "Abgabegarantie",
+    "Die vereinbarten Bereiche sind vollständig, sauber und abgabebereit zu reinigen. Beanstandungen sind gemäss Partnervereinbarung rasch zu beheben.",
+  );
+  ry -= 14;
+
+  drawBulletCard(doc, rx, ry, rw, "Wichtige Hinweise", [
+    `Kundenkommunikation läuft über ${brand}.`,
+    "Keine eigenen Angebote an den Kunden.",
+    `Bei Unklarheiten vor Ort zuerst ${brand} kontaktieren.`,
+    "Vorher-/Nachher-Fotos sind empfohlen.",
+  ]);
+
+  drawCardFooter(doc, p);
   return doc.build();
 }

@@ -9,8 +9,13 @@
 import { NextResponse } from "next/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
-import { getJobDocumentData, getCompanySummary } from "@/lib/auth/tenant-data";
+import {
+  getJobDocumentData,
+  getCompanySummary,
+  getCompanyProfileOverride,
+} from "@/lib/auth/tenant-data";
 import { buildPartnerAssignmentPdf } from "@/lib/pdf/partner-assignment-pdf";
+import { resolveCompanyProfile } from "@/lib/pdf/company-profile";
 import { JOB_STATUS_META } from "@/components/jobs/job-status";
 
 export const dynamic = "force-dynamic";
@@ -42,13 +47,17 @@ export async function GET(
     });
   }
 
-  const summary = await getCompanySummary(companyId);
+  const [summary, profileOverride] = await Promise.all([
+    getCompanySummary(companyId),
+    getCompanyProfileOverride(companyId),
+  ]);
+  const profile = resolveCompanyProfile(summary?.name ?? null, profileOverride);
   const time = job.scheduledFor ? job.scheduledFor.slice(11, 16) : "";
   const reference = `PE-${job.offerReference ?? job.id.slice(0, 8)}`;
   const statusLabel = JOB_STATUS_META[job.status]?.label ?? job.status;
 
   const pdf = buildPartnerAssignmentPdf({
-    companyName: summary?.name ?? "Mandant",
+    profile,
     reference,
     createdAt: job.createdAt,
     jobTitle: job.title,
@@ -58,6 +67,7 @@ export async function GET(
     customerAddress: job.location ?? job.customerRegion,
     serviceLabel: job.serviceInterest,
     cleaningDate: job.scheduledFor ? job.scheduledFor.slice(0, 10) : null,
+    handoverDate: null,
     cleaningTime: time && time !== "00:00" ? time : null,
     team: job.team,
     statusLabel,

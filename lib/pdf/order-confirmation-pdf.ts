@@ -1,27 +1,29 @@
 /**
- * Auftragsbestätigung (customer-facing order confirmation), SERVER-ONLY.
+ * Auftragsbestätigung (customer order confirmation), SERVER-ONLY.
  *
- * Generated after an offer is accepted and a job exists. Built entirely from
- * existing data (job + source offer scope + customer lead) — no migration, no
- * external asset. Single-page A4 via the shared `pdf-core`. Tenant-aware: the
- * header/company name come from the active company, so the Clean24 tenant
- * produces a Clean24 document.
+ * Modern card design matching the Clean24 reference: navy header card with four
+ * mini-cards, a left column (Bestätigung & Projektdetails + KUNDE/OBJEKT/TERMINE/
+ * HINWEIS cards + Leistungsumfang checklist), a right column (Preisübersicht +
+ * Abgabegarantie), and the company footer. Built from existing data only (job +
+ * source offer scope + customer lead) — no migration, no external asset.
+ * Single-page A4 via the shared `pdf-core` + `clean24-doc` helpers. Tenant-aware
+ * letterhead via `CompanyProfile`.
  */
 
+import { chf, createPdf, wrap, GRAY } from "./pdf-core";
 import {
-  BLACK,
-  EMERALD,
-  GRAY,
-  LEFT,
-  LINE,
-  NAVY,
-  RIGHT,
-  chf,
-  createPdf,
-  drawFooter,
-  drawHeader,
-  wrap,
-} from "./pdf-core";
+  CARD_BG,
+  CARD_BORDER,
+  DARK_TEXT,
+  DOC_LEFT,
+  DOC_RIGHT,
+  drawCardFooter,
+  drawCardHeader,
+  drawChecklist,
+  drawDarkCard,
+  drawInfoCard,
+} from "./clean24-doc";
+import type { CompanyProfile } from "./company-profile";
 
 export interface OrderConfirmationItem {
   label: string;
@@ -30,7 +32,7 @@ export interface OrderConfirmationItem {
 }
 
 export interface OrderConfirmationData {
-  companyName: string;
+  profile: CompanyProfile;
   reference: string;
   createdAt: string; // ISO
   offerReference: string | null;
@@ -39,6 +41,7 @@ export interface OrderConfirmationData {
   customerAddress: string | null;
   serviceLabel: string | null;
   cleaningDate: string | null; // YYYY-MM-DD
+  handoverDate: string | null; // YYYY-MM-DD
   cleaningTime: string | null; // HH:mm or null
   scopeItems: OrderConfirmationItem[];
   netChf: number | null;
@@ -46,119 +49,144 @@ export interface OrderConfirmationData {
   grossChf: number | null;
 }
 
+function dateCh(iso: string | null): string | null {
+  if (!iso) return null;
+  const [y, m, d] = iso.slice(0, 10).split("-");
+  return d && m && y ? `${d}.${m}.${y}` : iso.slice(0, 10);
+}
+
 export function buildOrderConfirmationPdf(
   data: OrderConfirmationData,
 ): Uint8Array<ArrayBuffer> {
   const doc = createPdf();
-  drawHeader(doc, { companyName: data.companyName, docLabel: "Auftragsbestätigung" });
+  const p = data.profile;
+  const reinigung = dateCh(data.cleaningDate) ?? "n. Vereinbarung";
+  const abgabe = dateCh(data.handoverDate) ?? dateCh(data.cleaningDate) ?? "n. Vereinbarung";
+  const recipient = data.customerContact ?? data.customerName ?? "Kunde";
+  const service = data.serviceLabel ?? "Reinigung inkl. Abgabegarantie";
 
-  doc.text(LEFT, 748, 16, 2, "Auftragsbestätigung", NAVY);
-
-  // Meta
-  let my = 726;
-  const metaRow = (k: string, v: string) => {
-    doc.text(LEFT, my, 10, 2, k, NAVY);
-    doc.text(LEFT + 88, my, 10, 1, v, BLACK);
-    my -= 15;
-  };
-  metaRow("Referenz", data.reference);
-  metaRow("Datum", data.createdAt.slice(0, 10));
-  if (data.offerReference) metaRow("Quell-Offerte", data.offerReference);
-
-  // Customer
-  my -= 8;
-  doc.text(LEFT, my, 10, 2, "Kunde", NAVY);
-  doc.text(LEFT + 88, my, 10, 1, data.customerName ?? "Ohne Kundenzuordnung", BLACK);
-  my -= 14;
-  if (data.customerContact) {
-    doc.text(LEFT + 88, my, 9.5, 1, data.customerContact, GRAY);
-    my -= 13;
-  }
-  if (data.customerAddress) {
-    doc.text(LEFT + 88, my, 9.5, 1, data.customerAddress, GRAY);
-    my -= 13;
+  // Price: Swiss 5-Rappen rounding on the final total, consistent with the
+  // Offerte PDF. Derive VAT from the net (not gross-net) so the breakdown and
+  // the Rundungsdifferenz read the same as the offer letter.
+  const net = data.netChf;
+  const vatPct = data.vatRatePct ?? 8.1;
+  let displayGross: number | null = data.grossChf;
+  let vatAmount = 0;
+  let rounding = 0;
+  if (net !== null) {
+    vatAmount = Math.round(net * (vatPct / 100) * 100) / 100;
+    const rawGross = net + vatAmount;
+    displayGross = Math.round(rawGross * 20) / 20;
+    rounding = Math.round((displayGross - rawGross) * 100) / 100;
   }
 
-  // Eckdaten box
-  let y = my - 14;
-  doc.text(LEFT, y, 11, 2, "Eckdaten", NAVY);
-  y -= 6;
-  doc.line(LEFT, y, RIGHT, y, 0.75, LINE);
-  y -= 16;
-  const fact = (k: string, v: string) => {
-    doc.text(LEFT, y, 10, 2, k, NAVY);
-    doc.text(LEFT + 130, y, 10, 1, v, BLACK);
-    y -= 15;
-  };
-  fact("Reinigungsdatum", data.cleaningDate ?? "nach Vereinbarung");
-  fact("Übergabe", data.cleaningTime ? `${data.cleaningTime} Uhr` : "nach Vereinbarung");
-  fact("Objekt / Adresse", data.customerAddress ?? "—");
-  if (data.serviceLabel) fact("Leistung", data.serviceLabel);
+  const bodyTop = drawCardHeader(doc, {
+    brand: p.brandName || p.legalName,
+    docLabel: "Auftragsbestätigung",
+    subtitle: "Premium Reinigungsservice mit Abgabegarantie",
+    refLine: data.offerReference
+      ? `Verbindliche Bestätigung zur angenommenen Offerte ${data.offerReference}`
+      : "Verbindliche Auftragsbestätigung",
+    minis: [
+      { label: "Kunde", value: recipient },
+      { label: "Reinigung", value: reinigung },
+      { label: "Abgabe", value: abgabe },
+      {
+        label: "Preis",
+        value: displayGross !== null ? `CHF ${chf(displayGross)}` : "—",
+        note: "inkl. MwSt.",
+      },
+    ],
+  });
 
-  // Scope
-  y -= 8;
-  doc.text(LEFT, y, 11, 2, "Vereinbarter Umfang", NAVY);
-  y -= 6;
-  doc.line(LEFT, y, RIGHT, y, 0.75, LINE);
-  y -= 16;
-  const MIN_Y = 210;
-  let truncated = 0;
-  if (data.scopeItems.length === 0) {
-    doc.text(LEFT, y, 10, 1, data.serviceLabel ?? "Gemäss Offerte.", GRAY);
-    y -= 16;
+  // -------- Left column --------
+  const lx = DOC_LEFT;
+  const lw = 320;
+  let ly = bodyTop;
+  doc.text(lx, ly, 13, 2, "Bestätigung & Projektdetails", DARK_TEXT);
+  ly -= 18;
+  const intro = `Hiermit bestätigen wir Ihnen die Durchführung der ${service} inklusive Abgabegarantie, gemäss der von Ihnen angenommenen Offerte. Der Auftrag wird fachgerecht, sorgfältig und termingerecht ausgeführt.`;
+  for (const line of wrap(intro, 9, lw)) {
+    doc.text(lx, ly, 9, 1, line, GRAY);
+    ly -= 12;
   }
-  for (let i = 0; i < data.scopeItems.length; i++) {
-    if (y < MIN_Y) {
-      truncated = data.scopeItems.length - i;
-      break;
-    }
-    const item = data.scopeItems[i];
-    doc.text(LEFT + 4, y, 10, 1, `· ${item.label}`, BLACK);
-    if (item.detail) {
-      y -= 11;
-      doc.text(LEFT + 14, y, 8.5, 1, item.detail, GRAY);
-    }
-    y -= 15;
-  }
-  if (truncated > 0) {
-    doc.text(LEFT + 4, y, 9, 1, `... ${truncated} weitere Position(en) gemäss Offerte.`, GRAY);
-    y -= 15;
-  }
+  ly -= 8;
 
-  // Price summary
-  if (data.grossChf !== null) {
-    y -= 6;
-    doc.line(330, y, RIGHT, y, 0.75, LINE);
-    y -= 16;
-    const totalRow = (label: string, value: string, bold: boolean) => {
-      doc.text(330, y, 10, bold ? 2 : 1, label, bold ? NAVY : GRAY);
-      doc.textRight(RIGHT, y, 10, bold ? 2 : 1, `CHF ${value}`, bold ? NAVY : BLACK);
-      y -= 15;
-    };
-    if (data.netChf !== null) totalRow("Zwischensumme (Netto)", chf(data.netChf), false);
-    if (data.netChf !== null && data.vatRatePct !== null) {
-      totalRow(`MwSt (${data.vatRatePct.toFixed(2)}%)`, chf(data.grossChf - data.netChf), false);
-    }
-    doc.line(330, y + 12, RIGHT, y + 12, 0.5, LINE);
-    totalRow("Vereinbarter Preis", chf(data.grossChf), true);
-  }
-
-  // Abgabegarantie
-  doc.rect(LEFT, 92, RIGHT - LEFT, 30, [0.93, 0.97, 0.95]);
-  doc.text(LEFT + 10, 110, 10, 2, "Abgabegarantie", EMERALD);
-  for (const [i, ln] of wrap(
-    "Wir reinigen das Objekt fachgerecht. Bei begründeter Beanstandung durch die Abnahmestelle bessern wir kostenlos nach.",
-    8.5,
-    RIGHT - LEFT - 20,
-  ).entries()) {
-    doc.text(LEFT + 10, 99 - i * 10, 8.5, 1, ln, GRAY);
-  }
-
-  drawFooter(
+  // 2x2 info cards
+  const cgap = 10;
+  const cw = (lw - cgap) / 2;
+  const chH = 58;
+  const addrLines = (data.customerAddress ?? "")
+    .split(/\n|,/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+  drawInfoCard(doc, lx, ly, cw, chH, "Kunde", [recipient, ...addrLines]);
+  drawInfoCard(doc, lx + cw + cgap, ly, cw, chH, "Objekt", [service, "inkl. Abgabegarantie"]);
+  ly -= chH + cgap;
+  drawInfoCard(doc, lx, ly, cw, chH, "Termine", [`Reinigung: ${reinigung}`, `Abgabe: ${abgabe}`]);
+  drawInfoCard(
     doc,
-    data.companyName,
-    "Bestätigung des erteilten Auftrags. Kein automatischer Versand.",
+    lx + cw + cgap,
+    ly,
+    cw,
+    chH,
+    "Hinweis",
+    data.cleaningTime
+      ? [`${data.cleaningTime} Uhr`, "Übergabe-Zeit vereinbart"]
+      : ["Uhrzeit der Übergabe", "noch nicht bekannt"],
+  );
+  ly -= chH + 16;
+
+  doc.text(lx, ly, 13, 2, "Vereinbarter Leistungsumfang", DARK_TEXT);
+  ly -= 16;
+  const checklistItems =
+    data.scopeItems.length > 0
+      ? data.scopeItems.map((it) => ({ label: it.label, detail: it.detail }))
+      : [{ label: service, detail: "gemäss Offerte" }];
+  drawChecklist(doc, lx, ly, lw, checklistItems);
+
+  // -------- Right column --------
+  const rx = 374;
+  const rw = DOC_RIGHT - rx;
+  let ry = bodyTop;
+
+  // Price card
+  if (displayGross !== null) {
+    const rows: Array<[string, string]> = [];
+    if (net !== null) {
+      rows.push(["Total exkl. MwSt.", `CHF ${chf(net)}`]);
+      rows.push([`MwSt. ${vatPct.toFixed(1)}%`, `CHF ${chf(vatAmount)}`]);
+      if (Math.abs(rounding) >= 0.005) rows.push(["Rundungsdifferenz", `CHF ${chf(rounding)}`]);
+    }
+    const ph = 70 + rows.length * 14;
+    doc.roundedRect(rx, ry - ph, rw, ph, 10, CARD_BG);
+    doc.roundedRectStroke(rx, ry - ph, rw, ph, 10, 0.6, CARD_BORDER);
+    doc.text(rx + 14, ry - 18, 7.5, 2, "PREISÜBERSICHT", GRAY);
+    doc.text(rx + 14, ry - 40, 20, 2, `CHF ${chf(displayGross)}`, DARK_TEXT);
+    doc.text(rx + 14, ry - 53, 8.5, 1, "Total inkl. MwSt.", GRAY);
+    if (rows.length > 0) {
+      doc.line(rx + 14, ry - 62, DOC_RIGHT - 14, ry - 62, 0.5, CARD_BORDER);
+      let py = ry - 76;
+      for (const [k, v] of rows) {
+        doc.text(rx + 14, py, 9, 1, k, GRAY);
+        doc.textRight(DOC_RIGHT - 14, py, 9, 2, v, DARK_TEXT);
+        py -= 14;
+      }
+    }
+    ry -= ph + 14;
+  }
+
+  // Abgabegarantie dark card
+  drawDarkCard(
+    doc,
+    rx,
+    ry,
+    rw,
+    "Abgabegarantie",
+    "Die Reinigung wird in abgabebereitem Zustand ausgeführt. Vereinbarte Bereiche werden vollständig und mit hoher Sorgfalt gereinigt.",
   );
 
+  drawCardFooter(doc, p);
   return doc.build();
 }

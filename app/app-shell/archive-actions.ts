@@ -15,7 +15,13 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 
-export type ArchivableEntity = "prospect" | "lead" | "offer" | "job" | "followup";
+export type ArchivableEntity =
+  | "prospect"
+  | "lead"
+  | "offer"
+  | "job"
+  | "followup"
+  | "source";
 
 export interface ArchiveActionState {
   status: "idle" | "success" | "error";
@@ -28,13 +34,19 @@ const TABLE: Record<ArchivableEntity, string> = {
   offer: "offers",
   job: "jobs",
   followup: "followup_tasks",
+  // Lead sources: soft-archive only (SETTINGS domain via RLS). Prospects keep
+  // their source_id, so soft-deleting a source never breaks their display.
+  source: "lead_sources",
 };
 
 const PATHS = [
   "/app-shell",
   "/app-shell/lead-hunter",
+  "/app-shell/lead-hunter/sources",
+  "/app-shell/lead-hunter/radar",
   "/app-shell/leads",
   "/app-shell/offers",
+  "/app-shell/pipeline",
   "/app-shell/jobs",
   "/app-shell/revenue-autopilot",
   "/app-shell/revenue-autopilot/outreach",

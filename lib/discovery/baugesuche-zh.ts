@@ -67,6 +67,23 @@ function pickString(rec: Rec, keys: string[]): string | null {
   return null;
 }
 
+/**
+ * First non-empty value among keys that START WITH any of `prefixes` and CONTAIN
+ * any of `contains` (lowercased). Used for the flattened nested feed columns like
+ * `buildingContractor_companyName` / `projectFramer_name` without hardcoding the
+ * exact sub-field names.
+ */
+function pickPrefixed(rec: Rec, prefixes: string[], contains: string[]): string | null {
+  for (const key of Object.keys(rec)) {
+    if (!prefixes.some((p) => key.startsWith(p))) continue;
+    if (contains.length > 0 && !contains.some((c) => key.includes(c))) continue;
+    const v = rec[key];
+    if (typeof v === "string" && v.trim().length > 0) return v.trim();
+    if (typeof v === "number") return String(v);
+  }
+  return null;
+}
+
 /** Normalise common date strings to YYYY-MM-DD; return null if not a date. */
 function normaliseDate(s: string | null): string | null {
   if (!s) return null;
@@ -169,27 +186,58 @@ function parseCsv(text: string): { columns: string[]; records: Rec[] } {
 
 /** Defensive German field mapping (works for CSV + JSON; keys are lowercased). */
 function mapRecord(rec: Rec): RawSignal | null {
+  // Title / project description — incl. the official ZH OGD field names.
   const title = pickString(rec, [
-    "title", "bauvorhaben", "vorhaben", "beschreibung", "projekt", "bezeichnung", "zweck",
+    "projectdescription", "title", "bauvorhaben", "vorhaben", "beschreibung",
+    "projekt", "bezeichnung", "zweck",
   ]);
   if (!title) return null;
 
-  const region = pickString(rec, ["gemeinde", "ort", "municipality", "region", "plz_ort"]);
-  const place = pickString(rec, ["strasse", "adresse", "lage", "address", "standort"]);
+  const region = pickString(rec, [
+    "municipality_name", "gemeinde", "ort", "municipality", "region", "plz_ort",
+    "projectlocation_address_town",
+  ]);
+
+  // Compose a clean address from the flattened projectLocation_address_* fields,
+  // falling back to a single free-text address field.
+  const street = pickString(rec, [
+    "projectlocation_address_street", "strasse", "adresse", "lage", "address", "standort",
+  ]);
+  const houseNr = pickString(rec, ["projectlocation_address_housenumber", "hausnummer"]);
+  const zip = pickString(rec, ["projectlocation_address_swisszipcode", "plz", "zip"]);
+  const town = pickString(rec, ["projectlocation_address_town", "ort", "gemeinde"]);
+  const streetFull = [street, houseNr].filter(Boolean).join(" ").trim();
+  const place =
+    [streetFull, [zip, town].filter(Boolean).join(" ").trim()]
+      .filter((s) => s.length > 0)
+      .join(", ") || null;
+
+  // Optional public building-permit context (company, not private contact data).
+  const contractor = pickPrefixed(
+    rec,
+    ["buildingcontractor", "bauherr", "projectframer", "bauherrschaft"],
+    ["name", "company", "firma"],
+  );
+
   const typeText = [
     pickString(rec, ["art", "kategorie", "type", "bauart", "projekttyp"]) ?? "",
     title,
   ].join(" ");
   const date = normaliseDate(
     pickString(rec, [
-      "publikationsdatum", "publikation", "eingangsdatum", "datum", "date", "entscheiddatum",
+      "publicationdate", "publikationsdatum", "publikation", "eingangsdatum",
+      "datum", "date", "entscheiddatum",
     ]),
   );
   const url = pickString(rec, ["url", "link", "permalink"]);
 
+  const summaryParts = [place, contractor ? `Bauherrschaft: ${contractor}` : null].filter(
+    Boolean,
+  ) as string[];
+
   return {
     title: title.slice(0, 200),
-    summary: place ? place.slice(0, 300) : null,
+    summary: summaryParts.length > 0 ? summaryParts.join(" · ").slice(0, 300) : null,
     sourceUrl: url ? url.slice(0, 400) : null,
     region: region ? region.slice(0, 120) : null,
     locationText: place ? place.slice(0, 200) : null,
@@ -260,11 +308,12 @@ export async function runBaugesucheZh(input: AdapterRunInput): Promise<AdapterRu
     const signals = records.map(mapRecord).filter((s): s is RawSignal => s !== null);
 
     if (signals.length === 0) {
+      // Customer-facing message stays simple; detected columns are returned as
+      // safe diagnostics for an optional technical view only (never values).
       return {
         status: "unsupported_schema",
         signals: [],
-        message:
-          "Keine Signale aus der Quelle – Schema/Spalten nicht erkannt (kein Titel-/Bauvorhaben-Feld gefunden).",
+        message: "Keine passenden Bau-Signale gefunden.",
         diagnostics: { columns: columns.slice(0, 40) },
       };
     }

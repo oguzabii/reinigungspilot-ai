@@ -7,6 +7,41 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.15** — **Clean24-Dokumentvorlagen, Lead-Radar-Politur, SIMAP/ZEFIX-Fundament.**
+Kundenseitige Politur: exakte Clean24-PDFs, ein aufgeräumter Lead Radar und zwei
+neue offizielle, env-gated Quellen-Adapter. **Reine UI + Helfer + Adapter, keine
+neue Migration, kein Versand, kein Service-Role.** (1) **Offerte-PDF neu**
+(`/app-shell/offers/[id]/pdf`): exakt an der Clean24-Vorlage ausgerichtet –
+Logo/Kopf, Kunden-Nr./Datum/UID, Absender, Kundenadresse, „Offerte OF-…",
+Anrede, Service-Einleitung, Positionstabelle (#/Beschreibung/Anzahl/Preis/Total),
+Totale inkl. **Rundungsdifferenz** (Schweizer 5-Rappen), Signatur, volle
+Firmenfusszeile – **aus echten Offerten-/Kundendaten** (manuelle und Lead-Offerten
+nutzen dieselbe Vorlage). (2) **Auftragsbestätigung + Partner-Einsatzbestätigung**
+im modernen **Karten-Design** (Navy-Kopf mit Mini-Karten, KUNDE/OBJEKT/TERMINE/
+HINWEIS, Leistungsumfang-Checkliste, Preisübersicht bzw. Ausführung,
+Abgabegarantie, Wichtige Hinweise) – geteilter PDF-Kern erweitert um abgerundete
+Rechtecke/Kreise (`lib/pdf/pdf-core.ts`, `lib/pdf/clean24-doc.ts`,
+`lib/pdf/company-profile.ts`). (3) **Lead Radar kundenfreundlich**: „Klarsa sucht
+neue Leads für Clean24", Lead-Quellen-Statuskarten (Google/Baugesuche/SIMAP/ZEFIX),
+neue Chancen, drei klare Buttons; **keine** Schema-/Spaltendiagnosen, technische
+Details hinter „Technische Details anzeigen". (4) **Lead-Quellen** (vorher
+„Quellen-Registry"): „Bereit" statt irreführend „Aktiv", Buttons „Quelle prüfen"/
+„Lead erfassen", **Archivieren** pro Quelle (soft). (5) **Läufe ausblenden** auf
+der Discovery-Seite (einzeln/alle) – **UI-Ebene only**, `audit_logs` bleiben
+unangetastet (Filter in `company_settings.settings`). (6) **Baugesuche-Mapping-Fix**:
+echte ZH-OGD-Felder (`projectDescription`/`municipality_name`/`publicationDate`/
+`projectLocation_address_*`/`buildingContractor`) → saubere Bau-Signale; sonst
+einfache Meldung statt Schema-Dump. (7) **SIMAP** (`lib/discovery/simap.ts`) &
+**ZEFIX** (`lib/discovery/zefix.ts`) als **offizielle, env-gated** Adapter
+(`SIMAP_API_*`, `ZEFIX_API_*`) – kein Scraping/HTML/Headless, Caps + Timeout,
+„Zugang erforderlich" ohne Konfiguration, nur **aktiv** wenn wirklich verbunden.
+(8) **Einstellungen** zeigen SIMAP/ZEFIX-Bereitschaft (nur Status). **Kein
+Service-Role, keine Secrets/echten Kundendaten, kein Scraping/Bulk/Hintergrund-
+Versand/Buchung, keine echte bexio-API. 001–007 unverändert; `004` unangetastet.**
+Aktualisiert: `docs/clean24-sales-ready-workflow.md`, `.env.local.example`.
+lint/build grün. **Nächster Schritt: Produktions-QA (PDFs am echten Tenant,
+Quellen-Zugänge) + Sales-Launch.**
+
 **v0.5.14** — **Einfacher Verkaufs-Workflow (fertig).** Klarsa fühlt sich wie
 **ein** AI-Verkaufsbüro an: der Inhaber sieht die **nächste beste Aktion**, nicht
 viele technische Module. Die in v0.5.13 aufgeschobenen Usability-Punkte sind nun

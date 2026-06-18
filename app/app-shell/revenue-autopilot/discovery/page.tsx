@@ -38,8 +38,10 @@ import {
   getAutopilotPolicy,
   getProspects,
   getDiscoveryRuns,
+  getHiddenDiscoveryRuns,
   type DiscoveryRunLog,
 } from "@/lib/auth/tenant-data";
+import { HideRunButton, HideAllRunsButton } from "./HideRunControls";
 
 // Reads the session/cookies -> always rendered on demand, never prerendered.
 export const dynamic = "force-dynamic";
@@ -77,12 +79,20 @@ export default async function DiscoveryPage() {
   const baugesucheConfigured = isBaugesucheConfigured();
   const anySource = googleConfigured || baugesucheConfigured;
 
-  const [summary, toggles, prospects, runs] = await Promise.all([
+  const [summary, toggles, prospects, runs, hiddenRuns] = await Promise.all([
     getCompanySummary(companyId),
     getAutopilotPolicy(companyId),
     getProspects(companyId),
     getDiscoveryRuns(companyId),
+    getHiddenDiscoveryRuns(companyId),
   ]);
+
+  // UI-level hide (audit logs are never mutated): drop runs the owner hid.
+  const visibleRuns = runs.filter(
+    (r) =>
+      !hiddenRuns.hiddenIds.includes(r.id) &&
+      (!hiddenRuns.hiddenBefore || r.createdAt >= hiddenRuns.hiddenBefore),
+  );
 
   const tier = summary?.tier ?? "starter";
   const tierInfo = autopilotTier(tier, summary?.billingStatus);
@@ -339,17 +349,22 @@ export default async function DiscoveryPage() {
           )}
         </section>
 
-        {/* Recent runs — audit transparency */}
+        {/* Recent runs — audit transparency (owner can hide clutter) */}
         <section className="mt-8">
-          <h2 className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-navy-900">
-            <History className="h-4 w-4 text-blue-600" />
-            Letzte Läufe (Audit)
-          </h2>
-          {runs.length === 0 ? (
-            <p className="mt-2 text-sm text-slate-500">Noch keine Discovery-Läufe.</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-navy-900">
+              <History className="h-4 w-4 text-blue-600" />
+              Letzte Läufe
+            </h2>
+            {canManage && visibleRuns.length > 0 && <HideAllRunsButton />}
+          </div>
+          {visibleRuns.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-500">
+              {runs.length === 0 ? "Noch keine Discovery-Läufe." : "Keine Läufe sichtbar (ausgeblendet)."}
+            </p>
           ) : (
             <ul className="mt-3 space-y-2">
-              {runs.map((r) => (
+              {visibleRuns.map((r) => (
                 <li
                   key={r.id}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
@@ -359,9 +374,12 @@ export default async function DiscoveryPage() {
                     {r.query ? ` · ${r.query}` : ""}
                     {r.region ? ` · ${r.region}` : ""}
                   </span>
-                  <span className="text-xs text-slate-500">
-                    {r.found ?? 0} gefunden · {r.created ?? 0} erstellt ·{" "}
-                    {r.deduped ?? 0} bereits/übersprungen · {formatDateTime(r.createdAt)}
+                  <span className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">
+                      {r.found ?? 0} gefunden · {r.created ?? 0} erstellt ·{" "}
+                      {r.deduped ?? 0} bereits/übersprungen · {formatDateTime(r.createdAt)}
+                    </span>
+                    {canManage && <HideRunButton runId={r.id} />}
                   </span>
                 </li>
               ))}

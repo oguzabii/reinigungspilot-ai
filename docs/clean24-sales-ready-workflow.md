@@ -1,8 +1,93 @@
-# Clean24 — Sales-Ready Workflow & Dokumentvorlagen (v0.5.13 → v0.5.14)
+# Clean24 — Sales-Ready Workflow & Dokumentvorlagen (v0.5.13 → v0.5.15)
 
 Diese Version macht Klarsa für den Clean24-Pilot **abschluss-fähiger**: vom
 gewonnenen Auftrag entstehen jetzt **kundenfertige und interne Dokumente** als
 PDF — ohne neue Migration, ohne externe Bibliothek, ohne Versand.
+
+## v0.5.15 — Clean24-Dokumentvorlagen, Lead-Radar-Politur, SIMAP/ZEFIX-Fundament
+
+Kundenseitige Politur und die exakten Clean24-Vorlagen. **Reine UI + Helfer +
+zwei neue env-gated Quellen-Adapter, keine neue Migration, kein Versand,
+kein Service-Role.**
+
+### Exakte Clean24-PDF-Vorlagen
+
+Alle drei Dokumente sind jetzt an den echten Clean24-Vorlagen ausgerichtet und
+werden aus **echten Offerten-/Kundendaten** erzeugt (nicht hartkodiert):
+
+- **Offerte** (`/app-shell/offers/[id]/pdf`, neu aufgebaut in `lib/pdf/offer-pdf.ts`):
+  Logo/Kopf, Kunden-Nr./Datum/UID, Absenderzeile, Kundenadresse, Titel
+  „Offerte OF-…", Anrede, Service-Einleitung, Positionstabelle
+  (#/Beschreibung/Anzahl/Preis/Total), Totale (exkl. MwSt., MwSt. %,
+  **Rundungsdifferenz** mit Schweizer 5-Rappen-Rundung, Total inkl. MwSt.),
+  Schlusstext, Signatur (Geschäftsführer) und vollständige Firmenfusszeile.
+- **Auftragsbestätigung** + **Partner-Einsatzbestätigung**: modernes Karten-
+  Design (Navy-Kopf mit vier Mini-Karten, KUNDE/OBJEKT/TERMINE/HINWEIS-Karten,
+  Leistungsumfang-Checkliste mit grünen Häkchen, Preisübersicht bzw. Ausführung,
+  Abgabegarantie-Karte; Partner zusätzlich „Wichtige Hinweise").
+- Technik: geteilter, dependency-freier PDF-Kern (`lib/pdf/pdf-core.ts`, erweitert
+  um abgerundete Rechtecke + Kreise), Karten-Layout-Helfer (`lib/pdf/clean24-doc.ts`),
+  Firmen-Briefkopf (`lib/pdf/company-profile.ts`, pro Mandant via
+  `company_settings.settings.company_profile` überschreibbar — **keine Secrets,
+  nur öffentlicher Briefkopf**). Helvetica/WinAnsi, einseitig A4, env-freier Build.
+
+### Lead Radar (kundenfreundlich)
+
+`/app-shell/lead-hunter/radar` führt jetzt mit **„Klarsa sucht neue Leads für
+Clean24"**, einfachen **Lead-Quellen-Statuskarten** (Google Places · Baugesuche
+Zürich · SIMAP · ZEFIX: Aktiv / Nicht verbunden), den **neuen Chancen**, der
+nächsten Aktion und drei Buttons (**Neue Leads suchen · Lead manuell erfassen ·
+Lead-Quellen verwalten**). **Keine** rohen Schema-/Spaltendiagnosen, keine
+langen Adapter-Fehler, kein „Opportunity Signals" als Hauptsprache — technische
+Details liegen hinter **„Technische Details anzeigen"**.
+
+### Lead-Quellen statt „Quellen-Registry"
+
+`/app-shell/lead-hunter/sources` heisst **Lead-Quellen** und ist die
+sekundäre/Experten-Seite (vom Lead Radar verlinkt). Manuelle Kanäle zeigen
+**„Bereit"** statt irreführend „Aktiv"; Buttons heissen **„Quelle prüfen"** und
+**„Lead erfassen"**. Jede Quelle hat einen **Archivieren**-Button (soft, via
+`deleted_at` — Prospects behalten ihre `source_id`, nichts bricht).
+
+### Läufe ausblenden
+
+Auf der Discovery-Seite kann der Inhaber einzelne **Läufe ausblenden** (kleines
+X) oder **„Alle Läufe ausblenden"**. **UI-Ebene only**: die `audit_logs` werden
+**nicht** verändert; der Filter liegt in `company_settings.settings`
+(`discoveryRunsHidden`) — keine Migration, kein Eingriff in den Audit-Trail.
+
+### Baugesuche-Mapping-Fix
+
+Der Adapter (`lib/discovery/baugesuche-zh.ts`) erkennt jetzt die echten Feld-
+namen des offiziellen ZH-OGD-Feeds: `projectDescription` → Titel,
+`municipality_name` → Gemeinde, `publicationDate` → Datum,
+`projectLocation_address_*` → Adresse, `buildingContractor`/`projectFramer` →
+Bauherrschafts-Kontext. Ohne brauchbare Zeilen erscheint die einfache Meldung
+**„Keine passenden Bau-Signale gefunden."** statt einem Schema-Dump.
+
+### SIMAP & ZEFIX (offizielle, env-gated Adapter)
+
+- **SIMAP Ausschreibungen** (`lib/discovery/simap.ts`): öffentliche
+  Ausschreibungen passend zu Reinigung/Facility, **nur offizielle API**
+  (`SIMAP_API_BASE_URL` + `SIMAP_API_TOKEN`), kein Scraping, Caps + Timeout,
+  gefiltert auf relevante Services. Ohne Zugang: „Zugang erforderlich".
+- **ZEFIX Firmenprüfung** (`lib/discovery/zefix.ts`): Firmen-Validierung +
+  begrenzte Firmensignale, **nur offizielle REST-API** (`ZEFIX_API_BASE_URL` +
+  Token oder User/Passwort), kein Bulk-Harvesting/Scraping. Ohne Zugang:
+  „Zugang erforderlich". Beide werden in der Registry nur als **aktiv** geführt,
+  wenn wirklich konfiguriert.
+
+### Einstellungen/Bereitschaft
+
+`/app-shell/settings` zeigt zusätzlich **SIMAP** und **ZEFIX** (konfiguriert /
+Zugang erforderlich) neben Google Places und Baugesuche — nur Status, **keine
+Schlüssel**.
+
+**Guardrails v0.5.15:** keine neue Migration, kein Service-Role, keine
+Secrets/echten Kundendaten committet, kein Scraping/HTML/PDF/Headless, kein
+Bulk-/Hintergrund-Versand, keine Buchung, keine echte bexio-API. **001–007
+unverändert; `004` unangetastet.** lint/build grün. Referenz-PDFs werden **nicht**
+committet.
 
 ## v0.5.14 — Einfacher Verkaufs-Workflow (abgeschlossen)
 
@@ -142,6 +227,11 @@ ab v0.5.11; in v0.5.13 zusätzlich der Restbestand auf `/workspace` geglättet).
 - **IMAP** als Eingang-Fundament: `IMAP_*` (vorbereitet, liest noch nicht)
 - **Google Places** Discovery: `GOOGLE_PLACES_API_KEY`
 - **Baugesuche Zürich**: `BAUGESUCHE_ZH_SIGNAL_URL`
+- **SIMAP** (öffentliche Ausschreibungen): `SIMAP_API_BASE_URL` + `SIMAP_API_TOKEN`
+  (offizielle API; ohne Zugang „Zugang erforderlich")
+- **ZEFIX** (Firmenprüfung): `ZEFIX_API_BASE_URL` + `ZEFIX_API_TOKEN` oder
+  `ZEFIX_API_USERNAME`/`ZEFIX_API_PASSWORD` (offizielle REST-API; ohne Zugang
+  „Zugang erforderlich")
 - **bexio**: manuelle Übergabe-Warteschlange (keine echte bexio-API)
 
 Alle Platzhalter bleiben leer im Repo. Kein Service-Role, keine Secrets.

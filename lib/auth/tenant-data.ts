@@ -601,6 +601,135 @@ export async function getJobById(
   return mapJobRow(data as unknown as RawJobRow);
 }
 
+export interface JobDocumentScopeItem {
+  label: string;
+  detail: string | null;
+  amountChf: number;
+}
+
+/**
+ * Rich job data for the customer/partner documents (Auftragsbestätigung,
+ * Partner-Einsatzbestätigung): the job joined with its source offer (the agreed
+ * scope = offer line items + pricing) and the customer lead. One embedded
+ * PostgREST query (no N+1). RLS-scoped via the session client (never
+ * service-role). Returns null if the job is not this tenant's. No migration —
+ * uses only existing columns.
+ */
+export interface JobDocumentData {
+  id: string;
+  title: string;
+  status: JobStatus;
+  valueChf: number | null;
+  scheduledFor: string | null;
+  location: string | null;
+  team: string | null;
+  createdAt: string;
+  customerName: string | null;
+  customerContact: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  customerRegion: string | null;
+  serviceInterest: string | null;
+  offerReference: string | null;
+  offerNetChf: number | null;
+  offerVatRatePct: number | null;
+  offerGrossChf: number | null;
+  offerValidUntil: string | null;
+  scopeItems: JobDocumentScopeItem[];
+}
+
+const JOB_DOC_SELECT =
+  "id, title, status, value_chf, scheduled_for, location, team, created_at, offers ( reference, total_net_chf, vat_rate_pct, total_gross_chf, valid_until, offer_items ( label, detail, amount_chf, sort_order ) ), leads ( company_name, contact_name, email, phone, region, service_interest )";
+
+interface RawJobDocOffer {
+  reference: string;
+  total_net_chf: number | string;
+  vat_rate_pct: number | string;
+  total_gross_chf: number | string;
+  valid_until: string | null;
+  offer_items: Array<{
+    label: string;
+    detail: string | null;
+    amount_chf: number | string;
+    sort_order: number;
+  }> | null;
+}
+interface RawJobDocLead {
+  company_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  region: string | null;
+  service_interest: string | null;
+}
+interface RawJobDocRow {
+  id: string;
+  title: string;
+  status: JobStatus;
+  value_chf: number | string | null;
+  scheduled_for: string | null;
+  location: string | null;
+  team: string | null;
+  created_at: string;
+  offers: RawJobDocOffer | RawJobDocOffer[] | null;
+  leads: RawJobDocLead | RawJobDocLead[] | null;
+}
+
+export async function getJobDocumentData(
+  companyId: string,
+  jobId: string,
+): Promise<JobDocumentData | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(JOB_DOC_SELECT)
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[tenant-data] getJobDocumentData failed:", error.message);
+    return null;
+  }
+  if (!data) return null;
+
+  const row = data as unknown as RawJobDocRow;
+  const offer = Array.isArray(row.offers) ? row.offers[0] : row.offers;
+  const lead = Array.isArray(row.leads) ? row.leads[0] : row.leads;
+  const scopeItems: JobDocumentScopeItem[] = (offer?.offer_items ?? [])
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((it) => ({
+      label: it.label,
+      detail: it.detail,
+      amountChf: Number(it.amount_chf) || 0,
+    }));
+
+  return {
+    id: row.id,
+    title: row.title,
+    status: row.status,
+    valueChf: row.value_chf === null ? null : Number(row.value_chf) || 0,
+    scheduledFor: row.scheduled_for,
+    location: row.location,
+    team: row.team,
+    createdAt: row.created_at,
+    customerName: lead?.company_name ?? null,
+    customerContact: lead?.contact_name ?? null,
+    customerEmail: lead?.email ?? null,
+    customerPhone: lead?.phone ?? null,
+    customerRegion: lead?.region ?? null,
+    serviceInterest: lead?.service_interest ?? null,
+    offerReference: offer?.reference ?? null,
+    offerNetChf: offer ? Number(offer.total_net_chf) || 0 : null,
+    offerVatRatePct: offer ? Number(offer.vat_rate_pct) || 0 : null,
+    offerGrossChf: offer ? Number(offer.total_gross_chf) || 0 : null,
+    offerValidUntil: offer?.valid_until ?? null,
+    scopeItems,
+  };
+}
+
 /* -------------------------------------------------------------------------- */
 /* bexio handoffs (manual invoice-handoff queue)                               */
 /* -------------------------------------------------------------------------- */

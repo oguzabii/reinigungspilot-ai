@@ -104,8 +104,9 @@ export default function WorkspacePage() {
               Noch kein Login, keine echten Kundendaten.
             </p>
             <p className="mt-1 text-sm leading-relaxed text-amber-800">
-              Echte Daten gehen erst live, wenn Auth, Rollen, Mandantentrennung
-              (RLS), Audit-Logs und Backup/Restore stehen. Harte Regel:{" "}
+              Echte Daten gehen erst live, wenn Anmeldung, Rollen,
+              Mandantentrennung, Audit-Logs und Backup/Restore stehen. Harte
+              Regel:{" "}
               <strong className="font-semibold">
                 „No Security = No Customer Data.“
               </strong>

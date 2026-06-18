@@ -75,7 +75,7 @@ const NAV_ITEMS: NavItem[] = [
       p.startsWith("/app-shell/jobs") || p.startsWith("/app-shell/bexio"),
   },
   {
-    label: "Chefansicht",
+    label: "CEO / Finanzen",
     href: "/app-shell/ceo",
     icon: Crown,
     isActive: (p) => p === "/app-shell/ceo" || p.startsWith("/app-shell/ceo/"),

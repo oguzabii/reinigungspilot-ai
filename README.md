@@ -7,6 +7,35 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.13** — **Sales-Ready Workflow & Clean24-Dokumentvorlagen.** Klarsa wird
+abschluss-fähiger: aus einem gewonnenen Auftrag entstehen jetzt **kundenfertige
+und interne PDF-Dokumente**. **Reine, additive Helfer + Reads + Routen, keine
+neue Migration, kein Versand.** (1) **Geteilter, dependency-freier PDF-Kern**
+(`lib/pdf/pdf-core.ts`, aus dem bewährten Offerten-Builder extrahiert) —
+Helvetica/WinAnsi/latin1 (ä ö ü ß), einseitig A4, **kein externes Asset/Font,
+env-freier Build**; die bestehende Offerte (`/app-shell/offers/[id]/pdf`) bleibt
+unangetastet. (2) **Auftragsbestätigung** (kundenseitig) unter
+**`/app-shell/jobs/[id]/confirmation/pdf`**: Firmenkopf, Referenz/Datum/Quell-
+Offerte, Kunde, Eckdaten (Reinigungsdatum/Übergabe/Adresse/Leistung), vereinbarter
+Umfang (Offert-Positionen), Preisübersicht (Netto/MwSt 8.1 %/Total),
+**Abgabegarantie**. (3) **Partner-Einsatzbestätigung** (intern) unter
+**`/app-shell/jobs/[id]/partner/pdf`**: Objekt/Ansprechpartner, Eckdaten,
+Partner/Team, Status, auszuführender Umfang und **feste Partner-Hinweise**
+(Kundenkommunikation über die Firma · keine eigenen Angebote · zuerst die Firma
+kontaktieren · Vorher-/Nachher-Fotos). (4) Beide aus **bestehenden Daten**
+(`getJobDocumentData`, Session-Client/RLS) — **keine neue Spalte**; „Übergabe"
+nutzt die Termin-Uhrzeit, sonst „nach Vereinbarung". (5) **Aufträge-Seite**:
+Download-Buttons **Auftragsbestätigung** + **Partner-Einsatz** pro Auftrag,
+Archivieren bleibt. (6) **Sprache**: Rest-Begriff „RLS" auf `/workspace`
+geglättet; Nav „Chefansicht" → **„CEO / Finanzen"**. **Bewusst fokussiert** —
+Pipeline-Seite, manuelle Offerte/Kunde, Cockpit „Nächste beste Aktion",
+CEO-Perioden und eine Einstellungen-Seite sind als **nächste Iteration**
+dokumentiert. **Kein Service-Role, keine Secrets, keine echten Kundendaten, kein
+Scraping/Bulk/Hintergrund-Versand/Buchung, keine echte bexio-API. 001–007
+unverändert; `004` unangetastet.** Neu: `docs/clean24-sales-ready-workflow.md`.
+lint/build grün. **Nächster Schritt: Produktions-QA der Dokumente +
+Pipeline/manuelle-Offerte-Iteration.**
+
 **v0.5.12** — **Kompakter Geld-Ablauf & Contact Enrichment Autopilot.** Klarsa
 fühlt sich wie **ein** Verkaufs-Ablauf an: **Firmen finden → Kontakt automatisch
 finden → E-Mail senden → Nachfassen/Termin → Offerte/Auftrag**. **Reine UI +

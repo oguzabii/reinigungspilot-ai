@@ -80,7 +80,7 @@ export default async function AppShellJobsPage() {
         {/* Calm status note */}
         <div className="mt-6 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
           <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
-          Aufträge aus angenommenen Offerten. Status & Termin pflegen, Termin als .ics herunterladen.
+          Aufträge aus gewonnenen Offerten. Termin pflegen, Auftragsbestätigung und Partner-Einsatzbestätigung als PDF herunterladen.
         </div>
 
         {/* Job list / empty state */}
@@ -156,14 +156,32 @@ function JobRow({ job }: { job: JobListItem }) {
           currentStatus={job.status}
         />
         <JobScheduleForm jobId={job.id} hasSchedule={job.scheduledFor !== null} />
-        {job.scheduledFor && (
+        <div className="flex flex-wrap gap-2">
+          {job.scheduledFor && (
+            <a
+              href={`/app-shell/jobs/${job.id}/ics`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
+            >
+              <CalendarPlus className="h-3.5 w-3.5" /> Termin (.ics)
+            </a>
+          )}
           <a
-            href={`/app-shell/jobs/${job.id}/ics`}
+            href={`/app-shell/jobs/${job.id}/confirmation/pdf`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
           >
-            <CalendarPlus className="h-3.5 w-3.5" /> Termin (.ics)
+            <Receipt className="h-3.5 w-3.5" /> Auftragsbestätigung
           </a>
-        )}
+          <a
+            href={`/app-shell/jobs/${job.id}/partner/pdf`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
+          >
+            <UserRound className="h-3.5 w-3.5" /> Partner-Einsatz
+          </a>
+        </div>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">

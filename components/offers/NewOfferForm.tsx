@@ -25,7 +25,14 @@ const initialState: ActionState = { status: "idle" };
  * belong to the active tenant), optional reference (auto-generated if blank),
  * and an optional first line item. No PDF, no sending — this only drafts.
  */
-export function NewOfferForm({ leads }: { leads: LeadOption[] }) {
+export function NewOfferForm({
+  leads,
+  preselectLeadId,
+}: {
+  leads: LeadOption[];
+  /** Preselect this lead (e.g. when arriving from "Offerte vorbereiten"). */
+  preselectLeadId?: string;
+}) {
   const [state, formAction, pending] = useActionState(createOffer, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -40,7 +47,12 @@ export function NewOfferForm({ leads }: { leads: LeadOption[] }) {
           <label htmlFor="of_lead_id" className={labelClass}>
             Aus Lead (optional)
           </label>
-          <select id="of_lead_id" name="lead_id" defaultValue="" className={inputClass}>
+          <select
+            id="of_lead_id"
+            name="lead_id"
+            defaultValue={preselectLeadId ?? ""}
+            className={inputClass}
+          >
             <option value="">– Ohne Lead –</option>
             {leads.map((l) => (
               <option key={l.id} value={l.id}>

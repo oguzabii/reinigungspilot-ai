@@ -111,6 +111,10 @@ export interface PdfDoc {
   ) => void;
   /** Draw a filled circle (centre cx,cy, radius r). */
   circle: (cx: number, cy: number, r: number, color: RGB) => void;
+  /** Fill an arbitrary path (raw PDF path ops, e.g. "x y m … c h"). */
+  fillPath: (d: string, color: RGB) => void;
+  /** Stroke an arbitrary path. */
+  strokePath: (d: string, width: number, color: RGB) => void;
   /** Assemble the final single-page PDF bytes. */
   build: () => Uint8Array<ArrayBuffer>;
 }
@@ -175,6 +179,12 @@ export function createPdf(): PdfDoc {
         `${f(cx + K * r)} ${f(cy - r)} ${f(cx + r)} ${f(cy - K * r)} ${f(cx + r)} ${f(cy)} c f`,
     );
   };
+  const fillPath: PdfDoc["fillPath"] = (d, color) => {
+    ops.push(`${rgb(color)} rg ${d} f`);
+  };
+  const strokePath: PdfDoc["strokePath"] = (d, width, color) => {
+    ops.push(`${rgb(color)} RG ${width} w 1 J 1 j ${d} S`);
+  };
 
   const build = (): Uint8Array<ArrayBuffer> => {
     const content = ops.join("\n");
@@ -218,7 +228,10 @@ export function createPdf(): PdfDoc {
     return out;
   };
 
-  return { text, textRight, line, rect, roundedRect, roundedRectStroke, circle, build };
+  return {
+    text, textRight, line, rect, roundedRect, roundedRectStroke, circle,
+    fillPath, strokePath, build,
+  };
 }
 
 /** Shared Clean24-style header used by the customer/partner documents. */

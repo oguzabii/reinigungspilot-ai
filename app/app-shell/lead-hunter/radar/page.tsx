@@ -12,6 +12,8 @@ import {
   ChevronRight,
   Sparkles,
   ShieldCheck,
+  Clock,
+  Zap,
 } from "lucide-react";
 import { AppShellNav } from "@/components/app-shell/AppShellNav";
 import {
@@ -21,10 +23,11 @@ import {
   scoreFillRadar,
   scoreToneBadge,
 } from "@/components/lead-hunter/swiss-radar";
+import { CandidatePipelineButtons } from "@/components/lead-hunter/CandidatePipelineButtons";
 import { sourceReadiness } from "@/lib/discovery/adapters";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
-import { getCompanySummary, getProspects } from "@/lib/auth/tenant-data";
+import { getCompanySummary, getProspects, getDiscoveryRuns } from "@/lib/auth/tenant-data";
 
 // Reads the session/cookies -> always rendered on demand, never prerendered.
 export const dynamic = "force-dynamic";
@@ -66,14 +69,19 @@ export default async function AppShellLeadRadarPage() {
   const companyId = context.activeCompanyId;
   if (!companyId) redirect("/app-shell");
 
-  const [summary, opportunities] = await Promise.all([
+  const [summary, opportunities, runs] = await Promise.all([
     getCompanySummary(companyId),
     getProspects(companyId),
+    getDiscoveryRuns(companyId, 1),
   ]);
   const company = summary?.name ?? "Ihren Betrieb";
 
   const sources = sourceReadiness();
   const activeSources = sources.filter((s) => s.configured).length;
+  const lastRun = runs[0] ?? null;
+  const lastSearch = lastRun ? lastRun.createdAt.slice(0, 16).replace("T", " ") : null;
+  // Suggest the next source to check: first configured one, else first overall.
+  const nextSource = sources.find((s) => s.configured)?.label ?? sources[0]?.label ?? null;
 
   // New candidates (not yet in the pipeline), most interesting first.
   const candidates = opportunities
@@ -131,13 +139,30 @@ export default async function AppShellLeadRadarPage() {
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-navy-900">
-              Klarsa sucht neue Leads für {company}
+              Klarsa sucht aktiv neue Leads für {company}
             </h1>
             <p className="text-sm text-slate-500">
               {activeSources} von {sources.length} Lead-Quellen aktiv ·{" "}
               {candidates.length} neue Chance{candidates.length === 1 ? "" : "n"}
             </p>
           </div>
+        </div>
+
+        {/* Active-search status strip */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 shadow-sm">
+          <span className="inline-flex items-center gap-1.5 font-medium text-emerald-700">
+            <Zap className="h-3.5 w-3.5" /> {activeSources > 0 ? "Suche aktiv" : "Suche bereit"}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5 text-slate-400" />
+            {lastSearch ? `Letzte Suche: ${lastSearch}` : "Noch keine Suche ausgeführt"}
+          </span>
+          {nextSource && (
+            <span className="inline-flex items-center gap-1.5">
+              <Search className="h-3.5 w-3.5 text-slate-400" />
+              Nächste Quelle: {nextSource}
+            </span>
+          )}
         </div>
 
         {/* Action buttons */}
@@ -241,21 +266,26 @@ export default async function AppShellLeadRadarPage() {
               {topCandidates.map((c) => (
                 <li
                   key={c.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-navy-900">{c.name}</p>
-                    <p className="text-xs text-slate-500">
-                      {[c.region, c.contactEmail || c.contactPhone ? "Kontakt vorhanden" : "Kontakt fehlt"]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-navy-900">{c.name}</p>
+                      <p className="text-xs text-slate-500">
+                        {[c.region, c.contactEmail || c.contactPhone ? "Kontakt vorhanden" : "Kontakt fehlt"]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    {c.score !== null && (
+                      <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${scoreToneBadge(c.score)}`}>
+                        Score {c.score}
+                      </span>
+                    )}
                   </div>
-                  {c.score !== null && (
-                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${scoreToneBadge(c.score)}`}>
-                      Score {c.score}
-                    </span>
-                  )}
+                  <div className="mt-2 border-t border-slate-100 pt-2">
+                    <CandidatePipelineButtons prospectId={c.id} />
+                  </div>
                 </li>
               ))}
             </ul>

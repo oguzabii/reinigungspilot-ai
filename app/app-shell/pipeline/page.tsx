@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import {
   Workflow,
   FilePlus2,
+  FilePenLine,
   Sparkles,
   MapPin,
   Library,
@@ -26,9 +27,11 @@ import { salesStageStats } from "@/components/app-shell/sales-flow";
 import { isPremiumExperience } from "@/components/app-shell/autopilot-tier";
 import { EnrichContactButton } from "@/app/app-shell/revenue-autopilot/outreach/EnrichContactButton";
 import { SendEmailButton } from "@/app/app-shell/revenue-autopilot/outreach/SendEmailButton";
-import { PromoteOpportunityButton } from "@/components/lead-hunter/PromoteOpportunityButton";
+import { CandidatePipelineButtons } from "@/components/lead-hunter/CandidatePipelineButtons";
 import { LeadStatusForm } from "@/components/leads/LeadStatusForm";
+import { FollowupSequence, type SeqStep } from "@/components/leads/FollowupSequence";
 import { CreateJobButton } from "@/components/offers/CreateJobButton";
+import { FocusScroller } from "./FocusScroller";
 import { JOB_STATUS_META } from "@/components/jobs/job-status";
 import { LEAD_STATUS_META, FOLLOWUP_STAGE_LABELS } from "@/components/leads/lead-status";
 import { OFFER_STATUS_META, formatChf } from "@/components/offers/offer-status";
@@ -66,13 +69,26 @@ export const metadata: Metadata = {
 const PRE_PROMO = new Set<string>(["raw", "scored", "approved"]);
 const OPEN_FOLLOWUP = new Set<string>(["planned", "due", "overdue"]);
 
-export default async function AppShellPipelinePage() {
+export default async function AppShellPipelinePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ focus?: string }>;
+}) {
   if (!isSupabaseConfigured()) redirect("/app-shell");
 
   const context = await getCurrentCompanyContext();
   if (!context) redirect("/login");
   const companyId = context.activeCompanyId;
   if (!companyId) redirect("/app-shell");
+
+  // Deep-link focus: ?focus=lead:<id> | followups
+  const focusRaw = (await searchParams).focus ?? "";
+  const focusedLeadId = focusRaw.startsWith("lead:") ? focusRaw.slice(5) : null;
+  const focusTargetId = focusedLeadId
+    ? `lead-${focusedLeadId}`
+    : focusRaw === "followups"
+      ? "leads"
+      : "";
 
   const [summary, prospects, leads, offers, followups, jobs, handoffJobs] =
     await Promise.all([
@@ -127,6 +143,19 @@ export default async function AppShellPipelinePage() {
     followupsByLead.set(f.leadId, arr);
   }
 
+  // All non-skipped follow-ups per lead = the sequence steps (planned/due/done).
+  const seqByLead = new Map<string, SeqStep[]>();
+  for (const f of followups) {
+    const arr = seqByLead.get(f.leadId) ?? [];
+    arr.push({ stage: f.stage, status: f.status, dueAt: f.dueAt });
+    seqByLead.set(f.leadId, arr);
+  }
+
+  // Focus deep-link: bring the focused lead to the top.
+  const orderedLeads = focusedLeadId
+    ? [...leads.filter((l) => l.id === focusedLeadId), ...leads.filter((l) => l.id !== focusedLeadId)]
+    : leads;
+
   // Send eligibility: Premium experience + a configured channel (per card we
   // also require a stored email). The button itself enforces this server-side.
   const canSend =
@@ -136,6 +165,7 @@ export default async function AppShellPipelinePage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <AppShellNav companyName={summary?.name} />
+      {focusTargetId && <FocusScroller targetId={focusTargetId} />}
       <main className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -228,12 +258,15 @@ export default async function AppShellPipelinePage() {
             </div>
           ) : (
             <ul className="mt-3 space-y-3">
-              {leads.map((lead) => (
+              {orderedLeads.map((lead) => (
                 <LeadCard
                   key={lead.id}
                   lead={lead}
                   offers={offersByLead.get(lead.id) ?? []}
                   followups={followupsByLead.get(lead.id) ?? []}
+                  seqSteps={seqByLead.get(lead.id) ?? []}
+                  canSend={canSend}
+                  focused={lead.id === focusedLeadId}
                 />
               ))}
             </ul>
@@ -348,13 +381,13 @@ function CandidateCard({
         )}
       </div>
 
-      {/* Actions */}
+      {/* Actions — Kontakt finden · E-Mail · In Pipeline / Offerte vorbereiten */}
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
         <EnrichContactButton prospectId={p.id} />
         {canSend && p.contactEmail && (
           <SendEmailButton prospectId={p.id} sent={p.status === "contacted"} />
         )}
-        <PromoteOpportunityButton opportunityId={p.id} promoted={false} />
+        <CandidatePipelineButtons prospectId={p.id} />
         <span className="ml-auto">
           <ArchiveButton entity="prospect" id={p.id} />
         </span>
@@ -371,10 +404,16 @@ function LeadCard({
   lead,
   offers,
   followups,
+  seqSteps,
+  canSend,
+  focused,
 }: {
   lead: LeadListItem;
   offers: OfferListItem[];
   followups: FollowupListItem[];
+  seqSteps: SeqStep[];
+  canSend: boolean;
+  focused: boolean;
 }) {
   const status = LEAD_STATUS_META[lead.status] ?? LEAD_STATUS_META.new;
   const offer = offers[0] ?? null; // newest offer for this lead
@@ -383,7 +422,12 @@ function LeadCard({
   const followup = followups[0] ?? null;
 
   return (
-    <li className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <li
+      id={`lead-${lead.id}`}
+      className={`scroll-mt-28 rounded-xl border bg-white p-4 shadow-sm ${
+        focused ? "border-blue-400 ring-2 ring-blue-200" : "border-slate-200"
+      }`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="font-semibold text-navy-900">{lead.companyName}</p>
         <span
@@ -447,20 +491,28 @@ function LeadCard({
         />
       </div>
 
-      {/* Next actions */}
+      {/* Offer actions */}
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
         {offer ? (
-          <a
-            href={`/app-shell/offers/${offer.id}/pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
-          >
-            <Download className="h-3.5 w-3.5" /> Offerte (PDF)
-          </a>
+          <>
+            <a
+              href={`/app-shell/offers/${offer.id}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
+            >
+              <Download className="h-3.5 w-3.5" /> Offerte (PDF)
+            </a>
+            <Link
+              href={`/app-shell/offers/${offer.id}/edit`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
+            >
+              <FilePenLine className="h-3.5 w-3.5" /> Offerte bearbeiten
+            </Link>
+          </>
         ) : (
           <Link
-            href="/app-shell/offers/new"
+            href={`/app-shell/offers/new?lead=${lead.id}`}
             className="inline-flex items-center gap-1.5 rounded-lg bg-navy-900 px-2.5 py-1 text-xs font-semibold text-white transition-colors hover:bg-navy-800"
           >
             <FilePlus2 className="h-3.5 w-3.5" /> Offerte erstellen
@@ -469,16 +521,13 @@ function LeadCard({
         {acceptedNoJob && (
           <CreateJobButton offerId={acceptedNoJob.id} hasJob={false} />
         )}
-        <Link
-          href="/app-shell/leads"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-800 transition-colors hover:border-blue-300 hover:text-blue-700"
-        >
-          <BellRing className="h-3.5 w-3.5" /> Follow-up planen
-        </Link>
         <span className="ml-auto">
           <ArchiveButton entity="lead" id={lead.id} />
         </span>
       </div>
+
+      {/* Automatic follow-up sequence (24h · 48h · 5 Tage) */}
+      <FollowupSequence leadId={lead.id} steps={seqSteps} canSend={canSend} />
     </li>
   );
 }

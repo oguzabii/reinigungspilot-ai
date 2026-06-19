@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function AppShellNewOfferPage() {
+export default async function AppShellNewOfferPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lead?: string }>;
+}) {
   if (!isSupabaseConfigured()) redirect("/app-shell");
 
   const context = await getCurrentCompanyContext();
@@ -31,6 +35,12 @@ export default async function AppShellNewOfferPage() {
     getCompanySummary(companyId),
     getLeads(companyId),
   ]);
+
+  // Preselect a lead when arriving from "Offerte vorbereiten" (only if it's ours).
+  const requestedLead = (await searchParams).lead;
+  const preselectLeadId = leads.some((l) => l.id === requestedLead)
+    ? requestedLead
+    : undefined;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -81,6 +91,7 @@ export default async function AppShellNewOfferPage() {
           <div className="mt-4">
             <NewOfferForm
               leads={leads.map((l) => ({ id: l.id, name: l.companyName }))}
+              preselectLeadId={preselectLeadId}
             />
           </div>
         </section>

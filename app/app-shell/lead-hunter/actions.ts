@@ -14,6 +14,7 @@
  */
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import type { ProspectStatus, SourceType, LeadStatus } from "@/lib/database-types";
@@ -280,4 +281,113 @@ export async function promoteOpportunity(
   revalidatePath("/app-shell/lead-hunter");
   revalidatePath("/app-shell/leads");
   return { status: "success", message: "In den Lead Inbox übernommen." };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Promote a candidate and go straight to Pipeline or the offer form (v0.5.16) */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One-click "In Pipeline übernehmen" / "Offerte vorbereiten" for a candidate:
+ * promote it to a lead (or reuse the existing one if already promoted) and
+ * redirect — to the Pipeline focused on that lead, or directly to the prefilled
+ * offer form. Skips the Lead-Inbox detour. Session client + RLS; never
+ * service-role. `intent`: "pipeline" (default) | "offer".
+ */
+export async function promoteCandidate(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const context = await getCurrentCompanyContext();
+  if (!context || !context.activeCompanyId) {
+    return { status: "error", message: "Kein aktiver Mandant – bitte erneut anmelden." };
+  }
+  const companyId = context.activeCompanyId;
+
+  const prospectId = field(formData, "prospect_id");
+  if (!prospectId) return { status: "error", message: "Keine Chance ausgewählt." };
+  const intent = field(formData, "intent", 20) === "offer" ? "offer" : "pipeline";
+
+  const supabase = await createClient();
+  const { data: prospect, error } = await supabase
+    .from("prospects")
+    .select("id, name, region, source_type, search_query, reason, suggested_message, promoted_lead_id")
+    .eq("id", prospectId)
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error) {
+    console.error("[lead-hunter] promoteCandidate read failed:", error.message);
+    return { status: "error", message: "Übernahme fehlgeschlagen. Bitte erneut versuchen." };
+  }
+  if (!prospect) return { status: "error", message: "Chance nicht gefunden." };
+  const p = prospect as unknown as {
+    name: string;
+    region: string | null;
+    source_type: SourceType;
+    search_query: string | null;
+    reason: string | null;
+    suggested_message: string | null;
+    promoted_lead_id: string | null;
+  };
+
+  let leadId = p.promoted_lead_id;
+  if (!leadId) {
+    const noteParts: string[] = [];
+    if (p.reason) noteParts.push(p.reason);
+    if (p.suggested_message) noteParts.push(`Nächste Aktion: ${p.suggested_message}`);
+    const { data: lead, error: leadError } = await supabase
+      .from("leads")
+      .insert({
+        company_id: companyId,
+        company_name: p.name,
+        region: p.region,
+        source_type: p.source_type,
+        service_interest: p.search_query,
+        status: "qualified" as LeadStatus,
+        notes: noteParts.length > 0 ? noteParts.join("\n\n") : null,
+        prospect_id: prospectId,
+        created_by: context.user.id,
+        updated_by: context.user.id,
+      })
+      .select("id")
+      .single();
+    if (leadError || !lead) {
+      console.error("[lead-hunter] promoteCandidate lead insert failed:", leadError?.message);
+      return { status: "error", message: "Lead konnte nicht erstellt werden. Berechtigung prüfen." };
+    }
+    // Atomically claim the prospect; on a lost race, drop the orphan and reuse.
+    const { data: claimed } = await supabase
+      .from("prospects")
+      .update({ promoted_lead_id: lead.id, status: "converted" as ProspectStatus, updated_by: context.user.id })
+      .eq("id", prospectId)
+      .eq("company_id", companyId)
+      .is("promoted_lead_id", null)
+      .select("id");
+    if (!claimed || claimed.length === 0) {
+      await supabase.from("leads").update({ deleted_at: new Date().toISOString() }).eq("id", lead.id).eq("company_id", companyId);
+      const { data: again } = await supabase
+        .from("prospects")
+        .select("promoted_lead_id")
+        .eq("id", prospectId)
+        .eq("company_id", companyId)
+        .maybeSingle();
+      leadId = (again as { promoted_lead_id: string | null } | null)?.promoted_lead_id ?? null;
+      if (!leadId) {
+        return { status: "error", message: "Übernahme fehlgeschlagen. Bitte erneut versuchen." };
+      }
+    } else {
+      leadId = lead.id;
+    }
+  }
+
+  revalidatePath("/app-shell/lead-hunter");
+  revalidatePath("/app-shell/leads");
+  revalidatePath("/app-shell/pipeline");
+  // redirect() throws — must be outside any try/catch.
+  redirect(
+    intent === "offer"
+      ? `/app-shell/offers/new?lead=${leadId}`
+      : `/app-shell/pipeline?focus=lead:${leadId}`,
+  );
 }

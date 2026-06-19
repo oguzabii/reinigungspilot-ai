@@ -123,6 +123,43 @@ export function resolveCompanyProfile(
   };
 }
 
+/** A footer text run: bold (label) or regular (value). */
+export interface FooterSeg {
+  t: string;
+  b: boolean;
+}
+
+/**
+ * Footer as bold-label segments (matching the Clean24 reference: bold labels
+ * like "E-Mail:", "Bank:", "IBAN:" with regular values). Returns lines of
+ * segments; only present values are included.
+ */
+export function footerSegments(p: CompanyProfile): FooterSeg[][] {
+  const bold = (t: string): FooterSeg => ({ t, b: true });
+  const reg = (t: string): FooterSeg => ({ t, b: false });
+  const pair = (label: string, value: string): FooterSeg[] =>
+    value ? [bold(label), reg(` ${value}`)] : [];
+  const addr = [p.street, `${p.zip} ${p.city}`.trim()].filter(Boolean).join(", ");
+
+  const line1: FooterSeg[] = [
+    ...(p.legalName ? [bold(p.legalName)] : []),
+    ...(addr ? [reg(`  ${addr}`)] : []),
+    ...pair("  E-Mail:", p.email),
+    ...pair("  Telefon:", p.phone),
+  ];
+  const line2: FooterSeg[] = [
+    ...pair("Website:", p.website),
+    ...pair("  Bank:", p.bankName),
+    ...pair("  Kontoinhaber:", p.bankHolder),
+    ...pair("  BIC/Swift:", p.bic),
+  ];
+  const line3: FooterSeg[] = [
+    ...pair("IBAN:", p.iban),
+    ...pair("  MwSt Nr.:", p.vatNo),
+  ];
+  return [line1, line2, line3].filter((l) => l.length > 0);
+}
+
 /** Single-line footer string with the parts that are present. */
 export function footerLine(p: CompanyProfile): string[] {
   const line1Parts = [

@@ -7,6 +7,39 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.16** — **Usability-Politur, editierbare Offerten, Follow-up-Sequenz &
+Direktfluss.** Klarsa wird für den täglichen Betrieb einfacher: eine gefundene
+Chance wird über **eine** Pipeline zu Lead, Offerte, Follow-up und Auftrag.
+**Keine neue Migration, kein Service-Role, kein Bulk-/Hintergrund-Versand.**
+(1) **Offerte-PDF treuer**: Vektor-Logo (Blatt + „Clean" + grünes „24" + Swoosh
++ Tagline – kein Asset nötig), engere Abstände/Typografie, Tabellen-Spaltentrenner
+und **fette Footer-Labels** wie in der Referenz. (2) **Editierbare Offerten**
+(`/app-shell/offers/[id]/edit`): Kunde, Leistung, Daten, erste Position (Bez. +
+Preis), MwSt, Gültig-bis, Notizen ändern; Totale neu berechnet; **PDF immer aus
+DB** → Änderung wirkt sofort; bei gesendeter Offerte Hinweis, dass versendete
+E-Mails unverändert bleiben. Buttons: bearbeiten · PDF Vorschau · PDF neu öffnen ·
+zurück. (3) **Direktfluss Kandidat → Pipeline → Offerte**: auf jeder Karte **In
+Pipeline übernehmen** (promotet + Pipeline-Fokus `?focus=lead:<id>`) und **Offerte
+vorbereiten** (promotet + Offertenformular mit vorausgefülltem Lead) – **ohne**
+Lead-Inbox-Umweg. (4) **Automatische Follow-up-Sequenz**: Owner startet 24h/48h/
+5-Tage-Schritte (schema-konform, keine Migration); Karte zeigt aktiv/Schritt/
+nächste Erinnerung; **Stoppen** manuell oder **„Antwort erhalten"** (Reply-Stop);
+Versand **nur** bei verbundenem Kanal (Premium), **owner-ausgelöst**, gedeckelt,
+auditiert. **Cron** `/api/cron/followups` vorbereitet + **secret-gated**
+(`FOLLOWUP_CRON_SECRET`), **kein** Versand (Hintergrund bräuchte Service-Role).
+Volle IMAP-Antworterkennung bleibt vorbereitet/dokumentiert – nichts wird
+vorgetäuscht. (5) **Einstellungen** als **Kategorien-Karten** (Allgemein ·
+Vertrieb & Automationen · E-Mail & Antworten · Dokumente · Lead-Quellen ·
+Bereinigung) statt langer Health-Liste. (6) **CEO/Finanzen**: Perioden-Kennzahlen
+sind jetzt **klickbare Aktionskarten** (Hover, CTA, Zielseiten). (7) **Lead Radar**
+aktiver: „Klarsa sucht aktiv", letzte Suche, nächste Quelle, **In Pipeline
+übernehmen** direkt auf Kandidaten. **Kein Service-Role, keine Secrets/echten
+Kundendaten, kein Scraping/Bulk/Hintergrund-Versand/Buchung, keine echte
+bexio-API. 001–007 unverändert; `004` unangetastet.** Aktualisiert:
+`docs/clean24-sales-ready-workflow.md`, `.env.local.example`. lint/build grün.
+**Nächster Schritt: Produktions-QA (PDF, Offerten-Edit, Follow-up-Sequenz) +
+Sales-Launch.**
+
 **v0.5.15** — **Clean24-Dokumentvorlagen, Lead-Radar-Politur, SIMAP/ZEFIX-Fundament.**
 Kundenseitige Politur: exakte Clean24-PDFs, ein aufgeräumter Lead Radar und zwei
 neue offizielle, env-gated Quellen-Adapter. **Reine UI + Helfer + Adapter, keine

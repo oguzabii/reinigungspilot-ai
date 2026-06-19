@@ -367,6 +367,195 @@ export async function createManualOffer(
 }
 
 /* -------------------------------------------------------------------------- */
+/* Edit an existing offer (customer + primary line item + totals) (v0.5.16)    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Edit an offer after creation: the customer (linked lead), the PRIMARY line
+ * item (description + price) and the offer meta (VAT, valid-until). Totals are
+ * recomputed from all current items. The PDF is always generated from the DB,
+ * so an edit immediately changes the PDF output. Session client + RLS (sales
+ * domain); no migration. Editing a SENT offer is allowed (the form shows a
+ * warning) — already-sent emails are unaffected.
+ *
+ * Multi-item editing is out of scope here (the offer page's "Position
+ * hinzufügen" covers more lines); this edits the first line item and is
+ * structured so quantity/multi-item can be added later.
+ */
+export async function updateOffer(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const context = await getCurrentCompanyContext();
+  if (!context || !context.activeCompanyId) {
+    return { status: "error", message: "Kein aktiver Mandant – bitte erneut anmelden." };
+  }
+  const companyId = context.activeCompanyId;
+
+  const offerId = field(formData, "offer_id", 60);
+  if (!offerId) return { status: "error", message: "Keine Offerte ausgewählt." };
+
+  const customerName = field(formData, "customer_name", 200);
+  if (!customerName) return { status: "error", message: "Kundenname ist erforderlich." };
+
+  const service = field(formData, "service", 200);
+  const itemLabel = field(formData, "item_label", 200) ?? service;
+  if (!itemLabel) {
+    return { status: "error", message: "Leistung oder Positions-Bezeichnung ist erforderlich." };
+  }
+  const price = parseAmount(field(formData, "item_amount", 20));
+  if (price === null) return { status: "error", message: "Bitte einen gültigen Preis angeben." };
+
+  const vatRate = parseVat(field(formData, "vat_rate_pct", 10));
+  const validRaw = field(formData, "valid_until", 10);
+  if (validRaw && !/^\d{4}-\d{2}-\d{2}$/.test(validRaw)) {
+    return { status: "error", message: "Ungültiges Gültigkeitsdatum." };
+  }
+  const validUntil = validRaw ?? null;
+
+  // Compose the customer-side context into the lead's free-text notes.
+  const cleaningDate = field(formData, "cleaning_date", 40);
+  const handover = field(formData, "handover", 120);
+  const freeNotes = field(formData, "notes", 1500);
+  const noteLines: string[] = [];
+  if (cleaningDate) noteLines.push(`Reinigungsdatum: ${cleaningDate}`);
+  if (handover) noteLines.push(`Übergabe: ${handover}`);
+  if (freeNotes) noteLines.push(freeNotes);
+  const leadNotes = noteLines.length > 0 ? noteLines.join("\n") : null;
+
+  const supabase = await createClient();
+
+  // The offer must belong to the ACTIVE tenant and not be deleted.
+  const { data: offerRow, error: offerErr } = await supabase
+    .from("offers")
+    .select("id, lead_id")
+    .eq("id", offerId)
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (offerErr) {
+    console.error("[offers] updateOffer offer read failed:", offerErr.message);
+    return { status: "error", message: "Offerte konnte nicht geladen werden. Bitte erneut versuchen." };
+  }
+  if (!offerRow) {
+    return { status: "error", message: "Offerte nicht gefunden (gehört nicht zum aktiven Mandanten)." };
+  }
+  let leadId = (offerRow as { lead_id: string | null }).lead_id;
+
+  // 1) Update (or create) the customer lead.
+  const leadFields = {
+    company_name: customerName,
+    contact_name: field(formData, "contact_name", 200),
+    email: field(formData, "email", 320),
+    phone: field(formData, "phone", 50),
+    region: field(formData, "address", 300),
+    service_interest: service,
+    notes: leadNotes,
+    updated_by: context.user.id,
+  };
+  if (leadId) {
+    const { error } = await supabase
+      .from("leads")
+      .update(leadFields)
+      .eq("id", leadId)
+      .eq("company_id", companyId)
+      .is("deleted_at", null);
+    if (error) {
+      console.error("[offers] updateOffer lead update failed:", error.message);
+      return { status: "error", message: "Kundendaten konnten nicht gespeichert werden. Berechtigung prüfen." };
+    }
+  } else {
+    const { data: lead, error } = await supabase
+      .from("leads")
+      .insert({
+        company_id: companyId,
+        source_type: "manual" as SourceType,
+        status: "offer_ready" as LeadStatus,
+        created_by: context.user.id,
+        ...leadFields,
+      })
+      .select("id")
+      .single();
+    if (error || !lead) {
+      console.error("[offers] updateOffer lead insert failed:", error?.message);
+      return { status: "error", message: "Kunde konnte nicht gespeichert werden. Berechtigung prüfen." };
+    }
+    leadId = lead.id;
+    await supabase
+      .from("offers")
+      .update({ lead_id: leadId, updated_by: context.user.id })
+      .eq("id", offerId)
+      .eq("company_id", companyId);
+  }
+
+  // 2) Update the PRIMARY line item (lowest sort_order), or insert one.
+  const itemDetail = field(formData, "item_detail", 500);
+  const { data: items } = await supabase
+    .from("offer_items")
+    .select("id, sort_order")
+    .eq("offer_id", offerId)
+    .eq("company_id", companyId)
+    .order("sort_order", { ascending: true });
+  const primary = (items ?? [])[0] as { id: string } | undefined;
+  if (primary) {
+    const { error } = await supabase
+      .from("offer_items")
+      .update({ label: itemLabel, detail: itemDetail, amount_chf: price })
+      .eq("id", primary.id)
+      .eq("company_id", companyId);
+    if (error) {
+      console.error("[offers] updateOffer item update failed:", error.message);
+      return { status: "error", message: "Position konnte nicht gespeichert werden. Berechtigung prüfen." };
+    }
+  } else {
+    const { error } = await supabase.from("offer_items").insert({
+      company_id: companyId,
+      offer_id: offerId,
+      label: itemLabel,
+      detail: itemDetail,
+      amount_chf: price,
+      sort_order: 0,
+    });
+    if (error) {
+      console.error("[offers] updateOffer item insert failed:", error.message);
+      return { status: "error", message: "Position konnte nicht gespeichert werden. Berechtigung prüfen." };
+    }
+  }
+
+  // 3) Recompute totals from ALL current items, then update the offer.
+  const { data: allItems } = await supabase
+    .from("offer_items")
+    .select("amount_chf")
+    .eq("offer_id", offerId)
+    .eq("company_id", companyId);
+  const net = round2(
+    (allItems ?? []).reduce((s, r) => s + (Number((r as { amount_chf: number | string }).amount_chf) || 0), 0),
+  );
+  const gross = round2(net * (1 + vatRate / 100));
+  const { error: updErr } = await supabase
+    .from("offers")
+    .update({
+      total_net_chf: net,
+      vat_rate_pct: vatRate,
+      total_gross_chf: gross,
+      valid_until: validUntil,
+      updated_by: context.user.id,
+    })
+    .eq("id", offerId)
+    .eq("company_id", companyId)
+    .is("deleted_at", null);
+  if (updErr) {
+    console.error("[offers] updateOffer offer update failed:", updErr.message);
+    return { status: "error", message: "Offerte konnte nicht aktualisiert werden. Bitte erneut versuchen." };
+  }
+
+  revalidatePath("/app-shell/offers");
+  revalidatePath(`/app-shell/offers/${offerId}/edit`);
+  revalidatePath("/app-shell/pipeline");
+  return { status: "success", message: "Offerte aktualisiert – die PDF-Vorlage übernimmt die Änderungen." };
+}
+
+/* -------------------------------------------------------------------------- */
 /* Update offer status                                                         */
 /* -------------------------------------------------------------------------- */
 

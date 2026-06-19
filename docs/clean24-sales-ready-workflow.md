@@ -1,8 +1,101 @@
-# Clean24 — Sales-Ready Workflow & Dokumentvorlagen (v0.5.13 → v0.5.15)
+# Clean24 — Sales-Ready Workflow & Dokumentvorlagen (v0.5.13 → v0.5.16)
 
 Diese Version macht Klarsa für den Clean24-Pilot **abschluss-fähiger**: vom
 gewonnenen Auftrag entstehen jetzt **kundenfertige und interne Dokumente** als
 PDF — ohne neue Migration, ohne externe Bibliothek, ohne Versand.
+
+## v0.5.16 — Usability-Politur, editierbare Offerten, Follow-up-Sequenz
+
+Letzter Politur-Schliff für den täglichen Betrieb. **Keine neue Migration, kein
+Service-Role, kein Bulk-/Hintergrund-Versand.**
+
+### Vereinfachter Owner-Flow
+
+Eine gefundene Chance wird ohne Umweg zu Lead → Offerte → Follow-up → Auftrag:
+
+- Auf jeder Kandidaten-Karte (Lead Radar **und** Pipeline): **In Pipeline
+  übernehmen** (promotet den Lead und springt in die Pipeline, auf den Lead
+  fokussiert) und **Offerte vorbereiten** (promotet bei Bedarf und öffnet das
+  Offertenformular **mit vorausgefülltem Lead** — kein Zwang durch die Lead
+  Inbox).
+- Pipeline-Deep-Links: `?focus=lead:<id>` (Lead nach oben + hervorgehoben +
+  Scroll) und `?focus=followups`.
+
+### Editierbare Offerten
+
+`/app-shell/offers/[id]/edit`: Kunde (Name/Adresse/E-Mail/Telefon), Leistung,
+Reinigungs-/Übergabedatum, **erste Position (Bezeichnung + Preis)**, MwSt,
+Gültig-bis und Notizen ändern. Die Totale werden neu berechnet; **das PDF wird
+immer aus den aktuellen DB-Daten erzeugt**, eine Änderung wirkt sofort. Bei
+einer bereits **gesendeten** Offerte erscheint der Hinweis: „Änderungen
+aktualisieren die PDF-Vorlage. Bereits versendete E-Mails bleiben unverändert."
+Buttons: **Offerte bearbeiten · PDF Vorschau · PDF neu öffnen · Zurück zur
+Pipeline**. Mehrfach-Positionen/Mengen sind bewusst für später strukturiert
+(`offer_items` hat keine Mengen-Spalte — kein Migrationszwang).
+
+### Automatische Follow-up-Sequenz
+
+Owner-Klick **„Automatische Follow-up-Sequenz starten"** legt drei geplante
+Schritte an (Schema-konform, keine Migration): **+24 h · +48 h · +5 Tage**. Die
+Lead-Karte zeigt **aktiv · aktueller Schritt · nächste fällige Erinnerung**.
+Stoppen: **„Sequenz stoppen"** (manuell) oder **„Antwort erhalten"**
+(Reply-Stop). **Versand ist getrennt und gated:** nur wenn ein Kanal
+konfiguriert ist (Premium), **owner-ausgelöst** über „Fällige jetzt senden",
+**pro Lauf gedeckelt (5)**, jeder Versand auditiert (keine Empfänger-PII). Kein
+Bulk, kein verstecktes Senden.
+
+**Reply-Stop:** Heute zuverlässig **manuell** (Button „Antwort erhalten"
+stoppt die Sequenz). Vollautomatische IMAP-Antworterkennung bleibt vorbereitet
+(IMAP-Fundament), benötigt aber IMAP-Polling-Zugang und ist bewusst nicht
+aktiviert — es wird **nichts** vorgetäuscht.
+
+**Cron:** `/api/cron/followups` ist vorbereitet und **secret-gated**
+(`FOLLOWUP_CRON_SECRET`): ohne Secret 404, mit Secret nur Readiness-JSON,
+**kein Versand** (mandantenübergreifender Hintergrund-Versand bräuchte
+Service-Role — bewusst nicht genutzt). Vercel-Cron: optionalen `vercel.json`
+-Eintrag auf `/api/cron/followups` zeigen lassen.
+
+### Einstellungen (Kategorien)
+
+`/app-shell/settings` ist jetzt **kategorisiert** (Karten): **Allgemein ·
+Vertrieb & Automationen · E-Mail & Antworten · Dokumente · Lead-Quellen ·
+Bereinigung** — keine lange „System-Health"-Liste mehr. Pro Kategorie nur die
+relevanten Status/Optionen. **Keine Secrets.**
+
+### CEO / Finanzen
+
+Die Perioden-Kennzahlen sind jetzt **klickbare Aktionskarten** (Hover, klare
+CTA): Gewonnen → Offerten · Offene Offerten → Pipeline · Abgeschlossen →
+Aufträge · bexio bereit → Übergabe · Follow-ups offen → Pipeline-Follow-up-Fokus.
+
+### Lead Radar
+
+Aktiv-Gefühl: **„Klarsa sucht aktiv"**, **letzte Suche**, aktive Quellen,
+**nächste Quelle**, prominenter **„Neue Leads suchen"**, und **„In Pipeline
+übernehmen"** direkt auf den Kandidaten.
+
+### Offerte-PDF-Treue
+
+Vektor-Logo (Blatt + „Clean" + grünes „24" + Swoosh + Tagline; kein Asset
+nötig), engere Anlehnung an die Referenz bei Abständen/Typografie, Tabellen-
+Spaltentrenner und **fett gesetzte Footer-Labels**. Aus echten Daten; manuelle
+und Lead-Offerten nutzen dieselbe Vorlage.
+
+### Produktions-QA-Checkliste (v0.5.16)
+
+- Offerte erstellen → PDF prüfen (Logo, Adresse, Total inkl. Rundung, Footer).
+- Offerte bearbeiten → PDF ändert sich entsprechend.
+- Kandidat → „Offerte vorbereiten" → Formular mit Lead vorausgefüllt.
+- Kandidat → „In Pipeline übernehmen" → Pipeline auf Lead fokussiert.
+- Follow-up-Sequenz starten → Schritte/Timing sichtbar; stoppen/„Antwort
+  erhalten" funktioniert; Versand nur bei verbundenem Kanal (Premium).
+- Einstellungen → Kategorien öffnen/Status korrekt; keine Secrets.
+- CEO-Karten klickbar → richtige Zielseiten.
+
+**Guardrails v0.5.16:** keine neue Migration, kein Service-Role, keine
+Secrets/echten Kundendaten committet, kein Scraping, kein Bulk-/Hintergrund-
+Versand, keine Buchung, keine echte bexio-API. **001–007 unverändert; `004`
+unangetastet.** lint/build grün. Referenz-PDFs werden **nicht** committet.
 
 ## v0.5.15 — Clean24-Dokumentvorlagen, Lead-Radar-Politur, SIMAP/ZEFIX-Fundament
 

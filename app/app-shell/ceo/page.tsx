@@ -163,6 +163,8 @@ export default async function AppShellCeoPage({
               label={`Gewonnen · ${periodKpis.periodLabel}`}
               value={`CHF ${formatChf(periodKpis.wonRevenueChf)}`}
               sub={`${periodKpis.wonCount} angenommen`}
+              href="/app-shell/offers"
+              cta="Offerten ansehen"
               accent
             />
             <Figure
@@ -170,24 +172,32 @@ export default async function AppShellCeoPage({
               label="Offene Offerten"
               value={String(periodKpis.openOffers)}
               sub={`CHF ${formatChf(periodKpis.openOffersChf)} · aktuell`}
+              href="/app-shell/pipeline#leads"
+              cta="Nachfassen"
             />
             <Figure
               icon={Briefcase}
               label={`Abgeschlossen · ${periodKpis.periodLabel}`}
               value={String(periodKpis.completedJobs)}
               sub={`CHF ${formatChf(periodKpis.completedJobChf)}`}
+              href="/app-shell/jobs"
+              cta="Aufträge öffnen"
             />
             <Figure
               icon={PlugZap}
               label="bexio bereit"
               value={String(periodKpis.bexioReady)}
               sub="zur Verrechnung · aktuell"
+              href="/app-shell/bexio"
+              cta="Verrechnen"
             />
             <Figure
               icon={BellRing}
               label="Follow-ups offen"
               value={String(periodKpis.followupsDue)}
               sub="ohne nächsten Schritt"
+              href="/app-shell/pipeline?focus=followups"
+              cta="Follow-ups planen"
             />
           </div>
         </section>
@@ -282,20 +292,25 @@ function Figure({
   label,
   value,
   sub,
+  href,
+  cta,
   accent,
 }: {
   icon: typeof Banknote;
   label: string;
   value: string;
   sub: string;
+  href: string;
+  cta: string;
   accent?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-2xl border p-4 shadow-sm ${
+    <Link
+      href={href}
+      className={`group flex flex-col rounded-2xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${
         accent
-          ? "border-navy-900 bg-navy-900 text-white"
-          : "border-slate-200 bg-white"
+          ? "border-navy-900 bg-navy-900 text-white hover:bg-navy-800"
+          : "border-slate-200 bg-white hover:border-blue-300"
       }`}
     >
       <span
@@ -316,7 +331,15 @@ function Figure({
       <p className={`mt-0.5 text-xs ${accent ? "text-blue-200/80" : "text-slate-400"}`}>
         {sub}
       </p>
-    </div>
+      <span
+        className={`mt-2 inline-flex items-center gap-0.5 text-[11px] font-semibold ${
+          accent ? "text-blue-200" : "text-blue-700"
+        }`}
+      >
+        {cta}
+        <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </Link>
   );
 }
 

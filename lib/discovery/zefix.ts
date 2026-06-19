@@ -18,6 +18,7 @@
  */
 
 import type { RawSignal, AdapterRunInput, AdapterRunResult } from "@/lib/discovery/adapters";
+import type { ConnectionResult } from "@/lib/discovery/connection";
 
 const MAX_RESULTS = 10;
 const REQUEST_TIMEOUT_MS = 8000;
@@ -37,17 +38,48 @@ export function isZefixConfigured(): boolean {
   return Boolean(base && hasAuth);
 }
 
-/** Build the Authorization header from a token or basic credentials. */
+/**
+ * Build the Authorization header. Honours an explicit `ZEFIX_AUTH_MODE`
+ * ("token" | "basic"); otherwise prefers a bearer token, then basic auth.
+ * Secrets never logged / never returned to the client.
+ */
 function authHeader(): Record<string, string> {
+  const mode = readEnv("ZEFIX_AUTH_MODE")?.toLowerCase();
   const token = readEnv("ZEFIX_API_TOKEN");
-  if (token) return { Authorization: `Bearer ${token}` };
   const user = readEnv("ZEFIX_API_USERNAME");
   const pass = readEnv("ZEFIX_API_PASSWORD");
-  if (user && pass) {
-    const b64 = Buffer.from(`${user}:${pass}`, "utf8").toString("base64");
-    return { Authorization: `Basic ${b64}` };
+  const basic: Record<string, string> =
+    user && pass
+      ? { Authorization: `Basic ${Buffer.from(`${user}:${pass}`, "utf8").toString("base64")}` }
+      : {};
+  const bearer: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+  if (mode === "basic") return basic;
+  if (mode === "token") return bearer;
+  if (token) return bearer;
+  return basic;
+}
+
+/**
+ * Bounded, owner-triggered connection test: one timeout-bounded minimal search.
+ * Returns a simple status only — never a credential. Does not persist anything.
+ */
+export async function testZefixConnection(): Promise<ConnectionResult> {
+  if (!isZefixConfigured()) {
+    return { status: "access_required", message: "ZEFIX-Zugang noch nicht konfiguriert." };
   }
-  return {};
+  const r = await searchZefix("AG"); // minimal, bounded probe
+  if (r.status === "not_configured") {
+    return { status: "access_required", message: "ZEFIX-Zugang noch nicht konfiguriert." };
+  }
+  if (r.status === "error") {
+    return {
+      status: "error",
+      message: r.message?.includes("401") || r.message?.includes("403")
+        ? "Authentifizierung fehlgeschlagen – Zugangsdaten prüfen."
+        : r.message ?? "Verbindung fehlgeschlagen.",
+    };
+  }
+  return { status: "connected", message: "Verbindung erfolgreich getestet." };
 }
 
 type Rec = Record<string, unknown>;

@@ -1,8 +1,99 @@
-# Clean24 — Sales-Ready Workflow & Dokumentvorlagen (v0.5.13 → v0.5.16)
+# Clean24 — Sales-Ready Workflow & Dokumentvorlagen (v0.5.13 → v0.5.17)
 
 Diese Version macht Klarsa für den Clean24-Pilot **abschluss-fähiger**: vom
 gewonnenen Auftrag entstehen jetzt **kundenfertige und interne Dokumente** als
 PDF — ohne neue Migration, ohne externe Bibliothek, ohne Versand.
+
+## v0.5.17 — Quellen-Verbindungen & Produktionsbereitschaft
+
+Finalisiert die offiziellen, env-gated Quellen (SIMAP, ZEFIX) mit einem ehrlichen
+Verbindungs-Status und einem Verbindungstest. **Keine neue Migration, kein
+Service-Role, keine Secrets im Repo, keine Scraper/Headless.**
+
+### Verbindungs-Status (ehrlich)
+
+Jede Quelle hat einen klaren Status: **not_configured · access_required ·
+configured_not_tested · connected · error.** „Verbunden" wird **nur** nach einem
+erfolgreichen, owner-ausgelösten **Verbindungstest** angezeigt – Konfiguration
+allein heisst „Konfiguriert", nie „Verbunden". Tests sind zeit-gebunden, geben
+nur einen einfachen Status zurück und zeigen **nie** ein Token.
+
+### SIMAP
+
+`lib/discovery/simap.ts`: offizielle SIMAP-API, owner-konfiguriert. Auth wahlweise
+**statisches Token** (`SIMAP_API_TOKEN`) **oder** OAuth-Client-Credentials
+(`SIMAP_API_CLIENT_ID`/`SIMAP_API_CLIENT_SECRET` + `SIMAP_AUTH_URL`, optional
+`SIMAP_SCOPE`) – Token-Tausch zur Laufzeit. `testSimapConnection()` macht einen
+gebundenen Test-Request. Treffer werden auf Clean24-relevante Leistungen
+gefiltert (Reinigung · Gebäudereinigung · Unterhaltsreinigung · Umzugsreinigung ·
+Facility Services · Hauswartung · Baureinigung · Endreinigung · Büroreinigung)
+und auf Signale gemappt (Titel · Auftraggeber · Ort · Publikation · Eingabefrist ·
+CPV · Quelle). Ohne Zugang: „Zugang erforderlich". **Kein Scraping/Headless.**
+
+### ZEFIX
+
+`lib/discovery/zefix.ts`: offizielle ZEFIX-REST-API. Auth: Bearer-Token **oder**
+Basic (`ZEFIX_API_USERNAME`/`ZEFIX_API_PASSWORD`), optional erzwungen via
+`ZEFIX_AUTH_MODE` (`token`|`basic`). `testZefixConnection()` macht einen minimalen,
+gebundenen Test. **A) Firmenprüfung:** offiziellen Namen/UID/Rechtsform/Sitz
+validieren („validiert" / „nicht gefunden" / „Zugang erforderlich"). **B) Neue
+Firmen:** nur als begrenzte Suche (kein Bulk-Download, kein Voll-Register-Import);
+ohne Zugang „Zugang erforderlich". **Kein Scraping von zefix.ch.**
+
+### Einstellungen → Lead-Quellen
+
+Pro Quelle: Status-Badge, kurze Erklärung und – wo sicher – ein **„Verbindung
+testen"**-Button (owner-getriggert, Server-Action, kein Secret im HTML).
+Google Places hat keinen Live-Test (Quota-Schonung) und zeigt den Konfig-Status.
+
+### Produktionsbereit?-Checkliste
+
+`/app-shell/settings` (Übersicht) zeigt eine **„Produktionsbereit?"**-Karte:
+E-Mail-Versand · Antworten/Reply-Stopp · Google Places · Baugesuche · SIMAP ·
+ZEFIX · PDF-Vorlagen · Follow-up-Sequenz · Bereinigung. Einfache Sprache; die
+**Umgebungsvariablen-Namen** stehen nur in „Technische Details".
+
+### Lead Radar
+
+SIMAP/ZEFIX zeigen statt blossem „nicht verbunden" jetzt **„Zugang erforderlich"**
++ **„In Einstellungen verbinden"**; konfigurierte Quellen zeigen „Konfiguriert".
+Eine Quelle trägt nur bei, wenn sie konfiguriert ist.
+
+### Follow-up-Ehrlichkeit
+
+Die UI ist explizit: **„Automatische Sequenz geplant"**, **„Fällige Follow-ups
+manuell senden"** (owner-ausgelöst, Premium + Kanal, gedeckelt, auditiert) und
+**Antwort-Stopp manuell** über „Antwort erhalten". Volle automatische
+IMAP-Antworterkennung ist **nicht** aktiv und wird nicht behauptet. Der
+Cron-Endpunkt ist **Readiness-only** (secret-gated, kein Versand) – echter
+Hintergrund-Versand bräuchte einen privilegierten Worker/Service-Role und ist
+bewusst nicht enthalten.
+
+### Quellen-Setup (Vercel Production env)
+
+Niemals echte Werte committen — in Vercel → Production env hinterlegen:
+
+- **SIMAP:** `SIMAP_API_BASE_URL` + (`SIMAP_API_TOKEN` **oder**
+  `SIMAP_API_CLIENT_ID`/`SIMAP_API_CLIENT_SECRET` + `SIMAP_AUTH_URL` [+ `SIMAP_SCOPE`]).
+- **ZEFIX:** `ZEFIX_API_BASE_URL` + (`ZEFIX_API_TOKEN` **oder**
+  `ZEFIX_API_USERNAME`/`ZEFIX_API_PASSWORD`) [+ `ZEFIX_AUTH_MODE`].
+- **Google Places:** `GOOGLE_PLACES_API_KEY`. **Baugesuche:** `BAUGESUCHE_ZH_SIGNAL_URL`.
+- Danach in Einstellungen → Lead-Quellen **„Verbindung testen"**.
+
+### Produktions-QA-Checkliste (v0.5.17)
+
+- Einstellungen → Lead-Quellen: SIMAP/ZEFIX „Verbindung testen" → connected/error
+  ehrlich; ohne Zugang „Zugang erforderlich".
+- Lead Radar: nicht-verbundene Quellen zeigen „In Einstellungen verbinden".
+- Discovery: konfigurierte Quellen tragen bei; Fehler bleiben ruhig.
+- Übersicht: „Produktionsbereit?"-Checkliste stimmt; keine Secrets sichtbar.
+- `/api/cron/followups` ohne Secret → 404.
+
+**Guardrails v0.5.17:** keine neue Migration, kein Service-Role, keine
+Secrets/echten Kundendaten committet, nur offizielle APIs, kein
+Scraping/Headless/HTML-Crawling, kein Bulk-/Hintergrund-Versand, keine Buchung,
+keine echte bexio-API. **001–007 unverändert; `004` unangetastet.** lint/build
+grün.
 
 ## v0.5.16 — Usability-Politur, editierbare Offerten, Follow-up-Sequenz
 

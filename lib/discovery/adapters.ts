@@ -19,8 +19,13 @@
 import type { SignalType } from "@/components/revenue-autopilot/signals";
 import { isDiscoveryConfigured } from "@/lib/discovery/google-places";
 import { isBaugesucheConfigured, runBaugesucheZh } from "@/lib/discovery/baugesuche-zh";
-import { isSimapConfigured, runSimap } from "@/lib/discovery/simap";
-import { isZefixConfigured, runZefix } from "@/lib/discovery/zefix";
+import { isSimapConfigured, runSimap, testSimapConnection } from "@/lib/discovery/simap";
+import { isZefixConfigured, runZefix, testZefixConnection } from "@/lib/discovery/zefix";
+import {
+  staticStatus,
+  type ConnectionResult,
+  type ConnectionStatus,
+} from "@/lib/discovery/connection";
 
 export type AdapterPhase = "live" | "planned";
 
@@ -118,20 +123,66 @@ export const SIGNAL_ADAPTERS: SignalAdapter[] = [
 
 /**
  * Customer-facing source readiness for the Lead Radar + Settings. Pure status
- * (configured / needs attention / not configured) — never secrets. The
- * Baugesuche entry reads "needs attention" when configured (so the owner knows
- * to verify the feed), otherwise the simple configured/planned states apply.
+ * (configured / access required / not configured) — never secrets. `needsAccess`
+ * marks sources that require official access you must request (SIMAP/ZEFIX);
+ * `testable` marks sources with a safe live connection test. The static `status`
+ * never reports "connected" — only an actual test (settings button) can.
  */
 export interface SourceReadiness {
   key: string;
   label: string;
   configured: boolean;
+  /** Requires official access/credentials (vs just a key/URL). */
+  needsAccess: boolean;
+  /** Has a safe, bounded live connection test (settings "Verbindung testen"). */
+  testable: boolean;
+  /** Static status (no live test): configured_not_tested / access_required / not_configured. */
+  status: ConnectionStatus;
 }
 
+/** Sources that require requesting official access before they can connect. */
+const ACCESS_GATED = new Set(["simap", "zefix"]);
+/** Sources with a safe, bounded live connection test. */
+const TESTABLE = new Set(["baugesuche", "simap", "zefix"]);
+
 export function sourceReadiness(): SourceReadiness[] {
-  return SIGNAL_ADAPTERS.map((a) => ({
-    key: a.key,
-    label: a.label,
-    configured: a.isConfigured(),
-  }));
+  return SIGNAL_ADAPTERS.map((a) => {
+    const configured = a.isConfigured();
+    const needsAccess = ACCESS_GATED.has(a.key);
+    return {
+      key: a.key,
+      label: a.label,
+      configured,
+      needsAccess,
+      testable: TESTABLE.has(a.key),
+      status: staticStatus(configured, needsAccess),
+    };
+  });
+}
+
+/**
+ * Run a safe, bounded live connection test for a source. Owner-triggered (from
+ * Settings) — never on page load. Returns a simple status only (no secrets).
+ * Google Places has no live test (a probe would cost API quota), so it reports
+ * its static config state.
+ */
+export async function testSourceConnection(key: string): Promise<ConnectionResult> {
+  if (key === "simap") return testSimapConnection();
+  if (key === "zefix") return testZefixConnection();
+  if (key === "baugesuche") {
+    if (!isBaugesucheConfigured()) {
+      return { status: "not_configured", message: "Kein Baugesuche-Feed konfiguriert." };
+    }
+    const r = await runBaugesucheZh({ query: "", limit: 1 });
+    if (r.status === "ok" || r.status === "unsupported_schema") {
+      return { status: "connected", message: "Feed erreichbar." };
+    }
+    return { status: "error", message: r.message ?? "Feed nicht erreichbar." };
+  }
+  if (key === "google_places") {
+    return isDiscoveryConfigured()
+      ? { status: "configured_not_tested", message: "Schlüssel gesetzt – Live-Test verbraucht API-Kontingent und wird übersprungen." }
+      : { status: "not_configured", message: "Kein Schlüssel konfiguriert." };
+  }
+  return { status: "not_configured" };
 }

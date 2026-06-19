@@ -7,6 +7,38 @@ interner Pilot/Proof und ist hier nicht öffentlich integriert.
 
 ## Aktuelle Version
 
+**v0.5.17** — **Quellen-Verbindungen & Produktionsbereitschaft.** SIMAP und ZEFIX
+werden offiziell verbindbar – mit ehrlichem Verbindungs-Status und Verbindungstest.
+**Keine neue Migration, kein Service-Role, keine Secrets im Repo, nur offizielle
+APIs, kein Scraping/Headless.** (1) **Verbindungs-Status** pro Quelle:
+`not_configured · access_required · configured_not_tested · connected · error`.
+**„Verbunden" nur nach erfolgreichem, owner-ausgelöstem Test** – Konfiguration
+allein = „Konfiguriert". (2) **SIMAP** (`lib/discovery/simap.ts`): offizielle API,
+Auth via statisches Token **oder** OAuth-Client-Credentials (Token-Tausch zur
+Laufzeit), `testSimapConnection()`; Treffer auf Clean24-Leistungen gefiltert
+(Reinigung/Gebäude-/Unterhalts-/Umzugsreinigung, Facility, Hauswartung,
+Bau-/Endreinigung, Büroreinigung) und auf Signale gemappt. (3) **ZEFIX**
+(`lib/discovery/zefix.ts`): offizielle REST-API, Bearer **oder** Basic (optional
+`ZEFIX_AUTH_MODE`), `testZefixConnection()`; **Firmenprüfung** (Name/UID/
+Rechtsform/Sitz: validiert/nicht gefunden) + begrenzte **Neue-Firmen**-Suche
+(kein Bulk-Download). (4) **Einstellungen → Lead-Quellen**: Status-Badge,
+Erklärung, **„Verbindung testen"** (Server-Action, kein Secret im HTML) +
+**„Produktionsbereit?"**-Checkliste (Übersicht); Env-Namen nur in „Technische
+Details". (5) **Lead Radar**: SIMAP/ZEFIX zeigen **„Zugang erforderlich"** +
+**„In Einstellungen verbinden"** statt blossem „nicht verbunden". (6) **Discovery**
+respektiert echte Verbindungs-States – kein Fake-Active, ruhige Fehler. (7)
+**Follow-up-Ehrlichkeit**: „Automatische Sequenz geplant", „Fällige manuell senden"
+(owner-ausgelöst, Premium+Kanal, gedeckelt, auditiert), Antwort-Stopp manuell;
+Cron **Readiness-only** (kein Hintergrund-Versand ohne Service-Role). Neue Helfer:
+`lib/discovery/connection.ts`, `testSourceConnection`,
+`app/app-shell/settings/connection-actions.ts` + `TestConnectionButton`. Env neu:
+`SIMAP_AUTH_URL`, `SIMAP_SCOPE`, `ZEFIX_AUTH_MODE` (Platzhalter leer). **Kein
+Service-Role, keine Secrets/echten Kundendaten, nur offizielle APIs, kein
+Scraping/Headless/Bulk/Hintergrund-Versand/Buchung, keine echte bexio-API.
+001–007 unverändert; `004` unangetastet.** Aktualisiert:
+`docs/clean24-sales-ready-workflow.md`, `.env.local.example`. lint/build grün.
+**Nächster Schritt: Produktions-QA mit echten Quellen-Zugängen + Sales-Launch.**
+
 **v0.5.16** — **Usability-Politur, editierbare Offerten, Follow-up-Sequenz &
 Direktfluss.** Klarsa wird für den täglichen Betrieb einfacher: eine gefundene
 Chance wird über **eine** Pipeline zu Lead, Offerte, Follow-up und Auftrag.

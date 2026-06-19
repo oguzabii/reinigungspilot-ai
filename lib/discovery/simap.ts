@@ -21,6 +21,7 @@
  */
 
 import type { RawSignal, AdapterRunInput, AdapterRunResult } from "@/lib/discovery/adapters";
+import type { ConnectionResult } from "@/lib/discovery/connection";
 
 const MAX_RESULTS = 10;
 const REQUEST_TIMEOUT_MS = 8000;
@@ -32,9 +33,93 @@ function readEnv(name: string): string | undefined {
   return v && v.length > 0 ? v : undefined;
 }
 
-/** True if the official SIMAP endpoint + token are configured (server-side). */
+/** Which auth the SIMAP config supports: a static token or an OAuth exchange. */
+function simapAuthMode(): "token" | "oauth" | null {
+  if (readEnv("SIMAP_API_TOKEN")) return "token";
+  if (readEnv("SIMAP_API_CLIENT_ID") && readEnv("SIMAP_API_CLIENT_SECRET") && readEnv("SIMAP_AUTH_URL")) {
+    return "oauth";
+  }
+  return null;
+}
+
+/** True if the official SIMAP endpoint + an auth method are configured. */
 export function isSimapConfigured(): boolean {
-  return Boolean(readEnv("SIMAP_API_BASE_URL") && readEnv("SIMAP_API_TOKEN"));
+  return Boolean(readEnv("SIMAP_API_BASE_URL")) && simapAuthMode() !== null;
+}
+
+/**
+ * Resolve a bearer token: either the static `SIMAP_API_TOKEN`, or an OAuth
+ * client-credentials exchange against `SIMAP_AUTH_URL`. Never throws; never logs
+ * or returns the secret. Returns the token or a calm error.
+ */
+async function getSimapToken(): Promise<{ token: string } | { error: string }> {
+  const mode = simapAuthMode();
+  if (mode === "token") return { token: readEnv("SIMAP_API_TOKEN") as string };
+  if (mode !== "oauth") return { error: "SIMAP: Zugang nicht konfiguriert." };
+
+  const authUrl = readEnv("SIMAP_AUTH_URL") as string;
+  const body = new URLSearchParams({
+    grant_type: "client_credentials",
+    client_id: readEnv("SIMAP_API_CLIENT_ID") as string,
+    client_secret: readEnv("SIMAP_API_CLIENT_SECRET") as string,
+  });
+  const scope = readEnv("SIMAP_SCOPE");
+  if (scope) body.set("scope", scope);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(authUrl, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+      body: body.toString(),
+      cache: "no-store",
+    });
+    if (!res.ok) return { error: `SIMAP-Auth antwortete mit Status ${res.status}.` };
+    const json = (await res.json()) as { access_token?: string };
+    if (!json.access_token) return { error: "SIMAP-Auth lieferte kein Token." };
+    return { token: json.access_token };
+  } catch (err) {
+    const aborted = err instanceof Error && err.name === "AbortError";
+    return { error: aborted ? "SIMAP-Auth hat das Zeitlimit überschritten." : "SIMAP-Auth fehlgeschlagen." };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Bounded, owner-triggered connection test. Resolves a token (static or OAuth),
+ * then makes ONE timeout-bounded request to the configured endpoint. Returns a
+ * simple status only — never a token. Does not persist anything.
+ */
+export async function testSimapConnection(): Promise<ConnectionResult> {
+  const url = readEnv("SIMAP_API_BASE_URL");
+  if (!url || !isSimapConfigured()) {
+    return { status: "access_required", message: "SIMAP-Zugang noch nicht konfiguriert." };
+  }
+  const tok = await getSimapToken();
+  if ("error" in tok) return { status: "error", message: tok.error };
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { Accept: "application/json", Authorization: `Bearer ${tok.token}` },
+      cache: "no-store",
+    });
+    if (res.ok) return { status: "connected", message: "Verbindung erfolgreich getestet." };
+    if (res.status === 401 || res.status === 403) {
+      return { status: "error", message: "Authentifizierung fehlgeschlagen – Zugangsdaten prüfen." };
+    }
+    return { status: "error", message: `SIMAP antwortete mit Status ${res.status}.` };
+  } catch (err) {
+    const aborted = err instanceof Error && err.name === "AbortError";
+    return { status: "error", message: aborted ? "Zeitlimit überschritten." : "Verbindung fehlgeschlagen." };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 type Rec = Record<string, unknown>;
@@ -145,13 +230,16 @@ function mapRecord(rec: Rec): RawSignal | null {
  */
 export async function runSimap(input: AdapterRunInput): Promise<AdapterRunResult> {
   const url = readEnv("SIMAP_API_BASE_URL");
-  const token = readEnv("SIMAP_API_TOKEN");
-  if (!url || !token) {
+  if (!url || !isSimapConfigured()) {
     return {
       status: "not_configured",
       signals: [],
       message: "SIMAP: Zugang erforderlich – offizielle API noch nicht konfiguriert.",
     };
+  }
+  const tok = await getSimapToken();
+  if ("error" in tok) {
+    return { status: "error", signals: [], message: tok.error };
   }
   const limit = Math.min(MAX_RESULTS, Math.max(1, input.limit ?? MAX_RESULTS));
 
@@ -160,7 +248,7 @@ export async function runSimap(input: AdapterRunInput): Promise<AdapterRunResult
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+      headers: { Accept: "application/json", Authorization: `Bearer ${tok.token}` },
       cache: "no-store",
     });
     if (!res.ok) {

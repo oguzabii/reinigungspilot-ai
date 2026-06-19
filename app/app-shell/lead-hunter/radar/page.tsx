@@ -25,6 +25,7 @@ import {
 } from "@/components/lead-hunter/swiss-radar";
 import { CandidatePipelineButtons } from "@/components/lead-hunter/CandidatePipelineButtons";
 import { sourceReadiness } from "@/lib/discovery/adapters";
+import { CONNECTION_STATUS_META } from "@/lib/discovery/connection";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCurrentCompanyContext } from "@/lib/auth/session";
 import { getCompanySummary, getProspects, getDiscoveryRuns } from "@/lib/auth/tenant-data";
@@ -42,20 +43,20 @@ export const metadata: Metadata = {
 /** Plain-language status text per source channel. */
 const SOURCE_TEXT: Record<string, { ready: string; missing: string }> = {
   google_places: {
-    ready: "Aktiv – findet Betriebe über die offizielle Places-Suche.",
-    missing: "Nicht konfiguriert – Zugang hinterlegen, dann findet Klarsa Betriebe.",
+    ready: "Konfiguriert – findet Betriebe über die offizielle Places-Suche.",
+    missing: "Nicht verbunden – in den Einstellungen verbinden, dann findet Klarsa Betriebe.",
   },
   baugesuche: {
-    ready: "Aktiv – offizielle Baugesuche/Bauprojekte als Signale.",
-    missing: "Nicht konfiguriert – offiziellen Bauprojekt-Feed hinterlegen.",
+    ready: "Konfiguriert – offizielle Baugesuche/Bauprojekte als Signale.",
+    missing: "Nicht verbunden – in den Einstellungen offiziellen Bauprojekt-Feed hinterlegen.",
   },
   simap: {
-    ready: "Aktiv – öffentliche Ausschreibungen passend zu Reinigung.",
-    missing: "Zugang erforderlich – offizielle SIMAP-API noch nicht verbunden.",
+    ready: "Konfiguriert – öffentliche Ausschreibungen passend zu Reinigung.",
+    missing: "Zugang erforderlich – in den Einstellungen verbinden (offizielle SIMAP-API).",
   },
   zefix: {
-    ready: "Aktiv – Firmenprüfung & Handelsregister-Signale.",
-    missing: "Zugang erforderlich – offizielle ZEFIX-API noch nicht verbunden.",
+    ready: "Konfiguriert – Firmenprüfung & Handelsregister-Signale.",
+    missing: "Zugang erforderlich – in den Einstellungen verbinden (offizielle ZEFIX-API).",
   },
 };
 
@@ -142,7 +143,7 @@ export default async function AppShellLeadRadarPage() {
               Klarsa sucht aktiv neue Leads für {company}
             </h1>
             <p className="text-sm text-slate-500">
-              {activeSources} von {sources.length} Lead-Quellen aktiv ·{" "}
+              {activeSources} von {sources.length} Lead-Quellen konfiguriert ·{" "}
               {candidates.length} neue Chance{candidates.length === 1 ? "" : "n"}
             </p>
           </div>
@@ -194,7 +195,8 @@ export default async function AppShellLeadRadarPage() {
           </h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {sources.map((s) => {
-              const text = SOURCE_TEXT[s.key] ?? { ready: "Aktiv.", missing: "Nicht konfiguriert." };
+              const text = SOURCE_TEXT[s.key] ?? { ready: "Konfiguriert.", missing: "Nicht verbunden." };
+              const statusMeta = CONNECTION_STATUS_META[s.status];
               return (
                 <div
                   key={s.key}
@@ -203,7 +205,7 @@ export default async function AppShellLeadRadarPage() {
                   <span
                     className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ${
                       s.configured
-                        ? "bg-emerald-50 text-emerald-600 ring-emerald-100"
+                        ? "bg-blue-50 text-blue-600 ring-blue-100"
                         : "bg-slate-100 text-slate-400 ring-slate-200"
                     }`}
                   >
@@ -212,19 +214,21 @@ export default async function AppShellLeadRadarPage() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-sm font-semibold text-navy-900">{s.label}</p>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${
-                          s.configured
-                            ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                            : "bg-slate-100 text-slate-500 ring-slate-200"
-                        }`}
-                      >
-                        {s.configured ? "Aktiv" : "Nicht verbunden"}
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${statusMeta.className}`}>
+                        {statusMeta.label}
                       </span>
                     </div>
                     <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
                       {s.configured ? text.ready : text.missing}
                     </p>
+                    {!s.configured && (
+                      <Link
+                        href="/app-shell/settings?cat=quellen"
+                        className="mt-1 inline-flex items-center gap-0.5 text-xs font-semibold text-blue-700 hover:text-blue-800"
+                      >
+                        In Einstellungen verbinden <ChevronRight className="h-3.5 w-3.5" />
+                      </Link>
+                    )}
                   </div>
                 </div>
               );

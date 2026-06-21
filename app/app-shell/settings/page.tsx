@@ -74,8 +74,8 @@ const SOURCE_META: Record<string, { icon: LucideIcon; ready: string; off: string
   },
   simap: {
     icon: Landmark,
-    ready: "Öffentliche Ausschreibungen passend zu Reinigung / Facility Services.",
-    off: "Zugang erforderlich. Offizielle SIMAP-API hinterlegen, dann Verbindung testen.",
+    ready: "Öffentliche SIMAP-Projekt-Suche (ohne Login) – Ausschreibungen passend zu Reinigung/Facility. Verbindung testen.",
+    off: "Offizielle SIMAP-Suche – Verbindung testen.",
   },
   zefix: {
     icon: Building2,

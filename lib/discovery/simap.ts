@@ -33,35 +33,57 @@ function readEnv(name: string): string | undefined {
   return v && v.length > 0 ? v : undefined;
 }
 
-/** Which auth the SIMAP config supports: a static token or an OAuth exchange. */
-function simapAuthMode(): "token" | "oauth" | null {
-  if (readEnv("SIMAP_API_TOKEN")) return "token";
-  if (readEnv("SIMAP_API_CLIENT_ID") && readEnv("SIMAP_API_CLIENT_SECRET") && readEnv("SIMAP_AUTH_URL")) {
-    return "oauth";
-  }
-  return null;
+/**
+ * Official SIMAP production base + public project-search endpoint (verified
+ * against simap.ch). The base defaults to the official host; the search path is
+ * overridable (the Swagger lists it under `/publications/v2/project/project-search`,
+ * occasionally exposed behind `/api`). Both are env-overridable so we never
+ * hardcode-guess a single immutable path.
+ */
+const SIMAP_DEFAULT_BASE = "https://www.simap.ch";
+const SIMAP_DEFAULT_SEARCH_PATH = "/publications/v2/project/project-search";
+
+/** Resolved base (env override or the official default). */
+function simapBaseUrl(): string {
+  return (readEnv("SIMAP_API_BASE_URL") ?? SIMAP_DEFAULT_BASE).replace(/\/+$/, "");
 }
 
-/** True if the official SIMAP endpoint + an auth method are configured. */
-export function isSimapConfigured(): boolean {
-  return Boolean(readEnv("SIMAP_API_BASE_URL")) && simapAuthMode() !== null;
+/** Full project-search URL = base + (override path | default). */
+function simapSearchUrl(): string {
+  const base = simapBaseUrl();
+  if (/project-search/i.test(base)) return base; // already a full endpoint
+  const path = readEnv("SIMAP_SEARCH_PATH") ?? SIMAP_DEFAULT_SEARCH_PATH;
+  return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
 /**
- * Resolve a bearer token: either the static `SIMAP_API_TOKEN`, or an OAuth
- * client-credentials exchange against `SIMAP_AUTH_URL`. Never throws; never logs
- * or returns the secret. Returns the token or a calm error.
+ * SIMAP public project search works WITHOUT authentication. So the source is
+ * always "configured" (the official public endpoint is available); the live
+ * connection test confirms it actually responds. Optional auth (static token or
+ * OAuth client-credentials) is supported for restricted deployments.
  */
-async function getSimapToken(): Promise<{ token: string } | { error: string }> {
-  const mode = simapAuthMode();
-  if (mode === "token") return { token: readEnv("SIMAP_API_TOKEN") as string };
-  if (mode !== "oauth") return { error: "SIMAP: Zugang nicht konfiguriert." };
+export function isSimapConfigured(): boolean {
+  return true;
+}
 
-  const authUrl = readEnv("SIMAP_AUTH_URL") as string;
+/**
+ * Build the (optional) Authorization header. Public search needs none. With a
+ * static token → Bearer; with OAuth client-credentials → a runtime token
+ * exchange. Never logs / returns the secret. On exchange failure returns no
+ * header (the public request still runs).
+ */
+async function simapAuthHeader(): Promise<Record<string, string>> {
+  const token = readEnv("SIMAP_API_TOKEN");
+  if (token) return { Authorization: `Bearer ${token}` };
+  const clientId = readEnv("SIMAP_API_CLIENT_ID");
+  const clientSecret = readEnv("SIMAP_API_CLIENT_SECRET");
+  const authUrl = readEnv("SIMAP_AUTH_URL");
+  if (!clientId || !clientSecret || !authUrl) return {};
+
   const body = new URLSearchParams({
     grant_type: "client_credentials",
-    client_id: readEnv("SIMAP_API_CLIENT_ID") as string,
-    client_secret: readEnv("SIMAP_API_CLIENT_SECRET") as string,
+    client_id: clientId,
+    client_secret: clientSecret,
   });
   const scope = readEnv("SIMAP_SCOPE");
   if (scope) body.set("scope", scope);
@@ -76,42 +98,52 @@ async function getSimapToken(): Promise<{ token: string } | { error: string }> {
       body: body.toString(),
       cache: "no-store",
     });
-    if (!res.ok) return { error: `SIMAP-Auth antwortete mit Status ${res.status}.` };
+    if (!res.ok) return {};
     const json = (await res.json()) as { access_token?: string };
-    if (!json.access_token) return { error: "SIMAP-Auth lieferte kein Token." };
-    return { token: json.access_token };
-  } catch (err) {
-    const aborted = err instanceof Error && err.name === "AbortError";
-    return { error: aborted ? "SIMAP-Auth hat das Zeitlimit überschritten." : "SIMAP-Auth fehlgeschlagen." };
+    return json.access_token ? { Authorization: `Bearer ${json.access_token}` } : {};
+  } catch {
+    return {};
   } finally {
     clearTimeout(timer);
   }
 }
 
 /**
- * Bounded, owner-triggered connection test. Resolves a token (static or OAuth),
- * then makes ONE timeout-bounded request to the configured endpoint. Returns a
- * simple status only — never a token. Does not persist anything.
+ * The project-search request body. Uses the documented Swiss filters only (no
+ * guessed field names): `orderAddressCountryOnlySwitzerland` and, when
+ * `SIMAP_CANTONS` is set (e.g. "ZH,AG"), `orderAddressCantons`. Results are then
+ * relevance-filtered client-side to Clean24 services.
+ */
+function simapSearchBody(): Record<string, unknown> {
+  const body: Record<string, unknown> = { orderAddressCountryOnlySwitzerland: true };
+  const cantons = readEnv("SIMAP_CANTONS");
+  if (cantons) {
+    const list = cantons.split(",").map((c) => c.trim()).filter(Boolean);
+    if (list.length > 0) body.orderAddressCantons = list;
+  }
+  return body;
+}
+
+/**
+ * Bounded, owner-triggered connection test against the official public
+ * project-search endpoint (POST). Returns a simple status only — never a token.
+ * Persists nothing.
  */
 export async function testSimapConnection(): Promise<ConnectionResult> {
-  const url = readEnv("SIMAP_API_BASE_URL");
-  if (!url || !isSimapConfigured()) {
-    return { status: "access_required", message: "SIMAP-Zugang noch nicht konfiguriert." };
-  }
-  const tok = await getSimapToken();
-  if ("error" in tok) return { status: "error", message: tok.error };
-
+  const auth = await simapAuthHeader();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
+    const res = await fetch(simapSearchUrl(), {
+      method: "POST",
       signal: controller.signal,
-      headers: { Accept: "application/json", Authorization: `Bearer ${tok.token}` },
+      headers: { "Content-Type": "application/json", Accept: "application/json", ...auth },
+      body: JSON.stringify(simapSearchBody()),
       cache: "no-store",
     });
-    if (res.ok) return { status: "connected", message: "Verbindung erfolgreich getestet." };
+    if (res.ok) return { status: "connected", message: "Öffentliche SIMAP-Suche erreichbar." };
     if (res.status === 401 || res.status === 403) {
-      return { status: "error", message: "Authentifizierung fehlgeschlagen – Zugangsdaten prüfen." };
+      return { status: "error", message: "SIMAP verlangt Zugangsdaten – Token/Client hinterlegen." };
     }
     return { status: "error", message: `SIMAP antwortete mit Status ${res.status}.` };
   } catch (err) {
@@ -229,28 +261,22 @@ function mapRecord(rec: Rec): RawSignal | null {
  * Never throws (failures map to `status: "error"`); JSON only — no scraping.
  */
 export async function runSimap(input: AdapterRunInput): Promise<AdapterRunResult> {
-  const url = readEnv("SIMAP_API_BASE_URL");
-  if (!url || !isSimapConfigured()) {
-    return {
-      status: "not_configured",
-      signals: [],
-      message: "SIMAP: Zugang erforderlich – offizielle API noch nicht konfiguriert.",
-    };
-  }
-  const tok = await getSimapToken();
-  if ("error" in tok) {
-    return { status: "error", signals: [], message: tok.error };
-  }
   const limit = Math.min(MAX_RESULTS, Math.max(1, input.limit ?? MAX_RESULTS));
+  const auth = await simapAuthHeader();
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
+    const res = await fetch(simapSearchUrl(), {
+      method: "POST",
       signal: controller.signal,
-      headers: { Accept: "application/json", Authorization: `Bearer ${tok.token}` },
+      headers: { "Content-Type": "application/json", Accept: "application/json", ...auth },
+      body: JSON.stringify(simapSearchBody()),
       cache: "no-store",
     });
+    if (res.status === 401 || res.status === 403) {
+      return { status: "not_configured", signals: [], message: "SIMAP verlangt Zugangsdaten – Token/Client hinterlegen." };
+    }
     if (!res.ok) {
       return { status: "error", signals: [], message: `SIMAP-Quelle antwortete mit Status ${res.status}.` };
     }

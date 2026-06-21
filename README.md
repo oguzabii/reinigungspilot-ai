@@ -39,6 +39,20 @@ Scraping/Headless/Bulk/Hintergrund-Versand/Buchung, keine echte bexio-API.
 `docs/clean24-sales-ready-workflow.md`, `.env.local.example`. lint/build grün.
 **Nächster Schritt: Produktions-QA mit echten Quellen-Zugängen + Sales-Launch.**
 
+> **v0.5.17.1** — **Offizielle Quellen-Endpunkte verifiziert.** Gegen die echten
+> OpenAPI/Swagger-Specs abgeglichen (nicht geraten). **ZEFIX** (exakt bestätigt):
+> Basis `https://www.zefix.admin.ch/ZefixPublicREST`, **POST `/api/v1/company/search`**,
+> HTTP-Basic (`Zefix-Credentials`), Body `name` (min. 3) · `canton` · `activeOnly`;
+> Mapping um Status/UID/Rechtsform/Sitz/`zefixDetailWeb` erweitert; Basis als
+> Default, Zugangsdaten erforderlich. **SIMAP**: öffentliche Projekt-Suche
+> funktioniert **ohne Login** – Default-Basis `https://www.simap.ch`, **POST
+> `/publications/v2/project/project-search`** (Pfad via `SIMAP_SEARCH_PATH`
+> überschreibbar), optionaler Token/Client für eingeschränkte Deployments,
+> optionaler Kantonsfilter (`SIMAP_CANTONS`). „Verbunden" nach Test. Neue env:
+> `SIMAP_SEARCH_PATH`, `SIMAP_CANTONS`, `ZEFIX_CANTON`. **Kein Service-Role, keine
+> Secrets, nur offizielle APIs, kein Scraping/Headless. 001–007 unverändert; `004`
+> unangetastet.** lint/build grün.
+
 **v0.5.16** — **Usability-Politur, editierbare Offerten, Follow-up-Sequenz &
 Direktfluss.** Klarsa wird für den täglichen Betrieb einfacher: eine gefundene
 Chance wird über **eine** Pipeline zu Lead, Offerte, Follow-up und Auftrag.

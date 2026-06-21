@@ -105,7 +105,7 @@ export const SIGNAL_ADAPTERS: SignalAdapter[] = [
     key: "simap",
     label: "SIMAP Ausschreibungen",
     description:
-      "Öffentliche Ausschreibungen passend zu Reinigung/Facility Services. Nur offizielle SIMAP-API (owner-konfiguriert), kein Scraping. Ohne Zugang: nicht konfiguriert.",
+      "Öffentliche Ausschreibungen passend zu Reinigung/Facility Services über die offizielle SIMAP-Projekt-Suche (POST /publications/v2/project/project-search). Öffentliche Suche ohne Login; optionaler Token/Client für eingeschränkte Deployments. Kein Scraping.",
     phase: "live",
     isConfigured: () => isSimapConfigured(),
     run: runSimap,
@@ -114,7 +114,7 @@ export const SIGNAL_ADAPTERS: SignalAdapter[] = [
     key: "zefix",
     label: "ZEFIX Firmenprüfung",
     description:
-      "Neue Firmen / Handelsregister-Signale & Firmen-Validierung. Nur offizielle ZEFIX-REST-API (owner-konfiguriert), kein Bulk-Harvesting/Scraping. Ohne Zugang: nicht konfiguriert.",
+      "Firmen-Validierung & Handelsregister-Signale über die offizielle ZEFIX-PublicREST-API (POST /api/v1/company/search, HTTP-Basic). Firmensuche nach Name (min. 3 Zeichen) + Kanton; kein Bulk-Download, kein Scraping. Ohne Zugangsdaten: Zugang erforderlich.",
     phase: "live",
     isConfigured: () => isZefixConfigured(),
     run: runZefix,
@@ -141,7 +141,8 @@ export interface SourceReadiness {
 }
 
 /** Sources that require requesting official access before they can connect. */
-const ACCESS_GATED = new Set(["simap", "zefix"]);
+// SIMAP public project-search works without login; only ZEFIX needs credentials.
+const ACCESS_GATED = new Set(["zefix"]);
 /** Sources with a safe, bounded live connection test. */
 const TESTABLE = new Set(["baugesuche", "simap", "zefix"]);
 

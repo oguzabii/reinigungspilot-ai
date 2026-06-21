@@ -89,6 +89,27 @@ Niemals echte Werte committen — in Vercel → Production env hinterlegen:
 - Übersicht: „Produktionsbereit?"-Checkliste stimmt; keine Secrets sichtbar.
 - `/api/cron/followups` ohne Secret → 404.
 
+### Endpunkte verifiziert (v0.5.17.1)
+
+Gegen die offiziellen OpenAPI/Swagger-Specs abgeglichen (nicht geraten):
+
+- **ZEFIX** (exakt bestätigt über `…/ZefixPublicREST/v3/api-docs`): Basis
+  `https://www.zefix.admin.ch/ZefixPublicREST`, **POST `/api/v1/company/search`**,
+  Sicherheits-Schema **HTTP-Basic** (`Zefix-Credentials`). Body `CompanySearchQuery`:
+  `name` (erforderlich, min. 3) · `canton` · `activeOnly` (+ legalFormId/UID …).
+  Weitere offizielle Endpunkte (Referenz): `GET /api/v1/company/uid/{id}`,
+  `GET /api/v1/sogc/bydate/{date}`. Klarsa nutzt die Firmensuche zur
+  Validierung; Basis ist Default, **Zugangsdaten erforderlich**.
+- **SIMAP**: öffentliche Projekt-Suche **ohne Login**. Default-Basis
+  `https://www.simap.ch`, **POST `/publications/v2/project/project-search`**
+  (Pfad via `SIMAP_SEARCH_PATH` überschreibbar, falls das Konto `/api/…` nutzt).
+  Body nutzt die dokumentierten Filter (`orderAddressCountryOnlySwitzerland`,
+  optional `orderAddressCantons` über `SIMAP_CANTONS`); Relevanz-Filter
+  client-seitig. Optionaler Token/Client für eingeschränkte Deployments.
+- **„Verbinden" testen** in Einstellungen → Lead-Quellen: echter, gebundener
+  Request; „Verbunden" nur bei 2xx. Neue env: `SIMAP_SEARCH_PATH`,
+  `SIMAP_CANTONS`, `ZEFIX_CANTON`.
+
 **Guardrails v0.5.17:** keine neue Migration, kein Service-Role, keine
 Secrets/echten Kundendaten committet, nur offizielle APIs, kein
 Scraping/Headless/HTML-Crawling, kein Bulk-/Hintergrund-Versand, keine Buchung,

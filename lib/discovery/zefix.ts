@@ -29,13 +29,35 @@ function readEnv(name: string): string | undefined {
   return v && v.length > 0 ? v : undefined;
 }
 
-/** True if the official ZEFIX endpoint + a credential are configured. */
+/**
+ * Official ZEFIX PublicREST base (verified against the OpenAPI spec) + company
+ * search path. Base defaults to the official host; the search endpoint is
+ * `POST /api/v1/company/search`. Both env-overridable so we never hardcode-guess.
+ */
+const ZEFIX_DEFAULT_BASE = "https://www.zefix.admin.ch/ZefixPublicREST";
+const ZEFIX_SEARCH_PATH = "/api/v1/company/search";
+
+function zefixBaseUrl(): string {
+  return (readEnv("ZEFIX_API_BASE_URL") ?? ZEFIX_DEFAULT_BASE).replace(/\/+$/, "");
+}
+
+/** Full company-search URL (handles a base already pointing at the endpoint). */
+function zefixSearchUrl(): string {
+  const base = zefixBaseUrl();
+  return /company\/search/i.test(base) ? base : `${base}${ZEFIX_SEARCH_PATH}`;
+}
+
+/**
+ * ZEFIX requires HTTP Basic auth (OpenAPI security scheme "Zefix-Credentials").
+ * The base defaults to the official host, so the real gate is the credentials
+ * (username + password, or an optional bearer token). Without them: access
+ * required.
+ */
 export function isZefixConfigured(): boolean {
-  const base = readEnv("ZEFIX_API_BASE_URL");
-  const hasAuth =
+  return (
     Boolean(readEnv("ZEFIX_API_TOKEN")) ||
-    Boolean(readEnv("ZEFIX_API_USERNAME") && readEnv("ZEFIX_API_PASSWORD"));
-  return Boolean(base && hasAuth);
+    Boolean(readEnv("ZEFIX_API_USERNAME") && readEnv("ZEFIX_API_PASSWORD"))
+  );
 }
 
 /**
@@ -67,7 +89,7 @@ export async function testZefixConnection(): Promise<ConnectionResult> {
   if (!isZefixConfigured()) {
     return { status: "access_required", message: "ZEFIX-Zugang noch nicht konfiguriert." };
   }
-  const r = await searchZefix("AG"); // minimal, bounded probe
+  const r = await searchZefix("Clean"); // bounded probe (name minLength 3)
   if (r.status === "not_configured") {
     return { status: "access_required", message: "ZEFIX-Zugang noch nicht konfiguriert." };
   }
@@ -119,6 +141,23 @@ export interface ZefixMatch {
   uid: string | null;
   legalForm: string | null;
   domicile: string | null;
+  status: string | null;
+  /** Official ZEFIX detail page (zefixDetailWeb), if returned. */
+  detailUrl: string | null;
+}
+
+/** Pick a string from a value that may be a string or an object with `.name`. */
+function pickNested(rec: Rec, keys: string[]): string | null {
+  for (const k of keys) {
+    const v = rec[k];
+    if (typeof v === "string" && v.trim().length > 0) return v.trim();
+    if (v && typeof v === "object") {
+      const o = v as Rec;
+      const n = pickString(o, ["name", "shortname", "uid", "description"]);
+      if (n) return n;
+    }
+  }
+  return null;
 }
 
 function mapCompany(rec: Rec): ZefixMatch | null {
@@ -126,25 +165,36 @@ function mapCompany(rec: Rec): ZefixMatch | null {
   if (!name) return null;
   return {
     name: name.slice(0, 200),
-    uid: pickString(rec, ["uid", "uidformatted", "uid_formatted", "ehraid"]),
-    legalForm: pickString(rec, ["legalform", "legalformname", "rechtsform"]),
-    domicile: pickString(rec, ["legalseat", "domicile", "sitz", "ort", "legalseatname"]),
+    uid: pickString(rec, ["uidformatted", "uid_formatted", "uid", "ehraid"]),
+    legalForm: pickNested(rec, ["legalform", "legalformname", "rechtsform"]),
+    domicile: pickNested(rec, ["legalseat", "domicile", "sitz", "ort", "legalseatname"]),
+    status: pickString(rec, ["status", "companystatus", "rabid"]),
+    detailUrl: pickString(rec, ["zefixdetailweb", "detailurl", "url"]),
   };
 }
 
-/** POST a bounded company search to the configured official ZEFIX endpoint. */
+/**
+ * POST a bounded company search to the official ZEFIX endpoint
+ * (`/api/v1/company/search`). Body follows `CompanySearchQuery`: `name` (the
+ * spec requires minLength 3), `activeOnly`, optional `canton` (`ZEFIX_CANTON`).
+ */
 async function searchZefix(name: string): Promise<{ status: "ok" | "error" | "not_configured"; matches: ZefixMatch[]; message?: string }> {
-  const base = readEnv("ZEFIX_API_BASE_URL");
-  if (!base || !isZefixConfigured()) return { status: "not_configured", matches: [] };
+  if (!isZefixConfigured()) return { status: "not_configured", matches: [] };
+  const term = name.trim().slice(0, 120);
+  if (term.length < 3) return { status: "ok", matches: [] }; // spec: name minLength 3
+
+  const query: Record<string, unknown> = { name: term, activeOnly: true };
+  const canton = readEnv("ZEFIX_CANTON");
+  if (canton) query.canton = canton.trim().toUpperCase();
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const res = await fetch(base, {
+    const res = await fetch(zefixSearchUrl(), {
       method: "POST",
       signal: controller.signal,
       headers: { "Content-Type": "application/json", Accept: "application/json", ...authHeader() },
-      body: JSON.stringify({ name: name.slice(0, 120), maxEntries: MAX_RESULTS }),
+      body: JSON.stringify(query),
       cache: "no-store",
     });
     if (!res.ok) {
@@ -212,8 +262,8 @@ export async function runZefix(input: AdapterRunInput): Promise<AdapterRunResult
   }
   const signals: RawSignal[] = r.matches.map((m) => ({
     title: m.name,
-    summary: [m.uid ? `UID ${m.uid}` : null, m.legalForm].filter(Boolean).join(" · ") || null,
-    sourceUrl: null,
+    summary: [m.uid ? `UID ${m.uid}` : null, m.legalForm, m.status].filter(Boolean).join(" · ") || null,
+    sourceUrl: m.detailUrl,
     region: m.domicile,
     locationText: m.domicile,
     signalType: "new_company",

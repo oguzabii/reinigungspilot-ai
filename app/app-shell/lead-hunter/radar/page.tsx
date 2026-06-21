@@ -51,8 +51,8 @@ const SOURCE_TEXT: Record<string, { ready: string; missing: string }> = {
     missing: "Nicht verbunden – in den Einstellungen offiziellen Bauprojekt-Feed hinterlegen.",
   },
   simap: {
-    ready: "Konfiguriert – öffentliche Ausschreibungen passend zu Reinigung.",
-    missing: "Zugang erforderlich – in den Einstellungen verbinden (offizielle SIMAP-API).",
+    ready: "Öffentliche Suche – Ausschreibungen passend zu Reinigung (ohne Login).",
+    missing: "Öffentliche SIMAP-Suche – in den Einstellungen testen.",
   },
   zefix: {
     ready: "Konfiguriert – Firmenprüfung & Handelsregister-Signale.",
